@@ -1,0 +1,15 @@
+Package: jepidemic
+Title: Java Epidemic
+Version: 0.01
+Authors@R: c(
+    person(given = "Rob",family = "Challen",email = "rc538@exeter.ac.uk",comment = structure("0000-0002-5504-7768", .Names = "ORCID"),role = c("aut", "cre")))
+Description: Some work in progress R functions related to the covid 19 epidemic
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+	tibble
+Imports:
+	rJava,
+	R6,
+	xptr

@@ -1,0 +1,109 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.github.terminological</groupId>
+  <artifactId>jepidemic</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <description>Epidemic tools in java</description>
+  
+  	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>9</maven.compiler.source>
+		<maven.compiler.target>9</maven.compiler.target>
+		<r6.version>master-SNAPSHOT</r6.version>
+	</properties>
+
+	<name>Java epidemic</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.github.terminological</groupId>
+			<artifactId>r6-generator-runtime</artifactId>
+			<version>${r6.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.4.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+		  <groupId>org.apache.commons</groupId>
+		  <artifactId>commons-math3</artifactId>
+		  <version>3.6.1</version>
+		</dependency>
+		
+	</dependencies>
+
+	<!-- Resolve runtime library on github -->
+	<repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+
+	<!-- Resolve maven plugin on github -->
+	<pluginRepositories>
+		<pluginRepository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</pluginRepository>
+	</pluginRepositories>
+		
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.github.terminological</groupId>
+				<artifactId>r6-generator-maven-plugin</artifactId>
+				<version>${r6.version}</version>
+				<configuration>
+					<packageData>
+						<title>Java Epidemic</title>
+						<version>0.01</version>
+						<debug>false</debug>
+<!-- 						<usePkgdown>true</usePkgdown> -->
+						<useJavadoc>true</useJavadoc>
+						<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+						<rjavaOpts>
+							<rjavaOpt>-Xmx4096M</rjavaOpt>
+						</rjavaOpts>
+						<packageName>jepidemic</packageName>
+						<license>MIT</license>
+						<description>
+							Some work in progress R functions related to the covid 19 epidemic
+						</description>
+						<maintainerName>Rob</maintainerName>
+						<maintainerFamilyName>Challen</maintainerFamilyName>
+						<maintainerEmail>rc538@exeter.ac.uk</maintainerEmail>
+						<maintainerOrganisation>University of Exeter</maintainerOrganisation>
+						<maintainerORCID>0000-0002-5504-7768</maintainerORCID>
+					</packageData>
+					<outputDirectory>${project.basedir}/r-library</outputDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>generate-r-library</id>
+						<goals>
+							<goal>generate-r-library</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
