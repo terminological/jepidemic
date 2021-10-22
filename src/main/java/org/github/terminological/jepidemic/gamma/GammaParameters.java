@@ -3,9 +3,7 @@ package org.github.terminological.jepidemic.gamma;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.commons.math3.distribution.AbstractMultivariateRealDistribution;
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -53,8 +51,8 @@ public class GammaParameters implements StatSummary {
 	
 	public String toString() {return this.convert().toString();}
 	
-	public DatedRtGammaEstimate withDate(int tau, LocalDate date, double incidence) {
-		return new DatedRtGammaEstimate(this, tau, date, incidence);
+	public DatedRtGammaEstimate withDate(int tau, LocalDate date, double incidence, int profileId) {
+		return new DatedRtGammaEstimate(this, tau, date, incidence, profileId);
 	}
 	
 //	@Deprecated

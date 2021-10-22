@@ -2,15 +2,13 @@ package org.github.terminological.jepidemic.estimate;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import static uk.co.terminological.rjava.RFunctions.*;
+import static uk.co.terminological.rjava.RFunctions.all;
+import static uk.co.terminological.rjava.RFunctions.precisionEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import org.github.terminological.jepidemic.IncompleteTimeseriesException;
-import org.github.terminological.jepidemic.gamma.GammaParameters;
 import org.junit.jupiter.api.Test;
 
 import uk.co.terminological.rjava.IncompatibleTypeException;
@@ -19,7 +17,6 @@ import uk.co.terminological.rjava.ZeroDimensionalArrayException;
 import uk.co.terminological.rjava.types.RDataframe;
 import uk.co.terminological.rjava.types.RInteger;
 import uk.co.terminological.rjava.types.RNamedList;
-import uk.co.terminological.rjava.types.RNumeric;
 import uk.co.terminological.rjava.types.RNumericArray;
 import uk.co.terminological.rjava.types.RNumericVector;
 import uk.co.terminological.rjava.types.RObject;
@@ -123,11 +120,33 @@ public class TestEstimator {
 					jLab = "mixture";
 					break;
 				}
-			
 				
-				RDataframe out = est.estimateRtSingle(getFlu2009(), "dates", "I");
-				RNumericVector res = out.pull("Rt.Mean",RNumericVector.class);
-				System.out.println(iLab+" "+jLab+" "+res.rCode());
+				for (int k=1; k<=4; k++) {
+					String kLab = null;
+					switch(k) {
+					case 1:
+						est.collectMixtureApproximation();
+						kLab = "approx";
+						break;
+					case 2:
+						est.collectMixtureQuantiles();
+						kLab = "quantiles";
+						break;
+					case 3:
+						est.collectResampledQuantiles(50);
+						kLab = "resample";
+						break;
+					case 4:
+						est.detailedOutput();
+						kLab = "details";
+						break;
+					}
+				
+					RDataframe tmp = getFlu2009();
+					RDataframe out = est.estimateRtSingle(tmp, "dates", "I");
+					RNumericVector res = out.pull("Rt.Mean",RNumericVector.class);
+					System.out.println(iLab+" "+jLab+" "+kLab+" "+res.rCode());
+				}
 			}
 		}
 		
@@ -155,13 +174,42 @@ public class TestEstimator {
 		RNamedList nl = getCovidSerialInterval();
 		RNumericArray tmp = nl.getAs("si_sample", RNumericArray.class);
 		CoriEstimator est = new CoriEstimator(5,5,28).legacySupport(true);
-		tmp.get().forEach(v -> est.withInfectivityProfile(v.getVector()));
+		est.withInfectivityProfileMatrix(tmp);
 		est.withAdaptivePrior(1.1);
 		est.selectAdaptiveWindow(100, 3);
 		est.collectMixtureApproximation();
 		RDataframe df = getPheApiOutput();
 		df.mutate("value", RInteger.class, v -> RFunctions.asNumeric(v));
 		RDataframe out = est.estimateRt(df, "date", "value");
+		System.out.println(out.asCsv());
+	}
+	
+	@Test
+	public void testDetailedSI() throws IOException, ZeroDimensionalArrayException {
+		RNamedList nl = getCovidSerialInterval();
+		RNumericArray tmp = nl.getAs("si_sample", RNumericArray.class);
+		CoriEstimator est = new CoriEstimator(5,5,28).legacySupport(true);
+		est.withInfectivityProfileMatrix(tmp);
+		est.withAdaptivePrior(1.1);
+		est.selectAdaptiveWindow(100, 3);
+		est.detailedOutput();
+		RDataframe df = getFlu2009();
+		RDataframe out = est.estimateRt(df, "dates", "I");
+		System.out.println(out.asCsv());
+	}
+	
+	@Test
+	public void testBootsSI() throws IOException, ZeroDimensionalArrayException {
+		RNamedList nl = getCovidSerialInterval();
+		RNumericArray tmp = nl.getAs("si_sample", RNumericArray.class);
+		CoriEstimator est = new CoriEstimator(5,5,28).legacySupport(true);
+		est.withInfectivityProfileMatrix(tmp);
+		est.withAdaptivePrior(1.1);
+		est.selectAdaptiveWindow(100, 3);
+		est.collectMixtureApproximation();
+		RDataframe df = getPheApiOutput();
+		df.mutate("value", RInteger.class, v -> RFunctions.asNumeric(v));
+		RDataframe out = est.estimateRtFromRates(df, "date", "RollMean.value", 10);
 		System.out.println(out.asCsv());
 	}
 	
@@ -181,4 +229,6 @@ public class TestEstimator {
 		System.out.println(ref);
 		System.out.println(ref2);
 	}
+	
+	
 }

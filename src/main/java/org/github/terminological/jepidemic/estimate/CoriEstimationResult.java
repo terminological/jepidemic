@@ -40,16 +40,18 @@ public class CoriEstimationResult extends Timeseries<CoriEstimationResultEntry> 
 		return out;
 	}
 	
-	public CoriEstimationSummary collectBootstraps() {
-		if (estimator.combiningStrategy==null) throw new RuntimeException("Combining strategy is not set");
-		CoriEstimationSummary out = new CoriEstimationSummary();
-		byDateIndex.entrySet().stream().map(kv -> {
-			List<DatedRtGammaEstimate> tmp = kv.getValue()
-					.stream()
-					.map(c -> c.selectSummaryForDayAndInfectivityProfile())
-					.collect(Collectors.toList());
-			return estimator.combiningStrategy.apply(kv.getKey(), tmp);
-		}).forEach(out::add);
+	public CoriEstimationSummary selectPosterior() {
+		if (estimator.posteriorSelectionStrategy==null) return new CoriEstimationSummary(this);
+		CoriEstimationSummary out = new CoriEstimationSummary(estimator);
+		byDateIndex.entrySet().stream().forEach(kv -> {
+			// streaming by date
+			List<DatedRtGammaEstimate> tmp = kv.getValue().stream()
+				.map(c -> c.selectSummaryForDayAndInfectivityProfile())
+				.collect(Collectors.toList());
+			out.add(new CoriEstimationSummaryEntry(tmp,out));
+		});
 		return out;
 	}
+	
+	
 }

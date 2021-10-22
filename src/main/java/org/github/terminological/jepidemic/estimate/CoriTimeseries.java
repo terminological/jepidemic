@@ -1,9 +1,8 @@
 package org.github.terminological.jepidemic.estimate;
 
+import java.util.Collection;
 import java.util.Optional;
-import java.util.TreeSet;
 
-import org.github.terminological.jepidemic.IncompleteTimeseriesException;
 import org.github.terminological.jepidemic.Timeseries;
 
 public class CoriTimeseries extends Timeseries<CoriTimeseriesEntry> implements Cloneable {
@@ -34,7 +33,7 @@ public class CoriTimeseries extends Timeseries<CoriTimeseriesEntry> implements C
 			if (fixedValue.isPresent()) {
 				prev = new CoriTimeseriesEntry(first.dateValue().minusDays(1), fixedValue.get(), this, true);
 			} else {
-				prev = new CoriTimeseriesEntry(first.dateValue().minusDays(1), first.value()/(1+r), this, true);
+				prev = new CoriTimeseriesEntry(first.dateValue().minusDays(1), first.value()/Math.exp(r), this, true);
 			}
 			first = prev;
 			this.add(prev);
@@ -47,18 +46,6 @@ public class CoriTimeseries extends Timeseries<CoriTimeseriesEntry> implements C
 		return Optional.of(start);
 	}
 
-	public void checkComplete() throws IncompleteTimeseriesException {
-		for (CoriTimeseriesEntry t: this) {
-			if( !t.dateValue().equals(
-					t.next().map(
-							s -> s.dateValue().minusDays(1)
-							).orElse(t.dateValue())) // this deals with the end of the time series
-					) {
-				throw new IncompleteTimeseriesException(t.dateValue().plusDays(1).toString());
-			}
-		};
-	}
-	
 	public CoriEstimator getEstimator() {
 		return estimator;
 	}
@@ -80,6 +67,17 @@ public class CoriTimeseries extends Timeseries<CoriTimeseriesEntry> implements C
 
 	public double[] getInfectivityProfile() {
 		return  this.infectivityProfile;
+	}
+	
+	@Override
+	public boolean add(CoriTimeseriesEntry e) {
+		if (this.contains(e)) throw new RuntimeException("Timeseries already contains this value: "+e.toString());
+		return super.add(e);
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends CoriTimeseriesEntry> c) {
+		return c.stream().map(this::add).anyMatch(b -> b.equals(Boolean.TRUE));
 	}
 
 	

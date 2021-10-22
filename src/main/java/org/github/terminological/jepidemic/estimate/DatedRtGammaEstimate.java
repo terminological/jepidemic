@@ -10,20 +10,23 @@ public class DatedRtGammaEstimate extends GammaParameters implements Comparable<
 	int tau;
 	LocalDate date;
 	double incidence;
+	int profileId;
 	DatedRtGammaEstimate prior = null;
 	
-	private DatedRtGammaEstimate(double shape, double scale, int tau, LocalDate date, double incidence) {
+	private DatedRtGammaEstimate(double shape, double scale, int tau, LocalDate date, double incidence, int profileId) {
 		super(shape, scale);
 		this.tau = tau;
 		this.date = date;
 		this.incidence = incidence;
+		this.profileId = profileId;
 	}
 	
-	public DatedRtGammaEstimate(GammaParameters p, int tau, LocalDate date, double incidence) {
+	public DatedRtGammaEstimate(GammaParameters p, int tau, LocalDate date, double incidence, int profileId) {
 		super(p.getShape(), p.getScale());
 		this.tau = tau;
 		this.date = date;
 		this.incidence = incidence;
+		this.profileId = profileId;
 	}
 
 	@Override
@@ -61,18 +64,22 @@ public class DatedRtGammaEstimate extends GammaParameters implements Comparable<
 	Optional<DatedRtGammaEstimate> wider(double factor) {
 		GammaParameters out = this.convert().wider(factor).convert();
 		if (!(Double.isFinite(out.getShape()) && Double.isFinite(out.getScale()))) return Optional.empty();
-		return Optional.of(out.withDate(tau, date, incidence).withPrior(prior));
+		return Optional.of(out.withDate(tau, date, incidence, profileId).withPrior(prior));
+	}
+	
+	public int getProfileId() {
+		return profileId;
 	}
 	
 	public double getIncidence() {return incidence;}
 	
 	public String toString() {return this.getEffectiveDate().toString()+": "+super.toString();}
 
-	public CoriEstimationSummaryEntry toStatSummary() {
-		return this.withDate(this.getStartDate(), this.getWindow(), this.getIncidence());
-	}
-	
-	public CoriEstimationSummaryEntry toStatSummary(LocalDate d) {
-		return this.withDate(d, this.getWindow(), this.getIncidence());
-	}
+//	public CoriEstimationSummaryEntry toStatSummary() {
+//		return new CoriEstimationSummaryEntry(this.getStartDate(), this.getWindow(), this.getIncidence());
+//	}
+//	
+//	public CoriEstimationSummaryEntry toStatSummary(LocalDate d) {
+//		return this.withDate(d, this.getWindow(), this.getIncidence());
+//	}
 }

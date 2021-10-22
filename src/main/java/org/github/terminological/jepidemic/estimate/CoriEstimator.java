@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -12,10 +11,10 @@ import java.util.stream.IntStream;
 import org.github.terminological.jepidemic.IncompleteTimeseriesException;
 import org.github.terminological.jepidemic.InfectivityProfile;
 import org.github.terminological.jepidemic.ParameterOutOfRangeException;
-import org.github.terminological.jepidemic.RtTimeseriesEntry;
 import org.github.terminological.jepidemic.TimeseriesEntry;
 import org.github.terminological.jepidemic.gamma.GammaMoments;
 import org.github.terminological.jepidemic.gamma.GammaParameters;
+import org.github.terminological.jepidemic.gamma.StatSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +62,12 @@ public class CoriEstimator {
 	
 	Function<CoriEstimationResultEntry,List<DatedRtGammaEstimate>> priorSelectionStrategy;
 	Function<CoriEstimationResultEntry,DatedRtGammaEstimate> posteriorSelectionStrategy; 
-	BiFunction<LocalDate,List<DatedRtGammaEstimate>,CoriEstimationSummaryEntry> combiningStrategy;
+	Function<CoriEstimationSummaryEntry,StatSummary> combiningStrategy;
 
 	
 	
 	/**
-	 * The Estimator is configured with the baseline /(R_0/) assumptions which are used as prior values for /(R_t/) when no other 
+	 * The Estimator is configured with the baseline \(R_0\) assumptions which are used as prior values for \(R_t\) when no other 
 	 * values are available, or the {@link CoriEstimator#withDefaultPrior()} option is used.
 	 * @param r0Mean - The mean of the gamma distribution of the baseline prior assumption about R0 - the theorerical reproduction number in an infinite pool of evenly mixing susceptible individuals 
 	 * @param r0SD - The SD of the prior gamma distribution 
@@ -96,13 +95,7 @@ public class CoriEstimator {
 		return this;
 	}
 	
-	private CoriEstimator collectFirst() {
-		this.combiningStrategy = (d,l) -> {
-			if (l.size() > 1) throw new RuntimeException("If there are more than one infectivity profiles a combining streategy must be defined");
-			return l.get(0).toStatSummary(d);
-		};
-		return this;
-	}
+	
 
 	/** 
 	 * Produces a CoriEstimator that is configured to behave like the default settings of EpiEstim. 
@@ -160,17 +153,7 @@ public class CoriEstimator {
 		
 	}
 	
-	/**
-	 * Configure the estimator to output full details for all windows (up to the maximum window defined in CoriEstimator::new and all infectivity profiles
-	 * @return The estimator itself (a fluent method)
-	 */
-	@RMethod 
-	public CoriEstimator detailedOutput() {
-		this.posteriorSelectionStrategy = null;
-		this.combiningStrategy = null;
-		this.summarise = false;
-		return this;
-	}
+	
 	
 	/**
 	 * The select methods define how the posterior estimate of \(R_t\) is selected. In this case a set value for the window is used. This must be less or equal to the 
@@ -184,12 +167,11 @@ public class CoriEstimator {
 	public CoriEstimator selectSpecificWindow(int window) {
 		if (window-1 > this.maxTau) throw new ParameterOutOfRangeException("The window must be smaller than maxWindow (from the constructor)");
 		this.posteriorSelectionStrategy = (res) -> res.forWindow(window);
-		this.summarise = true;
 		return this;
 	}
 	
 	/**
-	 * The adaptive windowing strategy selects a posterior estimate of \(R_t\) by selecting the shortest window length (>minWindow) which spans at least incidenceSum infection 
+	 * The adaptive windowing strategy selects a posterior estimate of \(R_t\) by selecting the shortest window length (&gt; minWindow) which spans at least incidenceSum infection 
 	 * (or observation) counts. This ensures that where numbers are low the estimation window is lengthened (up ot the value of maxWindow provided to the CoriEstimator::new constructor) to 
 	 * include more data at the cost of temporal precision. This prevents stochastic noise from dominating the estimates of \(R_t\). 
 	 * @param incidenceSum - the number of cases that must be observed in a window. It there are fewer that this the window will be lengthened. Larger values lead to smoother estiamtes at the cost of reduced temporal precision.
@@ -201,7 +183,6 @@ public class CoriEstimator {
 		if (incidenceSum <= 0) throw new ParameterOutOfRangeException("incidenceSum limit must be > 0");
 		if (minWindow-1 > this.maxTau) throw new ParameterOutOfRangeException("The minWindow must be smaller than maxWindow (from the constructor)");
 		this.posteriorSelectionStrategy = (res) -> res.selectWindowByCases(incidenceSum, minWindow);
-		this.summarise = true;
 		return this;
 	}
 	
@@ -219,7 +200,6 @@ public class CoriEstimator {
 	public CoriEstimator selectMinimumUncertainty(double timeVsRt, int minWindow) {
 		if (minWindow-1 > this.maxTau) throw new ParameterOutOfRangeException("The minWindow must be smaller than maxWindow (from the constructor)");
 		this.posteriorSelectionStrategy = (res) -> res.selectWindowByMinimumUncertainty(timeVsRt, minWindow);
-		this.summarise = true;
 		return this;
 	}
 	
@@ -231,7 +211,6 @@ public class CoriEstimator {
 	@RMethod
 	public CoriEstimator selectMixtureCombination() {
 		this.posteriorSelectionStrategy = (res) -> res.selectMixtureCombination();
-		this.summarise = true;
 		return this;
 	}
 	
@@ -242,7 +221,7 @@ public class CoriEstimator {
 	 */
 	@RMethod 
 	public CoriEstimator withDefaultPrior() {
-		this.priorSelectionStrategy = (res) -> defaultPriors(res.dateValue());
+		this.priorSelectionStrategy = (res) -> defaultPriors(res.dateValue(), res.getInfProfId());
 		return this;
 	}
 	
@@ -257,7 +236,7 @@ public class CoriEstimator {
 	public CoriEstimator withFixedPrior(double mean, double sd) {
 		if (mean < 0) throw new ParameterOutOfRangeException("The mean of the prior Rt must be positive");
 		if (sd <= 0) throw new ParameterOutOfRangeException("The SD of the prior Rt must be greater than zero");
-		this.priorSelectionStrategy = (res) -> fixedPriors(mean,sd,res.dateValue());
+		this.priorSelectionStrategy = (res) -> fixedPriors(mean,sd,res.dateValue(), res.getInfProfId());
 		return this;
 	}
 	
@@ -274,12 +253,12 @@ public class CoriEstimator {
 		return this;
 	}
 	
-	private static int meanWindow(List<DatedRtGammaEstimate> estimates) {
-		return (int) Math.round(estimates.stream().mapToInt(e ->e.getWindow()).average().orElse(-1));	
-	}
-	
-	private static double meanIncidence(List<DatedRtGammaEstimate> estimates) {
-		return estimates.stream().mapToDouble(e ->e.getIncidence()).average().orElse(Double.NaN);
+	private CoriEstimator collectFirst() {
+		this.combiningStrategy = (l) -> {
+			if (l.posteriorsForProfiles.size() > 1) throw new RuntimeException("If there are more than one infectivity profiles a combining strategy must be defined");
+			return l.posteriorsForProfiles.get(0);
+		};
+		return this;
 	}
 	
 	/**
@@ -291,7 +270,8 @@ public class CoriEstimator {
 	 */
 	@RMethod 
 	public CoriEstimator collectResampledQuantiles(int sampleSize) {
-		combiningStrategy = (date,cere) -> GammaParameters.resamplingCombination(cere, sampleSize).withDate(date, meanWindow(cere), meanIncidence(cere));
+		this.combiningStrategy = (cere) -> GammaParameters.resamplingCombination(cere.posteriorsForProfiles, sampleSize);
+		this.summarise = true;
 		return this;
 	}
 	
@@ -302,7 +282,8 @@ public class CoriEstimator {
 	 */
 	@RMethod 
 	public CoriEstimator collectMixtureQuantiles() {
-		combiningStrategy = (date,cere) -> GammaParameters.mixtureDistribution(cere).withDate(date, meanWindow(cere), meanIncidence(cere));
+		this.combiningStrategy = (cere) -> GammaParameters.mixtureDistribution(cere.posteriorsForProfiles);
+		this.summarise = true;
 		return this;
 	}
 	
@@ -315,7 +296,19 @@ public class CoriEstimator {
 	 */
 	@RMethod 
 	public CoriEstimator collectMixtureApproximation() {
-		combiningStrategy = (date,cere) -> GammaParameters.mixtureApproximation(cere).withDate(date, meanWindow(cere), meanIncidence(cere));
+		this.combiningStrategy = (cere) -> GammaParameters.mixtureApproximation(cere.posteriorsForProfiles);
+		this.summarise = true;
+		return this;
+	}
+	
+	/**
+	 * Configure the estimator to output full details for all infectivity profiles.
+	 * @return The estimator itself (a fluent method)
+	 */
+	@RMethod 
+	public CoriEstimator detailedOutput() {
+		this.combiningStrategy = null;
+		this.summarise = false;
 		return this;
 	}
 	
@@ -327,6 +320,8 @@ public class CoriEstimator {
 	 */
 	@RMethod
 	public CoriEstimator withInfectivityProfile(RNumericVector infectivityProfile) {
+		/* Messing with the settings at this point turns out to be a bad idea
+		 * because we assume defniition has occurred in some ordered way.
 		if (infProf.size() == 0) {
 			// set the do nothing collector if there is only one;
 			this.collectFirst();
@@ -339,6 +334,7 @@ public class CoriEstimator {
 			}
 			// if summarise is already true collector will have been set.
 		}
+		*/
 		infProf.add(new InfectivityProfile(infectivityProfile, infProf.size()));
 		return this;
 	}
@@ -433,6 +429,9 @@ public class CoriEstimator {
 				throw new ParameterOutOfRangeException("The incidence column: "+incidenceColName+" is not of type RNumeric (or RInteger)");
 			}
 		}
+		if (!RFunctions.all(RFunctions::isFinite, incidence.pull(incidenceColName,RNumericVector.class))) {
+			throw new ParameterOutOfRangeException("The incidence column contains non-finite values");
+		}
 		
 		CoriTimeseries rtSeries = new CoriTimeseries(this); //, initialGrowth);
 		
@@ -440,29 +439,36 @@ public class CoriEstimator {
 			incidence
 				.rename("date", dateColName)
 				.rename("I", incidenceColName)
-				.stream(TimeseriesEntry.class)
+				.stream(TimeseriesEntry.Incidence.class)
 				.forEach(x -> rtSeries.add(new CoriTimeseriesEntry(x, rtSeries)));
 		} catch (UnconvertableTypeException e) {
 			throw new RuntimeException(e);
 		}
 		
 		CoriEstimationResult allResults = estimateRtSingle(rtSeries);
+		CoriEstimationSummary filteredResults = allResults.selectPosterior();
 		
 		//Maybe stream here and combine later. 
 		
 		if (!summarise) {
-			RDataframe out = allResults.stream().collect(
-					CoriEstimationResultEntry.collector(dateColName,incidenceColName,epiEstimMode));
+			// TODO: sometimes it woudl be good to apply a posteriorSelectionStrategy independently of a bootstrap collection.
+			// at the moment collect bootstraps applies the posterior selection strategy first
+			// doing this independently would mena the following has to change as woudl be a summay entry rather than a result entry
+			
+			RDataframe out = filteredResults.stream().collect(
+					CoriEstimationSummaryEntry.collector(dateColName,incidenceColName,epiEstimMode));
 			return out;
 		
 		} else { 
 		
-			RDataframe out2 = allResults.collectBootstraps().stream().collect(
-				CoriEstimationSummaryEntry.collector(dateColName,incidenceColName,epiEstimMode ));
+			RDataframe out2 = filteredResults.stream().collect(
+				CoriEstimationSummaryEntry.summaryCollector(dateColName,incidenceColName,epiEstimMode ));
 			return(out2);
 		}
 		
 	}
+	
+	
 	
 	/**
 	 * This converts the input timeseries into a EstimateResult time series. This is the native Java methd in the api. 
@@ -493,7 +499,7 @@ public class CoriEstimator {
 				
 				List<DatedRtGammaEstimate> priors;
 				if (last == null) {
-					priors = defaultPriors(tsEntry.get().dateValue());
+					priors = defaultPriors(tsEntry.get().dateValue(), prof.getId());
 				} else {
 					priors = priorSelectionStrategy.apply(last);
 				}
@@ -512,20 +518,173 @@ public class CoriEstimator {
 		return allResults;
  	}
 
-	private List<DatedRtGammaEstimate> defaultPriors(LocalDate dateValue) {
-		return IntStream.range(0,maxTau).mapToObj(i -> defaultPrior(i, dateValue)).collect(Collectors.toList());
+	/** 
+	 * Estimates \(R_t\) for a one or more timeseries of infections in an epidemic, where the supplied dataframe is grouped
+	 * @param rates - a dataframe containing at least 2 columns (one containing a date, the other a numeric poission rate of cases). The dataframe may be grouped, in which case grouping is preserved, and each group is treated as a seperate time series 
+	 * @param dateColName - the name of the date column
+	 * @param rateColName - the name of the rate column
+	 * @param samplesPerProfile - the number of times to bootstrap per infectivity profile
+	 * @return a dataframe, containing either a summary of the estimates of \(R_t\) with mean, sd, and quantiles for each day, or a full breakdown of the component \(R_t\) estimates.
+	 */
+	@RMethod
+	public RDataframe estimateRtFromRates(RDataframe rates, String dateColName, String rateColName, int samplesPerProfile) {
+		
+		
+		RDataframe out = rates
+			.groupModify((d,g) -> {
+				try {
+					return estimateRtFromSingleRate(d.withColIfAbsent("errors", RCharacter.NA), dateColName, rateColName, samplesPerProfile);
+				} catch (IncompleteTimeseriesException e) {
+					return d.mergeWithCol("errors", RConverter.convert("Incomplete timeseries: "+e.getMessage()), (s1,s2) -> RFunctions.paste("; ",s1,s2));
+				} catch (UnexpectedNaValueException e) {
+					return d.mergeWithCol("errors", RConverter.convert("Unexpected NA value"), (s1,s2) -> RFunctions.paste("; ",s1,s2));
+				}
+			});
+		System.gc();
+		return out;
+		
 	}
 	
-	private List<DatedRtGammaEstimate> fixedPriors(double mean, double sd, LocalDate dateValue) {
-		return IntStream.range(0,maxTau).mapToObj(i -> fixedPrior(mean,sd,i, dateValue)).collect(Collectors.toList());
+	/**
+	 * Estimates \(R_t\) for a single timeseries of infections in an epidemic.
+	 * @param rate - a dataframe containing at least 2 columns (one containing a date, the other a numeric estimate of possion rate of cases). The dataframe may be grouped, in which case grouping is preserved 
+	 * @param dateColName - the name of the date column
+	 * @param rateColName - the name of the estimated poisson rate
+	 * @param samplesPerProfile - the number of times to bootstrap per infectivity profile
+	 * @return a dataframe, containing either a summary of the estimates of \(R_t\) with mean, sd, and quantiles for each day, or a full breakdown of the component \(R_t\) estimates.
+	 * @throws IncompleteTimeseriesException if the timeseries does not have contiguous dates
+	 */
+	@RMethod
+	public RDataframe estimateRtFromSingleRate(RDataframe rate, String dateColName, String rateColName, int samplesPerProfile) throws IncompleteTimeseriesException {
+		
+		if (!rate.containsKey(dateColName)) throw new ParameterOutOfRangeException("The dataframe does not contain a column: "+dateColName);
+		if (!rate.getTypeOfColumn(dateColName).equals(RDate.class)) throw new ParameterOutOfRangeException("The date column: "+dateColName+" is not of type RDate");
+		if (!rate.containsKey(rateColName)) throw new ParameterOutOfRangeException("The dataframe does not contain a column: "+rateColName);
+		if (!rate.getTypeOfColumn(rateColName).equals(RNumeric.class)) {
+			if (!rate.getTypeOfColumn(rateColName).equals(RInteger.class)) {
+				rate.mutate(rateColName, RInteger.class, i -> RFunctions.asNumeric(i));
+			} else {
+				throw new ParameterOutOfRangeException("The incidence column: "+rateColName+" is not of type RNumeric (or RInteger)");
+			}
+		}
+		
+		CoriBootstrappedTimeseries rtSeries = new CoriBootstrappedTimeseries(this); //, initialGrowth);
+		
+		try {
+			rate
+				.rename("date", dateColName)
+				.rename("pois", rateColName)
+				.stream(TimeseriesEntry.Rate.class)
+				.forEach(x -> rtSeries.add(new CoriBootstrappedTimeseriesEntry(x, rtSeries)));
+		} catch (UnconvertableTypeException e) {
+			throw new RuntimeException(e);
+		}
+		
+		CoriEstimationResult allResults = estimateRtBootstrapped(rtSeries, samplesPerProfile);
+		CoriEstimationSummary summaryResults = allResults.selectPosterior();
+		
+		//Maybe stream here and combine later. 
+		
+		if (!summarise) {
+			RDataframe out = summaryResults.stream().collect(
+				CoriEstimationSummaryEntry.poissonCollector(dateColName,rateColName,epiEstimMode));
+			return out;
+		
+		} else { 
+		
+			RDataframe out2 = summaryResults.stream().collect(
+				CoriEstimationSummaryEntry.poissonSummaryCollector(dateColName,rateColName,epiEstimMode ));
+			return out2;
+		}
+		
 	}
 	
-	protected DatedRtGammaEstimate defaultPrior(int tau, LocalDate dateValue) {
-		return rZero.withDate(tau, dateValue, 0);
+//	private static int lcm(int number1, int number2) {
+//	    if (number1 == 0 || number2 == 0) {
+//	        return 0;
+//	    }
+//	    int absNumber1 = Math.abs(number1);
+//	    int absNumber2 = Math.abs(number2);
+//	    int absHigherNumber = Math.max(absNumber1, absNumber2);
+//	    int absLowerNumber = Math.min(absNumber1, absNumber2);
+//	    int lcm = absHigherNumber;
+//	    while (lcm % absLowerNumber != 0) {
+//	        lcm += absHigherNumber;
+//	    }
+//	    return lcm;
+//	}
+	
+	/**
+	 * This converts the input timeseries into a EstimateResult time series. This is the native Java methd in the api. 
+	 * @param rtSeries - a CoriTimeseries
+	 * @param samplesPerProfile - the number of times to bootstrap per infectivity profile 
+	 * @return a CoriEstimateResult.
+	 * @throws IncompleteTimeseriesException if the timeseries does not have contiguous dates
+	 */
+	public CoriEstimationResult estimateRtBootstrapped(CoriBootstrappedTimeseries rtSeries, int samplesPerProfile) throws IncompleteTimeseriesException {
+		if (infProf.isEmpty()) throw new RuntimeException("Needs an infectivity profile to be defined before we can estimate Rt");
+		
+		rtSeries.checkComplete();
+		
+		// Make sure infProf has eough entries to allow for bootstrapping 
+		// of timeseries
+//		int infProfLen = lcm(samples, infProf.size());
+//		int repeats = infProfLen / (infProf.size());
+//		if (infProfLen > 10*samples) infProfLen = 10*samples;
+		List<InfectivityProfile> infProfRep = new ArrayList<>();
+		for (int i=0; i<samplesPerProfile; i++) {
+			infProfRep.addAll(infProf); 
+		}
+				
+		CoriEstimationResult allResults = new CoriEstimationResult(this);
+		infProfRep.parallelStream().map(prof -> {
+			
+			CoriEstimationResult singleResult = new CoriEstimationResult(this);
+			CoriTimeseries rtWorking = rtSeries.sample();
+			GrowthRateUtils conv = new GrowthRateUtils(prof);
+			double initialGrowth = conv.RToGrowth(rZero.convert().getMean());
+			rtWorking.inferStart(Optional.ofNullable(atStart ? 0 : null), prof.length(), initialGrowth);
+			rtWorking.estimateForProfile(prof.profile());
+			CoriEstimationResultEntry last = null;
+			Optional<CoriTimeseriesEntry> tsEntry = rtWorking.start();
+			while (tsEntry.isPresent()) {
+				
+				List<DatedRtGammaEstimate> priors;
+				if (last == null) {
+					priors = defaultPriors(tsEntry.get().dateValue(), prof.getId());
+				} else {
+					priors = priorSelectionStrategy.apply(last);
+				}
+				List<DatedRtGammaEstimate> results = tsEntry.get().results(priors);
+				
+				CoriEstimationResultEntry current = new CoriEstimationResultEntry(prof.getId(), tsEntry.get(), results, singleResult);
+				singleResult.add(current);
+				last = current;
+				tsEntry = tsEntry.get().next();
+			};
+			
+			return singleResult;
+		
+		}).forEach(allResults::addAll);
+		System.gc();
+		return allResults;
+ 	}
+	
+	
+	private List<DatedRtGammaEstimate> defaultPriors(LocalDate dateValue, int profileId) {
+		return IntStream.range(0,maxTau).mapToObj(i -> defaultPrior(i, dateValue, profileId)).collect(Collectors.toList());
 	}
 	
-	protected static DatedRtGammaEstimate fixedPrior(double mean, double sd, int tau, LocalDate dateValue) {
-		return new GammaMoments(mean,sd).convert().withDate(tau, dateValue, 0);
+	private List<DatedRtGammaEstimate> fixedPriors(double mean, double sd, LocalDate dateValue, int profileId) {
+		return IntStream.range(0,maxTau).mapToObj(i -> fixedPrior(mean,sd,i, dateValue, profileId)).collect(Collectors.toList());
+	}
+	
+	protected DatedRtGammaEstimate defaultPrior(int tau, LocalDate dateValue, int profileId) {
+		return rZero.withDate(tau, dateValue, 0D, profileId);
+	}
+	
+	protected static DatedRtGammaEstimate fixedPrior(double mean, double sd, int tau, LocalDate dateValue, int profileId) {
+		return new GammaMoments(mean,sd).convert().withDate(tau, dateValue, 0D, profileId);
 	}
 
 	protected int getMaxTau() {

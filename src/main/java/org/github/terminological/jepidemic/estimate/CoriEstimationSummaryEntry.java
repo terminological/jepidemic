@@ -1,8 +1,11 @@
 package org.github.terminological.jepidemic.estimate;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.github.terminological.jepidemic.RtTimeseriesEntry;
 import org.github.terminological.jepidemic.Timeseries;
@@ -17,36 +20,38 @@ import uk.co.terminological.rjava.types.RNumeric;
 
 public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntry, Comparable<CoriEstimationSummaryEntry> {
 
-	Timeseries<CoriEstimationSummaryEntry> ts;
-	StatSummary summary;
-	LocalDate date;
-	double incidence;
-	int window;
-	
-	public CoriEstimationSummaryEntry(StatSummary summary, LocalDate endDate, int window, double incidence) {
-		this.summary = summary;
-		this.date = endDate;
-		this.window = window;
-		this.incidence = incidence;
+	CoriEstimationSummary ts;
+	public LocalDate date;
+	List<DatedRtGammaEstimate> posteriorsForProfiles = new ArrayList<>();
+	StatSummary statSummary;
+		
+	public CoriEstimationSummaryEntry(List<DatedRtGammaEstimate> datedRtGammaEstimates, CoriEstimationSummary summary) {
+		this.posteriorsForProfiles = datedRtGammaEstimates;
+		List<LocalDate> dates = datedRtGammaEstimates.stream().map(de -> de.date).distinct().collect(Collectors.toList());
+		if(dates.size() > 1) throw new RuntimeException("Summary has gone wrong");
+		date = dates.get(0);
+		this.ts = summary;
+		if (ts.getEstimator().combiningStrategy != null) {
+			this.statSummary = ts.getEstimator().combiningStrategy.apply(this);
+		}
 	}
 	
-	public CoriEstimationSummaryEntry(DatedRtGammaEstimate datedRtGammaEstimate) {
-		this(datedRtGammaEstimate, datedRtGammaEstimate.date, datedRtGammaEstimate.tau+1, datedRtGammaEstimate.incidence);
-	}
-
 	@Override
 	public double getMean() {
-		return summary.getMean();
+		if (statSummary == null) throw new RuntimeException("Summary has not been calculated. No combining strategy defined.");
+		return statSummary.getMean();
 	}
 
 	@Override
 	public double getSD() {
-		return summary.getSD();
+		if (statSummary == null) throw new RuntimeException("Summary has not been calculated. No combining strategy defined.");
+		return statSummary.getSD();
 	}
 
 	@Override
 	public double quantile(double q) {
-		return summary.quantile(q);
+		if (statSummary == null) throw new RuntimeException("Summary has not been calculated. No combining strategy defined.");
+		return statSummary.quantile(q);
 	}
 	
 	public LocalDate getEndDate() {
@@ -54,12 +59,12 @@ public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntr
 	}
 	
 	public LocalDate getStartDate() {
-		if (window-1 > 0) return date.minusDays(window-1);
+		if (getWindow()-1 > 0) return date.minusDays(getWindow()-1);
 		else {return date;}
 	}
 	
 	public double getIncidence() {
-		return incidence;
+		return meanIncidence();
 	}
 
 	@Override
@@ -68,12 +73,20 @@ public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntr
 	}
 
 	public int getWindow() {
-		return window;
+		return meanWindow();
 	}
 
 	@Override
 	public RNumeric incidence() {
-		return RConverter.convert(incidence);
+		return RConverter.convert(getIncidence());
+	}
+	
+	public RNumeric rate() {
+		return RConverter.convert(getRate());
+	}
+	
+	private double getRate() {
+		return meanIncidence();
 	}
 
 	@Override
@@ -81,10 +94,9 @@ public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntr
 		return RConverter.convert(date);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void setTimeseries(Timeseries<?> ts) {
-		this.ts = (Timeseries<CoriEstimationSummaryEntry>) ts;
+		this.ts = (CoriEstimationSummary) ts;
 	}
 
 	@Override
@@ -123,12 +135,56 @@ public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntr
 	public RNumeric sd() {
 		return RConverter.convert(getSD());
 	}
+	
+	public List<DatedRtGammaEstimate> estimatesForDate() {
+		return this.posteriorsForProfiles;
+	}
 
 //	public static Collector<CoriEstimationSummaryEntry, ?, RDataframe> collector(String dateCol, String incidenceCol, boolean epiEstimCompat) {
 //		
 //	}
 	
-	public static Collector<CoriEstimationSummaryEntry, ?, RDataframe> collector(String dateCol, String incidenceCol, boolean epiEstimCompat) { 
+	public static Collector<CoriEstimationSummaryEntry,?,RDataframe> collector(String dateCol, String incidenceCol, boolean epiEstimCompat) {
+		return RConverter.flatteningDataframeCollector(
+				RConverter.flatMapping(
+						cere->cere.estimatesForDate().stream(),
+						RConverter.mapping("Rt.StartDate", pp->pp.getStartDate()),
+						RConverter.mapping("Rt.EndDate", pp->pp.getEndDate()),
+						RConverter.mapping("Rt.Window",pp -> pp.getWindow()),
+						RConverter.mapping(epiEstimCompat ? "Mean(R)": "Rt.Mean",pp -> pp.convert().getMean()),
+						RConverter.mapping(epiEstimCompat ? "Std(R)": "Rt.SD",pp -> pp.convert().getSD()),
+						RConverter.mapping("Rt.Shape",pp -> pp.getShape()),
+						RConverter.mapping("Rt.Scale",pp -> pp.getScale()),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.025(R)": "Rt.Quantile.0.025",pp -> pp.convert().quantile(0.025)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.05(R)": "Rt.Quantile.0.05",pp -> pp.convert().quantile(0.05)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.25(R)": "Rt.Quantile.0.25",pp -> pp.convert().quantile(0.25)),
+						RConverter.mapping(epiEstimCompat ? "Median(R)": "Rt.Quantile.0.5",pp -> pp.convert().quantile(0.5)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.75(R)": "Rt.Quantile.0.75",pp -> pp.convert().quantile(0.75)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.95(R)": "Rt.Quantile.0.95",pp -> pp.convert().quantile(0.95)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.975(R)": "Rt.Quantile.0.975",pp -> pp.convert().quantile(0.975)),
+						RConverter.mapping("Rt.prior.Mean",pp -> pp.getPrior().map(x -> x.convert().getMean()).orElse(Double.NaN)),
+						RConverter.mapping("Rt.prior.SD",pp -> pp.getPrior().map(x -> x.convert().getSD()).orElse(Double.NaN)),
+						RConverter.mapping("Rt.ProfileId",pp -> pp.getProfileId())
+				),
+				RConverter.mapping(dateCol,cere -> cere.date().get()),
+				RConverter.mapping(incidenceCol,cere -> cere.incidence().get())
+				
+				
+		);
+	}
+	
+//	@Deprecated
+//	public List<DatedRtGammaEstimate> welchSatterthwaiteNextPrior(double factor) {
+//		return results.stream().map(rEst -> {
+//			List<DatedRtGammaEstimate> tmpList = this.earlierEstimatesForEffectiveDate(rEst.getEffectiveDate());
+//			GammaParameters tmp = GammaParameters.welchSatterthwaiteCombination(tmpList);
+//			DatedRtGammaEstimate out = tmp.withDate(-1, rEst.date, rEst.incidence).withPrior(rEst.prior);
+//			if (!out.isDefined()) return series.estimator.defaultPrior(rEst.tau, rEst.date);
+//			return out.wider(factor).get();
+//		}).collect(Collectors.toList());
+//	}
+	
+	public static Collector<CoriEstimationSummaryEntry, ?, RDataframe> summaryCollector(String dateCol, String incidenceCol, boolean epiEstimCompat) { 
 		return RConverter.dataframeCollector(
 				RConverter.mapping(dateCol,s -> s.getStartDate()),
 				RConverter.mapping(incidenceCol,s -> s.getIncidence()),
@@ -138,9 +194,11 @@ public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntr
 				RConverter.mapping(epiEstimCompat ? "Mean(R)": "Rt.Mean",s -> s.getMean()),
 				RConverter.mapping(epiEstimCompat ? "Std(R)": "Rt.SD",s -> s.getSD()),
 				RConverter.mapping(epiEstimCompat ? "Quantile.0.025(R)": "Rt.Quantile.0.025",s -> s.quantile(0.025)),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.05(R)": "Rt.Quantile.0.05",s -> s.quantile(0.05)),
 				RConverter.mapping(epiEstimCompat ? "Quantile.0.25(R)": "Rt.Quantile.0.25",s -> s.quantile(0.25)),
 				RConverter.mapping(epiEstimCompat ? "Median(R)": "Rt.Quantile.0.5",s -> s.quantile(0.5)),
 				RConverter.mapping(epiEstimCompat ? "Quantile.0.75(R)": "Rt.Quantile.0.75",s -> s.quantile(0.75)),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.95(R)": "Rt.Quantile.0.95",s -> s.quantile(0.95)),
 				RConverter.mapping(epiEstimCompat ? "Quantile.0.975(R)": "Rt.Quantile.0.975",s -> s.quantile(0.975))						
 		);
 	}
@@ -163,5 +221,66 @@ public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntr
 	public Optional<Timeseries<?>> getTimeseries() {
 		return Optional.ofNullable(ts);
 	}
+
+	public static Collector<CoriEstimationSummaryEntry, ?, RDataframe> poissonSummaryCollector(String dateCol, String poissonRateCol, boolean epiEstimCompat) {
+		return RConverter.dataframeCollector(
+				RConverter.mapping(dateCol,s -> s.getStartDate()),
+				RConverter.mapping(poissonRateCol,s -> s.getRate()),
+				RConverter.mapping("Rt.StartDate",s -> s.getStartDate()),
+				RConverter.mapping("Rt.EndDate",s -> s.getEndDate()),
+				RConverter.mapping("Rt.Window",s -> s.getWindow()),
+				RConverter.mapping(epiEstimCompat ? "Mean(R)": "Rt.Mean",s -> s.getMean()),
+				RConverter.mapping(epiEstimCompat ? "Std(R)": "Rt.SD",s -> s.getSD()),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.025(R)": "Rt.Quantile.0.025",s -> s.quantile(0.025)),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.05(R)": "Rt.Quantile.0.05",s -> s.quantile(0.05)),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.25(R)": "Rt.Quantile.0.25",s -> s.quantile(0.25)),
+				RConverter.mapping(epiEstimCompat ? "Median(R)": "Rt.Quantile.0.5",s -> s.quantile(0.5)),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.75(R)": "Rt.Quantile.0.75",s -> s.quantile(0.75)),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.95(R)": "Rt.Quantile.0.95",s -> s.quantile(0.95)),
+				RConverter.mapping(epiEstimCompat ? "Quantile.0.975(R)": "Rt.Quantile.0.975",s -> s.quantile(0.975))						
+		);
+	}
+
+	public static Collector<CoriEstimationSummaryEntry,?,RDataframe>  poissonCollector(String dateCol, String poissonRateCol, boolean epiEstimCompat) {
+		return RConverter.flatteningDataframeCollector(
+				RConverter.flatMapping(
+						cere->cere.estimatesForDate().stream(),
+						RConverter.mapping("Rt.StartDate", pp->pp.getStartDate()),
+						RConverter.mapping("Rt.EndDate", pp->pp.getEndDate()),
+						RConverter.mapping("Rt.Window",pp -> pp.getWindow()),
+						RConverter.mapping(epiEstimCompat ? "Mean(R)": "Rt.Mean",pp -> pp.convert().getMean()),
+						RConverter.mapping(epiEstimCompat ? "Std(R)": "Rt.SD",pp -> pp.convert().getSD()),
+						RConverter.mapping("Rt.Shape",pp -> pp.getShape()),
+						RConverter.mapping("Rt.Scale",pp -> pp.getScale()),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.025(R)": "Rt.Quantile.0.025",pp -> pp.convert().quantile(0.025)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.05(R)": "Rt.Quantile.0.05",pp -> pp.convert().quantile(0.05)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.25(R)": "Rt.Quantile.0.25",pp -> pp.convert().quantile(0.25)),
+						RConverter.mapping(epiEstimCompat ? "Median(R)": "Rt.Quantile.0.5",pp -> pp.convert().quantile(0.5)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.75(R)": "Rt.Quantile.0.75",pp -> pp.convert().quantile(0.75)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.95(R)": "Rt.Quantile.0.95",pp -> pp.convert().quantile(0.05)),
+						RConverter.mapping(epiEstimCompat ? "Quantile.0.975(R)": "Rt.Quantile.0.975",pp -> pp.convert().quantile(0.975)),
+						RConverter.mapping("Rt.prior.Mean",pp -> pp.getPrior().map(x -> x.convert().getMean()).orElse(Double.NaN)),
+						RConverter.mapping("Rt.prior.SD",pp -> pp.getPrior().map(x -> x.convert().getSD()).orElse(Double.NaN)),
+						RConverter.mapping("Rt.ProfileId",pp -> pp.getProfileId())
+				),
+				RConverter.mapping(dateCol,cere -> cere.date().get()),
+				RConverter.mapping(poissonRateCol,cere -> cere.rate().get())
+				
+		);
+	}
+	
+	private int meanWindow() {
+		return (int) Math.round(this.posteriorsForProfiles.stream().mapToInt(e ->e.getWindow()).average().orElse(-1));	
+	}
+	
+	private double meanIncidence() {
+		return this.posteriorsForProfiles.stream().mapToDouble(e ->e.getIncidence()).average().orElse(Double.NaN);
+	}
+
+	public void merge(CoriEstimationSummaryEntry t) {
+		this.posteriorsForProfiles.addAll(t.posteriorsForProfiles);
+		
+	}
+	
 	
 }

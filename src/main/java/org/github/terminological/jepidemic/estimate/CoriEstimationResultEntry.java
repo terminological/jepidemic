@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.github.terminological.jepidemic.Timeseries;
@@ -16,33 +15,44 @@ import org.github.terminological.jepidemic.gamma.GammaParameters;
 import org.github.terminological.jepidemic.gamma.WeightedGammaMixture;
 
 import uk.co.terminological.rjava.RConverter;
-import uk.co.terminological.rjava.types.RDataframe;
 import uk.co.terminological.rjava.types.RDate;
 import uk.co.terminological.rjava.types.RInteger;
 import uk.co.terminological.rjava.types.RNumeric;
 
-public class CoriEstimationResultEntry implements TimeseriesEntry, Comparable<CoriEstimationResultEntry> { 
+public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Comparable<CoriEstimationResultEntry> { 
 
 	private CoriTimeseriesEntry tsEntry;
 	//private double incidence;
 	//private LocalDate date;
-	private TreeSet<DatedRtGammaEstimate> results;
+	private TreeSet<DatedRtGammaEstimate> posteriors;
 	private int profId;
 	private CoriEstimationResult series;
 	private Optional<CoriEstimationResultEntry> next;
 	private Optional<CoriEstimationResultEntry> prev;
 	
 	public CoriEstimationResultEntry(int profId, CoriTimeseriesEntry tsEntry, 
-			List<DatedRtGammaEstimate> results, CoriEstimationResult series) {
+			List<DatedRtGammaEstimate> posteriorsForTaus, CoriEstimationResult series) {
 		this.tsEntry = tsEntry;
 		this.profId = profId;
 		//this.incidence = tsEntry.value();
 		//this.date = tsEntry.dateValue();
-		this.results = new TreeSet<>(results);
+		this.posteriors = new TreeSet<>(posteriorsForTaus);
 		this.series = series;
+	}
+	
+	public CoriEstimationResultEntry(CoriEstimationResultEntry unfiltered, 
+			DatedRtGammaEstimate selectedPosterior) {
+		this.tsEntry = unfiltered.tsEntry;
+		this.profId = unfiltered.profId;
+		//this.incidence = tsEntry.value();
+		//this.date = tsEntry.dateValue();
+		this.posteriors = new TreeSet<DatedRtGammaEstimate>();
+		this.posteriors.add(selectedPosterior);
+		this.series = unfiltered.series;
 	}
 
 	public double getIncidence() {return tsEntry.value();}
+	
 	public LocalDate getDate() {return tsEntry.dateValue();}
 	
 	@Override
@@ -69,20 +79,20 @@ public class CoriEstimationResultEntry implements TimeseriesEntry, Comparable<Co
 	}
 	
 	public DatedRtGammaEstimate selectWindowByCases(double minCases, int minWindow) {
-		for (DatedRtGammaEstimate result: results) {
+		for (DatedRtGammaEstimate result: posteriors) {
 			if (
 					result.tau >= minWindow-1 &&
 					this.tsEntry.casesInWindow(result.tau) > minCases
 				) return result;
 		}
-		return results.last();
+		return posteriors.last();
 	}
 	
 	public DatedRtGammaEstimate selectWindowByMinimumUncertainty(double timeVsRt, int minWindow) {
 		timeVsRt = Math.sqrt(timeVsRt);
-		DatedRtGammaEstimate out = CoriEstimationResultEntry.na(-1, this.getDate(), this.getIncidence());
+		DatedRtGammaEstimate out = CoriEstimationResultEntry.na(-1, this.getDate(), this.getIncidence(),this.profId);
 		double score = Double.POSITIVE_INFINITY;
-		for (DatedRtGammaEstimate result: results) {
+		for (DatedRtGammaEstimate result: posteriors) {
 			double tmp = Math.pow(result.tau+1,timeVsRt)*
 				Math.pow(result.convert().getSD(),1/timeVsRt);
 			if (tmp < score && result.tau >= minWindow-1) {
@@ -102,7 +112,7 @@ public class CoriEstimationResultEntry implements TimeseriesEntry, Comparable<Co
 		int tmp2 = (int) Math.round(tmp.stream().mapToInt(t -> t.tau).average().orElse(-1));
 		return 
 			new WeightedGammaMixture(tmp, weighting).gammaApproximation()
-			.withDate(tmp2,this.dateValue(),this.getIncidence());
+			.withDate(tmp2,this.dateValue(),this.getIncidence(),this.profId);
 	}
 	
 	public DatedRtGammaEstimate selectSummaryForDayAndInfectivityProfile() {
@@ -111,12 +121,12 @@ public class CoriEstimationResultEntry implements TimeseriesEntry, Comparable<Co
 	
 	//public static DatedRtGammaEstimate NA = new GammaParameters(Double.NaN,Double.NaN).withDate(-1,null,0);  
 	
-	public static DatedRtGammaEstimate na(int window, LocalDate date, Double incidence) {
-		return new GammaParameters(Double.NaN,Double.NaN).withDate(window, date, incidence);
+	public static DatedRtGammaEstimate na(int window, LocalDate date, Double incidence, int profileId) {
+		return new GammaParameters(Double.NaN,Double.NaN).withDate(window, date, incidence, profileId);
 	}
 	
 	public DatedRtGammaEstimate forWindow(int window) {
-		return results.stream().filter(wg -> wg.tau==window-1).findFirst().orElse(na(window,this.getDate(),this.getIncidence()));
+		return posteriors.stream().filter(wg -> wg.tau==window-1).findFirst().orElse(na(window,this.getDate(),this.getIncidence(),this.profId));
 	}
 	
 //	private List<DatedRtGammaEstimate> earlierEstimatesForEffectiveDate(LocalDate test) {
@@ -148,6 +158,8 @@ public class CoriEstimationResultEntry implements TimeseriesEntry, Comparable<Co
 		return tsEntry.incidence();
 	}
 	
+	
+	
 	public LocalDate dateValue() {
 		return getDate();
 	}
@@ -160,23 +172,19 @@ public class CoriEstimationResultEntry implements TimeseriesEntry, Comparable<Co
 	public RInteger infectivityProfileId() {
 		return RConverter.convert(profId);
 	}
-	
-	public List<DatedRtGammaEstimate> estimatesForDate() {
-		return new ArrayList<>(results);
-	}
 
 //	public DatedRtEstimate posterior(int window) {
 //		return results.stream().filter(wg -> wg.tau==window-1).findFirst().get();
 //	}
 //	
 	private List<DatedRtGammaEstimate> todayEstimatesForEffectiveDate(LocalDate effective) {
-		return results.stream().filter(wg -> wg.getEffectiveDate().equals(effective)).collect(Collectors.toList());
+		return posteriors.stream().filter(wg -> wg.getEffectiveDate().equals(effective)).collect(Collectors.toList());
 	}
 	
 	// prior estimates Rt
 	public List<DatedRtGammaEstimate> adaptiveNextPrior(double factor) {
-		return this.results.stream().map(
-				r -> r.wider(factor).orElse(series.estimator.defaultPrior(r.tau, r.date)))
+		return this.posteriors.stream().map(
+				r -> r.wider(factor).orElse(series.estimator.defaultPrior(r.tau, r.date, r.profileId)))
 				.collect(Collectors.toList());
 	}
 	
@@ -205,48 +213,24 @@ public class CoriEstimationResultEntry implements TimeseriesEntry, Comparable<Co
 	}
 
 	
-	public static Collector<CoriEstimationResultEntry,?,RDataframe> collector(String dateCol, String incidenceCol, boolean epiEstimCompat) {
-		return RConverter.flatteningDataframeCollector(
-				RConverter.flatMapping(
-						cere->cere.estimatesForDate().stream(),
-						RConverter.mapping("Rt.StartDate", pp->pp.getStartDate()),
-						RConverter.mapping("Rt.EndDate", pp->pp.getEndDate()),
-						RConverter.mapping("Rt.Window",pp -> pp.getWindow()),
-						RConverter.mapping(epiEstimCompat ? "Mean(R)": "Rt.Mean",pp -> pp.convert().getMean()),
-						RConverter.mapping(epiEstimCompat ? "Std(R)": "Rt.SD",pp -> pp.convert().getSD()),
-						RConverter.mapping("Rt.Shape",pp -> pp.getShape()),
-						RConverter.mapping("Rt.Scale",pp -> pp.getScale()),
-						RConverter.mapping(epiEstimCompat ? "Quantile.0.025(R)": "Rt.Quantile.0.025",pp -> pp.convert().quantile(0.025)),
-						RConverter.mapping(epiEstimCompat ? "Quantile.0.25(R)": "Rt.Quantile.0.25",pp -> pp.convert().quantile(0.25)),
-						RConverter.mapping(epiEstimCompat ? "Median(R)": "Rt.Quantile.0.5",pp -> pp.convert().quantile(0.5)),
-						RConverter.mapping(epiEstimCompat ? "Quantile.0.75(R)": "Rt.Quantile.0.75",pp -> pp.convert().quantile(0.75)),
-						RConverter.mapping(epiEstimCompat ? "Quantile.0.975(R)": "Rt.Quantile.0.975",pp -> pp.convert().quantile(0.975)),
-						RConverter.mapping("Rt.prior.Mean",pp -> pp.getPrior().map(x -> x.convert().getMean()).orElse(Double.NaN)),
-						RConverter.mapping("Rt.prior.SD",pp -> pp.getPrior().map(x -> x.convert().getSD()).orElse(Double.NaN))
-						
-				),
-				RConverter.mapping(dateCol,cere -> cere.date().get()),
-				RConverter.mapping(incidenceCol,cere -> cere.incidence().get()),
-				RConverter.mapping("Rt.ProfileId",cere -> cere.infectivityProfileId().get())
-				
-		);
-	}
 	
-//	@Deprecated
-//	public List<DatedRtGammaEstimate> welchSatterthwaiteNextPrior(double factor) {
-//		return results.stream().map(rEst -> {
-//			List<DatedRtGammaEstimate> tmpList = this.earlierEstimatesForEffectiveDate(rEst.getEffectiveDate());
-//			GammaParameters tmp = GammaParameters.welchSatterthwaiteCombination(tmpList);
-//			DatedRtGammaEstimate out = tmp.withDate(-1, rEst.date, rEst.incidence).withPrior(rEst.prior);
-//			if (!out.isDefined()) return series.estimator.defaultPrior(rEst.tau, rEst.date);
-//			return out.wider(factor).get();
-//		}).collect(Collectors.toList());
-//	}
 
 	@Override
 	public Optional<Timeseries<?>> getTimeseries() {
 		return Optional.ofNullable(series);
 	}
+
+	
+
+	public Integer getInfProfId() {
+		return this.profId;
+	}
+
+	public TreeSet<DatedRtGammaEstimate> posteriors() {
+		return this.posteriors;
+	}
+
+	
 
 //	public List<DatedRtGammaEstimate> gammaMixturePrior() {
 //		return results.stream().map(rEst -> {

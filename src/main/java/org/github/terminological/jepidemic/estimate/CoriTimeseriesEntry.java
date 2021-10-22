@@ -21,7 +21,7 @@ import uk.co.terminological.rjava.types.RNumeric;
  *  
  *
  */
-public class CoriTimeseriesEntry implements TimeseriesEntry, Comparable<CoriTimeseriesEntry> {
+public class CoriTimeseriesEntry implements TimeseriesEntry.Incidence, Comparable<CoriTimeseriesEntry> {
 
 	private LocalDate date;
 	private CoriTimeseries series;
@@ -33,7 +33,7 @@ public class CoriTimeseriesEntry implements TimeseriesEntry, Comparable<CoriTime
 	
 	private double value;
 	
-	public CoriTimeseriesEntry(TimeseriesEntry e, CoriTimeseries series) {
+	public CoriTimeseriesEntry(TimeseriesEntry.Incidence e, CoriTimeseries series) {
 		this(e.date().get(), e.incidence().javaPrimitive(),  series, false);	
 	}
 	
@@ -97,7 +97,7 @@ public class CoriTimeseriesEntry implements TimeseriesEntry, Comparable<CoriTime
 		return new GammaParameters(
 				prior.getShape()+sumI_s(tau),
 				1/(1/prior.getScale()+sumLambda_s(tau)))
-				.withDate(tau, date, incidence().javaPrimitive(Double.NaN))
+				.withDate(tau, date, incidence().javaPrimitive(Double.NaN), prior.profileId)
 				.withPrior(prior);
 		
 	}
@@ -193,6 +193,5 @@ public class CoriTimeseriesEntry implements TimeseriesEntry, Comparable<CoriTime
 	public Optional<Timeseries<?>> getTimeseries() {
 		return Optional.ofNullable(series);
 	}
-
 	
 }

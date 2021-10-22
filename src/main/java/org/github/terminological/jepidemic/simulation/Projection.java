@@ -2,16 +2,12 @@ package org.github.terminological.jepidemic.simulation;
 
 import java.time.LocalDate;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
-import org.github.terminological.jepidemic.InfectivityProfile;
 import org.github.terminological.jepidemic.RtTimeseriesEntry;
 import org.github.terminological.jepidemic.estimate.CoriEstimationSummary;
-import org.github.terminological.jepidemic.estimate.CoriEstimationSummaryEntry;
+import org.github.terminological.jepidemic.estimate.CoriEstimator;
 import org.github.terminological.jepidemic.gamma.GammaParameters;
 
-import uk.co.terminological.rjava.RClass;
-import uk.co.terminological.rjava.RMethod;
 import uk.co.terminological.rjava.UnconvertableTypeException;
 import uk.co.terminological.rjava.types.RDataframe;
 
@@ -23,11 +19,11 @@ public class Projection {
 	
 	// @RMethod
 	public Projection(RDataframe dataframe) throws UnconvertableTypeException {
-		this.series = new CoriEstimationSummary();
+		this.series = new CoriEstimationSummary((CoriEstimator) null);
 		
 		dataframe.attach(RtTimeseriesEntry.class)
 			.streamCoerce()
-			.map(s -> s.assumeGamma())
+			.map(s -> s.assumeGamma(series,0))
 			.forEach(series::add);
 		
 	}

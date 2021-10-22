@@ -5,8 +5,6 @@ dpc = DataProviderController$setup("~/Data/maps")
 dpc$loadSpimSources("~/S3/encrypted/")
 tsp = dpc$timeseriesProcessor()
 
-
-
 devtools::install("~/Git/r6-generator-maven-plugin-test/r-library/")
 
 J = testRapi::JavaApi$new()

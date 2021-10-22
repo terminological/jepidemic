@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.terminological</groupId>
   <artifactId>jepidemic</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.3-SNAPSHOT</version>
   <description>Epidemic tools in java</description>
   
   	<properties>
@@ -74,7 +74,7 @@
 				<configuration>
 					<packageData>
 						<title>Java Epidemic</title>
-						<version>0.01</version>
+						<version>0.03</version>
 						<debug>false</debug>
 <!-- 						<usePkgdown>true</usePkgdown> -->
 						<useJavadoc>true</useJavadoc>

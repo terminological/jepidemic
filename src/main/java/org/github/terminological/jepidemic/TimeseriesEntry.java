@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import uk.co.terminological.rjava.RName;
 import uk.co.terminological.rjava.types.RDate;
+import uk.co.terminological.rjava.types.RInteger;
 import uk.co.terminological.rjava.types.RNumeric;
 
 /**
@@ -14,11 +15,11 @@ import uk.co.terminological.rjava.types.RNumeric;
  */
 public interface TimeseriesEntry {
 	
-	@RName("I") RNumeric incidence();
+	
 	@RName("date") RDate date();
 	
 	public default LocalDate getDate() {return date().get();} 
-	public default double getIncidence() {return incidence().get();}
+	
 	
 	void  setTimeseries(Timeseries<?> ts);
 	public Optional<Timeseries<?>> getTimeseries();
@@ -41,5 +42,20 @@ public interface TimeseriesEntry {
 				);
 	};
 	
+	
+	public static interface Incidence extends TimeseriesEntry {
+		@RName("I") RNumeric incidence();
+		public default double getIncidence() {return incidence().get();}
+	}
+	
+	public static interface Rate extends TimeseriesEntry {
+		@RName("pois") RNumeric rate();
+		public default double getPoissonRate() {return rate().get();}
+	}
+	
+	public static interface RateIncidence extends TimeseriesEntry.Rate, TimeseriesEntry.Incidence {
+		@RName("sample") RInteger sample();
+		public default int getSample() {return sample().get();}
+	}
 	
 }
