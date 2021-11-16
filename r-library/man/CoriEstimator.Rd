@@ -20,7 +20,7 @@ An estimator of the reproduction number (\(R_t\)) using a renewal equation metho
 
 Version: 0.03
 
-Generated: 2021-06-19T00:37:06.865179
+Generated: 2021-11-06T14:23:49.368647
 }
 
 \details{
@@ -161,7 +161,7 @@ instance = J$CoriEstimator$new(r0Mean, r0SD, maxWindow)
 			\item \href{#method-collectMixtureQuantiles}{\code{instance$collectMixtureQuantiles()}}
 			\item \href{#method-collectMixtureApproximation}{\code{instance$collectMixtureApproximation()}}
 			\item \href{#method-detailedOutput}{\code{instance$detailedOutput()}}
-			\item \href{#method-withInfectivityProfile}{\code{instance$withInfectivityProfile(infectivityProfile)}}
+			\item \href{#method-withInfectivityProfile}{\code{instance$withInfectivityProfile(infectivityProfile, replace)}}
 			\item \href{#method-withInfectivityProfileMatrix}{\code{instance$withInfectivityProfileMatrix(infectivityProfiles)}}
 			\item \href{#method-atStartOfTimeseries}{\code{instance$atStartOfTimeseries()}}
 			\item \href{#method-inMiddleOfTimeseries}{\code{instance$inMiddleOfTimeseries()}}
@@ -315,7 +315,7 @@ J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, wind
 				\item{meanR0 - the mean prior of R0}{ - (java expects a double)}
 				\item{sdR0 - the sd prior of R0}{ - (java expects a double)}
 				\item{window - the window size}{ - (java expects a int)}
-				\item{n2 - the number of samples to}{ - (java expects a int)}
+				\item{n2 - the number of samples to use for estimating confidence limits on bootstrapped infectivity profiles}{ - (java expects a int)}
 			}
 			\if{html}{\out{</div>}}
 		}
@@ -772,7 +772,7 @@ not available
 			\preformatted{
 J = jepidemic::JavaApi$get()
 instance = J$CoriEstimator$new(...);
-instance$withInfectivityProfile(infectivityProfile)
+instance$withInfectivityProfile(infectivityProfile, replace)
   			}
 			\if{html}{\out{</div>}}
 		}
@@ -782,6 +782,7 @@ instance$withInfectivityProfile(infectivityProfile)
 			\itemize{
 				\item{infectivityProfile - A numeric vector of the daily discrete probability of a secondary infection event occurring given an infected individual. It is assumed that this vector starts 
 at time zero with a probability of zero.}{ - (java expects a RNumericVector)}
+				\item{replace -  replace the existing infectivity profile with this new one? if false then the profile is added to a list.}{ - (java expects a boolean)}
 			}
 			\if{html}{\out{</div>}}
 		}
@@ -802,7 +803,7 @@ not available
 	\if{html}{\out{<a id="method-withInfectivityProfileMatrix"></a>}}
 	
 	\subsection{Method \code{withInfectivityProfileMatrix()}}{
-		Configure the estimator with an infectivity profile. At least one profile must be added
+		Configure the estimator with an infectivity profile by specifying it as a matrix. This will replace all previously set profiles.
 	
 
 		\subsection{Usage}{

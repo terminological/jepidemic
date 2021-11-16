@@ -1,0 +1,251 @@
+---
+title: "Bayesian growth rate estimation"
+author: "Rob Challen"
+date: "22/10/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Bayesian growth rate estimation
+
+Assume, as before $I_t$ is a Poisson distributed quantity, with a rate parameter which is a function of time:
+
+
+$$
+\begin{aligned}
+E[I_t] &= \lambda_t \\
+E[I_{t+\tau}] &= \lambda_te^{r_t\tau}
+\end{aligned}
+$$
+
+Assuming $\r_t$ is constant over $[t-\tau;t+\tau]$ then by definition:
+
+
+$$
+\begin{aligned}
+P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,r_t) = \prod_{s=-\tau}^{\tau}\frac{
+  e^{-\lambda_te^{sr_t}}
+  {\lambda_t^{I_s}e^{sr_t I_{t+s}}}
+}{
+  I_{t+s}!
+} \\
+\end{aligned}
+$$
+
+If we assume $\lambda_t$ to be gamma distributed with shape parameter $\alpha$ and rate parameter $\beta$, and if $n = 2\tau+1$
+
+$$
+\begin{aligned}
+P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,r_t) &= 
+\frac{
+  e^{
+    -\lambda_t\sum{\big(
+      e^{sr_t}
+      +sr_t I_{t+s}
+    \big)}
+  }
+  
+  \lambda_t^{\sum{I_{t+s}}}
+}{
+  \prod_{s=-\tau}^{\tau}I_{t+s}!
+} \\
+\end{aligned}
+$$
+
+## OLD LOGIC
+
+$$
+\begin{aligned}
+P(\lambda_{t}) &= \frac{\beta^\alpha}{\Gamma(\alpha)} \lambda_{t}^{\alpha-1}e^{-\beta\lambda_{t}} \\
+
+P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &= \frac{P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t)P(\lambda_{t})}{P(I_{t-\tau},\dots,I_{t+\tau})}\\
+
+P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &= \frac{e^{-n\lambda_t}\lambda_t^{\sum{I_s}}}{\prod_{s=t-\tau}^{t+\tau}I_s!}\frac{\beta^\alpha}{\Gamma(\alpha)} \lambda_{t}^{\alpha-1}e^{-\beta\lambda_{t}}\\
+
+P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &\propto \lambda_t^{\sum{I_s+\alpha-1}}e^{-(2\tau+1+\beta)\lambda_t} \\
+
+P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &\sim \Gamma\big(\sum_{t-\tau}^{t+\tau}{I_s}+\alpha, 2\tau+1+\beta\big)\\
+\alpha' &= \alpha+\sum_{t-\tau}^{t+\tau}{I_s}\\
+\beta' &= 2\tau+1+\beta
+\end{aligned}
+$$
+
+The posterior estimate of the Poisson rate $\lambda$ is gamma distributed by definition but to estimate the likely values of $I_t$ ($\overline{I_t}$) we need the posterior predictive distribution:
+
+$$
+\begin{aligned}
+
+\overline{I_t} &\sim NegBin\Big(\alpha',\frac{\beta'}{\beta'+1}\Big)\\
+
+E(\overline{I_t}|I_{t-\tau},\dots,I_{t+\tau}) &= \frac{\alpha'}{\beta'} \\
+
+V(\overline{I_t}|I_{t-\tau},\dots,I_{t+\tau}) &= \alpha'\Big(\frac{\beta'+1}{\beta'^2}\Big)
+\end{aligned}
+$$
+
+The exponential growth rate $r_t$ is the gradient of the logarithm of I ($\frac{d}{dt}log(\overline{I_t})$)
+
+$$
+\begin{aligned}
+r_t \approx \frac{1}{2m}(log(E(I_{t+m}))-log(E(I_{t-m}))) \\
+r_t = \frac{1}{2m}log\frac{\lambda_{t+m}}{\lambda_{t-m}} \\
+
+\end{aligned}
+$$
+if $m = \tau$ and $\phi_t = e^{2\tau r_t}$
+
+$$
+\begin{aligned}
+r_t &= \frac{1}{2\tau}log\frac{\lambda_{t+\tau}}{\lambda_{t-\tau}} \\
+\phi_t &\sim \Bigg(\frac{Gamma(\alpha+\sum_{s=t}^{t+2\tau}{I_s}, \beta')}{Gamma(\alpha+\sum_{r=t-2\tau}^{t}{I_r}, \beta')}\Bigg) \\
+
+\alpha'_{\tau+} &= \alpha+\sum_{t}^{t+2\tau}{I_s}\\
+\alpha'_{\tau-} &= \alpha+\sum_{t-2\tau}^{t}{I_s}\\
+
+\phi_t &\sim \Bigg(\frac{
+Gamma(\alpha'_{\tau+}, \beta')
+}{
+Gamma(\alpha'_{\tau-}, \beta')
+}
+\Bigg)\\
+
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\phi_t &\sim BetaPrime\big(\sum_{t}^{t+2\tau}{I}+\alpha, \sum_{t-2\tau}^{t}{I}+\alpha\big) \\
+
+r_t &\sim \frac{1}{2\tau}log\Big(BetaPrime\big(\alpha'_{\tau+}, \alpha'_{\tau-})\Big) \\
+
+BetaPrime(\alpha_1, \alpha_2) &: \\
+f(x) &= \frac{1}{B(\alpha_1,\alpha_2)}x^{\alpha_1-1}(1+x)^{-\alpha_1-\alpha_2} \\
+F(x) &= I_{
+\frac{x}{1+x}}(\alpha_1,\alpha_2)
+
+\end{aligned}
+$$
+Where $I$ is the incomplete beta function.
+
+support for $x$ here is 0,inf as we are looking at ratio of gammas. Support for $r_t$ is -inf,inf.
+
+$$
+\begin{aligned}
+r_t &\sim \frac{1}{2\tau}log(\phi_t)\\
+\phi_t &= e^{2\tau r_t}\\
+\end{aligned}
+$$
+
+given that \phi_t is differentiable and a strictly increasing function we note:
+
+Give that Strictly increasing functions / Method of transformations:
+https://www.statlect.com/fundamentals-of-probability/functions-of-random-variables-and-their-distribution
+https://www.probabilitycourse.com/chapter4/4_1_3_functions_continuous_var.php
+
+
+$$
+\begin{aligned}
+F_R(r_t) &= P(R \leq r_t)\\
+F_\Phi(\phi_t) &= P(\Phi \leq \phi_t)\\
+
+f_R(r_t) &= P(R = r_t)\\
+f_\Phi(\phi_t) &= P(\Phi = \phi_t)\\
+
+
+
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+f_R(r_t) &= f_\Phi(\phi_t)\frac{d\phi_t}{dr_t}\\
+f_R(r_t) &= f_\Phi(e^{2\tau r_t})\frac{d}{dr_t}(e^{2\tau r_t})\\
+f_R(r_t) &= 2\tau e^{2\tau r_t}f_\Phi(e^{2\tau r_t})\\
+f_R(r_t) &=  \frac{2\tau e^{2\tau r_t}}{B(\alpha'_{\tau+}, \alpha'_{\tau-})}
+
+\Big(
+  e^{r_t(\alpha'_{\tau+}-1)}
+  (1+e^{r_t})^{(-\alpha'_{\tau+}-\alpha'_{\tau-})}
+\Big)\\
+
+f_R(r_t) &=  \frac{2\tau}{B(\alpha'_{\tau+}, \alpha'_{\tau-})}
+\Big(
+  e^{r_t(\alpha'_{\tau+}+2\tau-1)}
+  (1+e^{r_t})^{(-\alpha'_{\tau+}-\alpha'_{\tau-})}
+\Big)\\
+
+
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+F_R(r_t) &= F_\Phi(\phi_t)\\
+F_R(r_t) &= F_\Phi(e^{2\tau r_t})\\
+F_R(r_t) &= I_{
+\frac{e^{2\tau r_t}}{1+e^{2\tau r_t}}}(\alpha_{\tau+},\alpha_{\tau-})
+\end{aligned}
+$$
+
+
+https://en.wikipedia.org/wiki/Beta_prime_distribution#Properties
+
+
+
+
+## Linear fnction of time:
+
+$\lambda_t$ is a poisson rate at time t
+$\kappa_t$ is the exponent of the growth rate at time t, i.e. multiplicative:
+$I_t$ is poisson distributed at time t with
+both quantities assumed constant over period $t-\tau$ to  $t+\tau$
+
+$$
+\begin{aligned}
+
+
+P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,\kappa_t) = \prod_{s=-\tau}^{\tau}\frac{e^{-\lambda_t\kappa_t^s}\big({\lambda_t\kappa_t^s}\big)^{I_{(s+t)}}}{I_{(s+t)}!} \\
+
+
+P(\lambda_t,\kappa_t|I_{t-\tau},\dots,I_{t+\tau}) = \frac{P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,\kappa_t) P(\lambda_t,\kappa_t)}{P(I_{t-\tau},\dots,I_{t+\tau})} \\
+
+s \in \{-\tau\dots\tau\} \\
+
+
+P(\lambda_t,\kappa_t|I_{t-\tau},\dots,I_{t+\tau}) \propto \frac{e^{-\lambda_t\sum_s{\kappa_t^s}}\lambda_t^{\sum_s{I_{(s+t)}}}\kappa_t^{\sum_s{sI_{(s+t)}}}}{\prod_s{I_{(s+t)}!}}
+
+
+\end{aligned}
+$$
+## Linear fnction of time in log space:
+
+$I_t$ is observed incidence at time $t$
+$L_t$ is $log(I_t)$
+$r_t$ is exponential growth rate
+
+$\lambda_t$ is a poisson rate at time t
+$\kappa_t$ is the exponent of the growth rate at time t, i.e. multiplicative:
+$I_t$ is poisson distributed at time t with
+both quantities assumed constant over period $t-\tau$ to  $t+\tau$
+
+$$
+\begin{aligned}
+
+
+
+P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,\kappa_t) = \prod_{s=-\tau}^{\tau}\frac{e^{-\lambda_t\kappa_t^s}\big({\lambda_t\kappa_t^s}\big)^{I_{(s+t)}}}{I_{(s+t)}!} \\
+
+
+P(\lambda_t,\kappa_t|I_{t-\tau},\dots,I_{t+\tau}) = \frac{P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,\kappa_t) P(\lambda_t,\kappa_t)}{P(I_{t-\tau},\dots,I_{t+\tau})} \\
+
+s \in \{-\tau\dots\tau\} \\
+
+
+P(\lambda_t,\kappa_t|I_{t-\tau},\dots,I_{t+\tau}) \propto \frac{e^{-\lambda_t\sum_s{\kappa_t^s}}\lambda_t^{\sum_s{I_{(s+t)}}}\kappa_t^{\sum_s{sI_{(s+t)}}}}{\prod_s{I_{(s+t)}!}}
+
+
+\end{aligned}
+$$

@@ -2,8 +2,6 @@ package org.github.terminological.jepidemic.estimate;
 
 import java.util.Arrays;
 
-import org.github.terminological.jepidemic.gamma.GammaParameters;
-import org.github.terminological.jepidemic.gamma.WeightedGammaMixture;
 import org.junit.jupiter.api.Test;
 
 public class TestMixture {
@@ -12,9 +10,12 @@ public class TestMixture {
 	public void smokeTest() {
 		
 		WeightedGammaMixture mix = new WeightedGammaMixture(Arrays.asList(
-				new GammaParameters(2,3),
-				new GammaParameters(5,2),
-				new GammaParameters(7,4)
+//				new GammaParameters(2,3),
+//				new GammaParameters(5,2),
+//				new GammaParameters(7,4)
+				new GammaMoments(4, 2).convert(),
+				new GammaMoments(3, 5).convert(),
+				new GammaMoments(7, 1).convert()
 				));
 		
 		System.out.println("=PDF=");

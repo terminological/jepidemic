@@ -37,5 +37,7 @@ public class CoriEstimationSummary extends Timeseries<CoriEstimationSummaryEntry
 			this.add(t);
 		}
 	}
+
+	
 	
 }

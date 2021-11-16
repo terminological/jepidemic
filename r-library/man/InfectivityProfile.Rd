@@ -19,7 +19,7 @@ A holder of a discrete probability distribution of the infectivity profile
 
 Version: 0.03
 
-Generated: 2021-06-19T00:37:06.861398
+Generated: 2021-11-06T14:23:49.364939
 }
 
 \details{

@@ -712,30 +712,7 @@ P(I_t | I_{t-\tau+1},\dots,I_{t-1}) &= \frac{\Lambda_t^{I_t}e^{-\Lambda_t}}{I_t!
 \end{aligned}
 $$
 
-# Linear fnction of time:
 
-$\lambda_t$ is a poisson rate at time t
-$\kappa_t$ is the growth rate at time t, i.e. multiplicative:
-$I_t$ is poisson distributed at time t with
-both quantities assumed constant over period $t-\tau$ to  $t+\tau$
-
-$$
-\begin{aligned}
-
-
-P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,\kappa_t) = \prod_{s=-\tau}^{\tau}\frac{e^{-\lambda_t\kappa_t^s}\big({\lambda_t\kappa_t^s}\big)^{I_{(s+t)}}}{I_{(s+t)}!} \\
-
-
-P(\lambda_t,\kappa_t|I_{t-\tau},\dots,I_{t+\tau}) = \frac{P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t,\kappa_t) P(\lambda_t,\kappa_t)}{P(I_{t-\tau},\dots,I_{t+\tau})} \\
-
-s \in \{-\tau\dots\tau\} \\
-
-
-P(\lambda_t,\kappa_t|I_{t-\tau},\dots,I_{t+\tau}) \propto \frac{e^{-\lambda_t\sum_s{\kappa_t^s}}\lambda_t^{\sum_s{I_{(s+t)}}}\kappa_t^{\sum_s{sI_{(s+t)}}}}{\prod_s{I_{(s+t)}!}}
-
-
-\end{aligned}
-$$
 
 # Conclusion
 

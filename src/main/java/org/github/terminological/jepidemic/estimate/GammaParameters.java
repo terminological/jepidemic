@@ -1,15 +1,16 @@
-package org.github.terminological.jepidemic.gamma;
+package org.github.terminological.jepidemic.estimate;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.github.terminological.jepidemic.estimate.DatedRtGammaEstimate;
+import org.github.terminological.jepidemic.distributions.Summary;
 
-public class GammaParameters implements StatSummary {
+public class GammaParameters implements Summary {
 	
 	private double scale;
 	private double shape;
@@ -51,8 +52,8 @@ public class GammaParameters implements StatSummary {
 	
 	public String toString() {return this.convert().toString();}
 	
-	public DatedRtGammaEstimate withDate(int tau, LocalDate date, double incidence, int profileId) {
-		return new DatedRtGammaEstimate(this, tau, date, incidence, profileId);
+	public DatedGammaEstimate withDate(int tau, LocalDate date, double incidence,double incidenceInWindow) {
+		return new DatedGammaEstimate(this, tau, date, incidence, incidenceInWindow);
 	}
 	
 //	@Deprecated
@@ -85,16 +86,20 @@ public class GammaParameters implements StatSummary {
 		return scale;
 	}
 	
+	public double getRate() {
+		return 1.0/scale;
+	}
+	
 //	public static GammaParameters normalAssumptionCombination(List<? extends GammaParameters> distributions) {
 //		return GammaMoments.normalAssumptionEstimate(
 //				distributions.stream().map(d -> d.convert()).collect(Collectors.toList())
 //				).convert();
 //	}
 	
-	public static StatSummary resamplingCombination(List<? extends GammaParameters> distributions, int sampleSize) {
+	public static Summary resamplingCombination(List<? extends GammaParameters> distributions, int sampleSize) {
 		DescriptiveStatistics ds = new DescriptiveStatistics(); 
 		distributions.parallelStream().flatMapToDouble(d -> Arrays.stream(d.dist().sample(sampleSize))).forEach(ds::addValue);
-		return new StatSummary() {
+		return new Summary() {
 
 			@Override
 			public double getMean() {
@@ -141,9 +146,11 @@ public class GammaParameters implements StatSummary {
 		return true;
 	}
 
-	
+	public static <X extends DatedGammaEstimate> Summary mixtureDistribution(List<X> cere, Function<X,Double> weights) {
+		return new WeightedGammaMixture(cere, weights);
+	}
 
-	public static StatSummary mixtureDistribution(List<DatedRtGammaEstimate> cere) {
+	public static Summary mixtureDistribution(List<? extends DatedGammaEstimate> cere) {
 		return new WeightedGammaMixture(cere);
 	}
 
@@ -155,7 +162,7 @@ public class GammaParameters implements StatSummary {
 		return getShape()*getScale()*getScale();
 	}
 
-	public static StatSummary mixtureApproximation(List<DatedRtGammaEstimate> cere) {
+	public static Summary mixtureApproximation(List<? extends DatedGammaEstimate> cere) {
 		return new WeightedGammaMixture(cere).gammaApproximation().convert();
 	}
 
@@ -170,4 +177,11 @@ public class GammaParameters implements StatSummary {
 		return dist().inverseCumulativeProbability(q);
 	}
 	
+	public static GammaParameters fromShapeAndScale(double shape, double scale) {
+		return new GammaParameters(shape,scale);
+	}
+	
+	public static GammaParameters fromShapeAndRate(double shape, double rate) {
+		return new GammaParameters(shape,1.0/rate);
+	}
 }

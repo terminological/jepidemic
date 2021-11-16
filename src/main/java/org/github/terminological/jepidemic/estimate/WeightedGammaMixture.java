@@ -1,4 +1,4 @@
-package org.github.terminological.jepidemic.gamma;
+package org.github.terminological.jepidemic.estimate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,8 +8,9 @@ import java.util.function.Function;
 
 import org.apache.commons.math3.distribution.AbstractRealDistribution;
 import org.apache.commons.math3.util.Pair;
+import org.github.terminological.jepidemic.distributions.Summary;
 
-public class WeightedGammaMixture extends AbstractRealDistribution implements StatSummary {
+public class WeightedGammaMixture extends AbstractRealDistribution implements Summary {
 
 	public static final double DEFAULT_INVERSE_ABSOLUTE_ACCURACY = 1e-9;
     
@@ -18,7 +19,9 @@ public class WeightedGammaMixture extends AbstractRealDistribution implements St
 	private double mean = -1;
 	private double var = -1;
 	private Map<Double,Double> quantiles = new HashMap<>();
-	private double acc = Double.NEGATIVE_INFINITY;
+	private double acc_max = Double.NEGATIVE_INFINITY;
+//	private double acc_min = Double.POSITIVE_INFINITY;
+//	private UnivariateIntegrator intr;
 	
 	/**
      * Creates a Mixture of Gamma distributions.
@@ -36,9 +39,12 @@ public class WeightedGammaMixture extends AbstractRealDistribution implements St
     		double wt = mapper.apply(g);
     		weightedMap.add(new Pair<>(g, wt));
     		totalWeight += wt;
-    		double ul = g.convert().getMean()+5*g.convert().getSD();
-    		if (acc<ul) acc=ul;
+    		double ul = g.convert().getMean()+10*g.convert().getSD();
+    		if (acc_max<ul) acc_max=ul;
+//    		double ll = g.convert().getMean()-10*g.convert().getSD();
+//    		if (acc_min>ll) acc_min=ll;
     	});
+ //   	this.intr = new TrapezoidIntegrator(0.001,0.001,TrapezoidIntegrator.DEFAULT_MIN_ITERATIONS_COUNT,TrapezoidIntegrator.TRAPEZOID_MAX_ITERATIONS_COUNT); 
     }
 
     
@@ -61,23 +67,42 @@ public class WeightedGammaMixture extends AbstractRealDistribution implements St
 	}
 
 	@Override
+	// https://en.wikipedia.org/wiki/Mixture_distribution
 	public double getNumericalMean() {
 		if (totalWeight == 0) return Double.NaN;
 		if (mean < 0) {
-			mean = this.weightedMap.stream().mapToDouble(d -> d.getKey().getMean()*d.getValue()).sum()/totalWeight;
+			Double sum = this.weightedMap.stream()
+					.map(x -> x.getSecond()/totalWeight*x.getFirst().dist().getNumericalMean())
+					.filter(v -> !Double.isNaN(v) && Double.isFinite(v))
+					.reduce(Double::sum).orElse(Double.NaN);
+			mean = sum;
+//			UnivariateFunction f = new UnivariateFunction() {
+//				@Override
+//				public double value(double x) {
+//					return x * WeightedGammaMixture.this.density(x);
+//				}};
+//			mean = this.intr.integrate(100000, f, this.getSupportLowerBound(), this.acc_max);
 		}
 		return mean;
 	}
 
 	@Override
+	// https://en.wikipedia.org/wiki/Mixture_distribution
 	public double getNumericalVariance() {
 		if (totalWeight == 0) return Double.NaN;
 		if (var < 0) {
-			var = this.weightedMap.stream().mapToDouble(d ->
-				d.getValue()*( //weight * (
-					d.getKey().getVar()+ // var_i   
-					d.getKey().getMean()*d.getKey().getMean()) //+mu_i^2
-				).sum()/totalWeight - this.getNumericalMean()*this.getNumericalMean();
+			Double sum = this.weightedMap.stream()
+					.map(x -> x.getSecond()/totalWeight*(x.getFirst().dist().getNumericalVariance()+Math.pow(x.getFirst().dist().getNumericalMean(),2)))
+					.reduce(Double::sum).orElse(Double.NaN);
+			var = sum-Math.pow(getNumericalMean(),2);
+//			UnivariateFunction f = new UnivariateFunction() {
+//				@Override
+//				public double value(double x) {
+//					return Math.pow(x,2) * WeightedGammaMixture.this.density(x);
+//				}};
+//			var = this.intr.integrate(100000, f, this.getSupportLowerBound(), this.acc_max) - 
+//					Math.pow(this.getNumericalMean(),2);
+//			// https://en.wikipedia.org/wiki/Variance#Absolutely_continuous_random_variable
 		}
 		return var;
 	}

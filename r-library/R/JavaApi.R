@@ -3,7 +3,7 @@
 #
 # Java Epidemic
 # Version: 0.03
-# Generated: 2021-06-19T00:37:06.848829
+# Generated: 2021-11-06T14:23:49.353315
 # Contact: rc538@exeter.ac.uk
 JavaApi = R6::R6Class("JavaApi", public=list( 
 	#### fields ----
@@ -32,6 +32,10 @@ JavaApi = R6::R6Class("JavaApi", public=list(
  	initialize = function(logLevel = "INFO") {
  		if (!is.null(JavaApi$singleton)) stop("Startup the java api with JavaApi$get() rather than using this constructor directly")
  	
+ 		message("Initialising Java Epidemic")
+ 		message("Version: 0.03")
+		message("Generated: 2021-11-06T14:23:49.353469")
+ 	
 		if (!.jniInitialized) 
 	        .jinit(parameters=getOption("java.parameters"),silent = TRUE, force.init = FALSE)
 		
@@ -49,7 +53,7 @@ JavaApi = R6::R6Class("JavaApi", public=list(
     	self$.log = .jcall("org/slf4j/LoggerFactory", returnSig = "Lorg/slf4j/Logger;", method = "getLogger", "jepidemic");
     	.jcall(self$.log,returnSig = "V",method = "info","Initialised jepidemic");
 		.jcall(self$.log,returnSig = "V",method = "debug","Version: 0.03");
-		.jcall(self$.log,returnSig = "V",method = "debug","Generated: 2021-06-19T00:37:06.849064");
+		.jcall(self$.log,returnSig = "V",method = "debug","Generated: 2021-11-06T14:23:49.353561");
 		.jcall(self$.log,returnSig = "V",method = "debug","Contact: rc538@exeter.ac.uk");
 		self$printMessages()
 		# initialise type conversion functions
@@ -88,19 +92,19 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp = as.numeric(rObj)[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RNumeric',tmp))
 			},
-			RFactor=function(rObj) {
-				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RFactor'))
-				if (length(rObj) > 1) stop('input too long')
-				tmp = as.integer(rObj)[[1]]
-				tmpLabel = levels(rObj)[[tmp]]
-				return(rJava::.jnew('uk/co/terminological/rjava/types/RFactor',tmp, tmpLabel))
-			},
 			RLogical=function(rObj) {
 				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RLogical'))
 				if (length(rObj) > 1) stop('input too long')
 				if (!is.logical(rObj)) stop('expected a logical')
 				tmp = as.integer(rObj)[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RLogical',tmp))
+			},
+			RFactor=function(rObj) {
+				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RFactor'))
+				if (length(rObj) > 1) stop('input too long')
+				tmp = as.integer(rObj)[[1]]
+				tmpLabel = levels(rObj)[[tmp]]
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RFactor',tmp, tmpLabel))
 			},
 			RNull=function(rObj) {
 				if (!is.null(rObj)) stop('input expected to be NULL')
@@ -211,6 +215,13 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				return(jout)
 			},
 			InfectivityProfile=function(rObj) return(rObj$.jobj),
+			RUntypedNaVector=function(rObj) {
+				if (is.null(rObj)) return(rJava::.new('uk/co/terminological/rjava/types/RUntypedNaVector'))
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RUntypedNaVector',length(rObj)))
+			},
+			RUntypedNa=function(rObj) {
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RUntypedNa'))
+			},
 			RFactorVector=function(rObj) {
 				if (is.null(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RFactorVector'))
 				if (!is.factor(rObj)) stop('expected a vector of factors')
@@ -262,8 +273,8 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 			RDate=function(jObj) as.Date(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive'),'%Y-%m-%d'),
 			RCharacterVector=function(jObj) as.character(rJava::.jcall(jObj,returnSig='[Ljava/lang/String;',method='rPrimitive')),
 			RNumeric=function(jObj) as.numeric(rJava::.jcall(jObj,returnSig='D',method='rPrimitive')),
-			RFactor=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rLabel')),
 			RLogical=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='I',method='rPrimitive')),
+			RFactor=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rLabel')),
 			RNull=function(jObj) return(NULL),
 			RLogicalVector=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='[I',method='rPrimitive')),
 			RCharacter=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive')),
@@ -290,6 +301,8 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				return(dplyr::group_by(convDf(jObj),!!!sapply(groups,as.symbol)))
 			},
 			InfectivityProfile=function(jObj) return(jObj),
+			RUntypedNaVector=function(jObj) rep(NA, rJava::.jcall(jObj,returnSig='I',method='size')),
+			RUntypedNa=function(jObj) return(NA),
 			RFactorVector=function(jObj) ordered(
 				x = rJava::.jcall(jObj,returnSig='[I',method='rValues'),
 				labels = rJava::.jcall(jObj,returnSig='[Ljava/lang/String;',method='rLevels')

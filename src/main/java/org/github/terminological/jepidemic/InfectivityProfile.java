@@ -1,5 +1,6 @@
 package org.github.terminological.jepidemic;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
@@ -15,7 +16,32 @@ import uk.co.terminological.rjava.types.RNumericVector;
 @RClass
 public class InfectivityProfile extends EnumeratedIntegerDistribution {
 
-	RNumericVector infProf;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		result = prime * result + Arrays.hashCode(infProf);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof InfectivityProfile))
+			return false;
+		InfectivityProfile other = (InfectivityProfile) obj;
+		if (id != other.id)
+			return false;
+		if (!Arrays.equals(infProf, other.infProf))
+			return false;
+		return true;
+	}
+
+	double[] infProf;
 	private int id;
 	
 	/**
@@ -28,12 +54,12 @@ public class InfectivityProfile extends EnumeratedIntegerDistribution {
 				IntStream.rangeClosed(1, discretePdf.size()).toArray(),  //sequence of ints starting at 1
 				discretePdf.javaPrimitive(0) // the 
 				);
-		this.infProf = discretePdf;
+		this.infProf = discretePdf.javaPrimitive(Double.NaN);
 		this.id = id;
 	}
 	
 	public double[] profile() {
-		return infProf.javaPrimitive(Double.NaN);
+		return infProf;
 	}
 
 	public int getId() {
@@ -41,7 +67,7 @@ public class InfectivityProfile extends EnumeratedIntegerDistribution {
 	}
 
 	public int length() {
-		return infProf.size();
+		return infProf.length;
 	}
 	
 }

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.github.terminological.jepidemic.RtTimeseriesEntry;
 import org.github.terminological.jepidemic.Timeseries;
 import org.github.terminological.jepidemic.TimeseriesEntry;
-import org.github.terminological.jepidemic.gamma.StatSummary;
+import org.github.terminological.jepidemic.distributions.Summary;
 
 import uk.co.terminological.rjava.RConverter;
 import uk.co.terminological.rjava.types.RDataframe;
@@ -18,14 +18,14 @@ import uk.co.terminological.rjava.types.RDate;
 import uk.co.terminological.rjava.types.RInteger;
 import uk.co.terminological.rjava.types.RNumeric;
 
-public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntry, Comparable<CoriEstimationSummaryEntry> {
+public class CoriEstimationSummaryEntry implements Summary, RtTimeseriesEntry, Comparable<CoriEstimationSummaryEntry> {
 
 	CoriEstimationSummary ts;
 	public LocalDate date;
-	List<DatedRtGammaEstimate> posteriorsForProfiles = new ArrayList<>();
-	StatSummary statSummary;
+	List<DatedRtEstimate> posteriorsForProfiles = new ArrayList<>();
+	Summary statSummary;
 		
-	public CoriEstimationSummaryEntry(List<DatedRtGammaEstimate> datedRtGammaEstimates, CoriEstimationSummary summary) {
+	public CoriEstimationSummaryEntry(List<DatedRtEstimate> datedRtGammaEstimates, CoriEstimationSummary summary) {
 		this.posteriorsForProfiles = datedRtGammaEstimates;
 		List<LocalDate> dates = datedRtGammaEstimates.stream().map(de -> de.date).distinct().collect(Collectors.toList());
 		if(dates.size() > 1) throw new RuntimeException("Summary has gone wrong");
@@ -136,7 +136,7 @@ public class CoriEstimationSummaryEntry implements StatSummary, RtTimeseriesEntr
 		return RConverter.convert(getSD());
 	}
 	
-	public List<DatedRtGammaEstimate> estimatesForDate() {
+	public List<DatedRtEstimate> estimatesForDate() {
 		return this.posteriorsForProfiles;
 	}
 

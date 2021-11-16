@@ -1,7 +1,6 @@
 package org.github.terminological.jepidemic.estimate;
 
 import org.github.terminological.jepidemic.InfectivityProfile;
-import org.github.terminological.jepidemic.gamma.GammaMoments;
 
 public class GrowthRateUtils {
 

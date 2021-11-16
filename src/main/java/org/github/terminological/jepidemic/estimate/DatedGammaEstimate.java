@@ -3,44 +3,44 @@ package org.github.terminological.jepidemic.estimate;
 import java.time.LocalDate;
 import java.util.Optional;
 
-import org.github.terminological.jepidemic.gamma.GammaParameters;
-
-public class DatedRtGammaEstimate extends GammaParameters implements Comparable<DatedRtGammaEstimate> {
+public class DatedGammaEstimate extends GammaParameters implements Comparable<DatedGammaEstimate> {
 
 	int tau;
 	LocalDate date;
 	double incidence;
-	int profileId;
-	DatedRtGammaEstimate prior = null;
+	double incidenceInWindow;
+	DatedGammaEstimate prior = null;
 	
-	private DatedRtGammaEstimate(double shape, double scale, int tau, LocalDate date, double incidence, int profileId) {
+	private DatedGammaEstimate(double shape, double scale, int tau, LocalDate date, double incidence, double incidenceInWindow) {
 		super(shape, scale);
 		this.tau = tau;
 		this.date = date;
 		this.incidence = incidence;
-		this.profileId = profileId;
+		this.incidenceInWindow = incidenceInWindow;
+		
 	}
 	
-	public DatedRtGammaEstimate(GammaParameters p, int tau, LocalDate date, double incidence, int profileId) {
+	public DatedGammaEstimate(GammaParameters p, int tau, LocalDate date, double incidence, double incidenceInWindow) {
 		super(p.getShape(), p.getScale());
 		this.tau = tau;
 		this.date = date;
 		this.incidence = incidence;
-		this.profileId = profileId;
+		this.incidenceInWindow = incidenceInWindow;
+		
 	}
 
 	@Override
-	public int compareTo(DatedRtGammaEstimate o) {
+	public int compareTo(DatedGammaEstimate o) {
 		return this.date.compareTo(o.date)*1000+(this.tau-o.tau);
 	}
 
 	public int getWindow() {return tau+1;}
 
-	public LocalDate getEffectiveDate() {
-		if (tau > 0)
-			return date.minusDays(tau/2);
-		return date;
-	}
+//	public LocalDate getEffectiveDate() {
+////		if (tau > 0)
+////			return date.minusDays(tau/2);
+//		return date;
+//	}
 	
 	public LocalDate getStartDate() {
 		if (tau > 0)
@@ -52,28 +52,36 @@ public class DatedRtGammaEstimate extends GammaParameters implements Comparable<
 		return date;
 	}
 	
-	public DatedRtGammaEstimate withPrior(DatedRtGammaEstimate prior) {
+	public DatedGammaEstimate withPrior(DatedGammaEstimate prior) {
 		this.prior = prior;
 		return this;
 	}
 	
-	public Optional<DatedRtGammaEstimate> getPrior() {
+	public Optional<DatedGammaEstimate> getPrior() {
 		return Optional.ofNullable(prior);
 	}
 	
-	Optional<DatedRtGammaEstimate> wider(double factor) {
+	Optional<? extends DatedGammaEstimate> wider(double factor) {
 		GammaParameters out = this.convert().wider(factor).convert();
 		if (!(Double.isFinite(out.getShape()) && Double.isFinite(out.getScale()))) return Optional.empty();
-		return Optional.of(out.withDate(tau, date, incidence, profileId).withPrior(prior));
+		return Optional.of(
+			out
+				.withDate(tau, date, incidence, incidenceInWindow)
+				.withPrior(prior));
+				//.withProfileId(profileId));
 	}
 	
-	public int getProfileId() {
-		return profileId;
-	}
+	
+
+	
 	
 	public double getIncidence() {return incidence;}
 	
-	public String toString() {return this.getEffectiveDate().toString()+": "+super.toString();}
+	public String toString() {return this.getEndDate().toString()+": "+super.toString();}
+
+	public DatedRtEstimate withProfileId(int profId) {
+		return new DatedRtEstimate(this, profId);
+	}
 
 //	public CoriEstimationSummaryEntry toStatSummary() {
 //		return new CoriEstimationSummaryEntry(this.getStartDate(), this.getWindow(), this.getIncidence());

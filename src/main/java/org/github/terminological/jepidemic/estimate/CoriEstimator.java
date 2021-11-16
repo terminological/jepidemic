@@ -12,9 +12,7 @@ import org.github.terminological.jepidemic.IncompleteTimeseriesException;
 import org.github.terminological.jepidemic.InfectivityProfile;
 import org.github.terminological.jepidemic.ParameterOutOfRangeException;
 import org.github.terminological.jepidemic.TimeseriesEntry;
-import org.github.terminological.jepidemic.gamma.GammaMoments;
-import org.github.terminological.jepidemic.gamma.GammaParameters;
-import org.github.terminological.jepidemic.gamma.StatSummary;
+import org.github.terminological.jepidemic.distributions.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,9 +58,9 @@ public class CoriEstimator {
 	private boolean summarise = false;
 	private boolean epiEstimMode = false;
 	
-	Function<CoriEstimationResultEntry,List<DatedRtGammaEstimate>> priorSelectionStrategy;
-	Function<CoriEstimationResultEntry,DatedRtGammaEstimate> posteriorSelectionStrategy; 
-	Function<CoriEstimationSummaryEntry,StatSummary> combiningStrategy;
+	Function<CoriEstimationResultEntry,List<DatedRtEstimate>> priorSelectionStrategy;
+	Function<CoriEstimationResultEntry,DatedRtEstimate> posteriorSelectionStrategy; 
+	Function<CoriEstimationSummaryEntry,Summary> combiningStrategy;
 
 	
 	
@@ -114,7 +112,7 @@ public class CoriEstimator {
 		return out.withDefaultPrior()
 				.selectSpecificWindow(window)
 				.atStartOfTimeseries()
-				.withInfectivityProfile(infectivityProfile)
+				.withInfectivityProfile(infectivityProfile, true)
 				.collectFirst()
 				.legacySupport(true);
 		
@@ -130,7 +128,7 @@ public class CoriEstimator {
 	 * @param meanR0 - the mean prior of R0
 	 * @param sdR0 - the sd prior of R0
 	 * @param window - the window size
-	 * @param n2 - the number of samples to 
+	 * @param n2 - the number of samples to use for estimating confidence limits on bootstrapped infectivity profiles
 	 * @return a default cori estimator
 	 */
 	@RMethod 
@@ -140,15 +138,8 @@ public class CoriEstimator {
 			.selectSpecificWindow(window)
 			.atStartOfTimeseries()
 			.collectResampledQuantiles(n2)
-			.legacySupport(true);
-		if (infectivityProfiles.getDimensionality() != 2) throw new ParameterOutOfRangeException("Infectivity profiles should be defined in a matrix");
-		try {
-			infectivityProfiles.get().forEach(a -> {
-				out.withInfectivityProfile(a.getVector());
-			});
-		} catch (ZeroDimensionalArrayException e) {
-			e.printStackTrace();
-		}
+			.legacySupport(true)
+			.withInfectivityProfileMatrix(infectivityProfiles);
 		return out;
 		
 	}
@@ -211,6 +202,21 @@ public class CoriEstimator {
 	@RMethod
 	public CoriEstimator selectMixtureCombination() {
 		this.posteriorSelectionStrategy = (res) -> res.selectMixtureCombination();
+		return this;
+	}
+	
+	/**
+	 * The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+	 * dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows. 
+	 * @return The estimator itself (a fluent method)
+	 */
+	@RMethod
+	public CoriEstimator selectWeightedMixtureCombination(RNumericVector weights) {
+		double[] wts = weights.javaPrimitive(0);
+		if (wts.length != maxTau) throw new ParameterOutOfRangeException("The weights array must be the same length as the maximum window: "+maxTau);
+		this.posteriorSelectionStrategy = (res) -> res.selectMixtureCombination(
+				(datedRt) -> wts[datedRt.getWindow()-1]
+				);
 		return this;
 	}
 	
@@ -316,10 +322,11 @@ public class CoriEstimator {
 	 * Configure the estimator with an infectivity profile. At least one profile must be added
 	 * @param infectivityProfile - A numeric vector of the daily discrete probability of a secondary infection event occurring given an infected individual. It is assumed that this vector starts 
 	 * at time zero with a probability of zero. 
+	 * @param replace -  replace the existing infectivity profile with this new one? if false then the profile is added to a list.
 	 * @return The estimator itself (a fluent method)
 	 */
 	@RMethod
-	public CoriEstimator withInfectivityProfile(RNumericVector infectivityProfile) {
+	public CoriEstimator withInfectivityProfile(RNumericVector infectivityProfile, boolean replace) {
 		/* Messing with the settings at this point turns out to be a bad idea
 		 * because we assume defniition has occurred in some ordered way.
 		if (infProf.size() == 0) {
@@ -335,22 +342,24 @@ public class CoriEstimator {
 			// if summarise is already true collector will have been set.
 		}
 		*/
+		if(replace) infProf = new ArrayList<>();
 		infProf.add(new InfectivityProfile(infectivityProfile, infProf.size()));
 		return this;
 	}
 	
 	/**
-	 * Configure the estimator with an infectivity profile. At least one profile must be added
+	 * Configure the estimator with an infectivity profile by specifying it as a matrix. This will replace all previously set profiles.
 	 * @param infectivityProfiles - A numeric array of the daily discrete probability of a secondary infection event occurring given an infected individual. It is assumed that this vector starts 
 	 * at time zero with a probability of zero. 
 	 * @return The estimator itself (a fluent method)
 	 */
 	@RMethod
 	public CoriEstimator withInfectivityProfileMatrix(RNumericArray infectivityProfiles) {
+		infProf = new ArrayList<>();
 		if (infectivityProfiles.getDimensionality() != 2) throw new ParameterOutOfRangeException("Infectivity profiles should be defined in a matrix");
 		try {
 			infectivityProfiles.get().forEach(a -> {
-				this.withInfectivityProfile(a.getVector());
+				this.withInfectivityProfile(a.getVector(), false);
 			});
 		} catch (ZeroDimensionalArrayException e) {
 			e.printStackTrace();
@@ -497,13 +506,13 @@ public class CoriEstimator {
 			Optional<CoriTimeseriesEntry> tsEntry = rtWorking.start();
 			while (tsEntry.isPresent()) {
 				
-				List<DatedRtGammaEstimate> priors;
+				List<DatedRtEstimate> priors;
 				if (last == null) {
 					priors = defaultPriors(tsEntry.get().dateValue(), prof.getId());
 				} else {
 					priors = priorSelectionStrategy.apply(last);
 				}
-				List<DatedRtGammaEstimate> results = tsEntry.get().results(priors);
+				List<DatedRtEstimate> results = tsEntry.get().results(priors);
 				
 				CoriEstimationResultEntry current = new CoriEstimationResultEntry(prof.getId(), tsEntry.get(), results, singleResult);
 				singleResult.add(current);
@@ -649,13 +658,13 @@ public class CoriEstimator {
 			Optional<CoriTimeseriesEntry> tsEntry = rtWorking.start();
 			while (tsEntry.isPresent()) {
 				
-				List<DatedRtGammaEstimate> priors;
+				List<DatedRtEstimate> priors;
 				if (last == null) {
 					priors = defaultPriors(tsEntry.get().dateValue(), prof.getId());
 				} else {
 					priors = priorSelectionStrategy.apply(last);
 				}
-				List<DatedRtGammaEstimate> results = tsEntry.get().results(priors);
+				List<DatedRtEstimate> results = tsEntry.get().results(priors);
 				
 				CoriEstimationResultEntry current = new CoriEstimationResultEntry(prof.getId(), tsEntry.get(), results, singleResult);
 				singleResult.add(current);
@@ -671,20 +680,24 @@ public class CoriEstimator {
  	}
 	
 	
-	private List<DatedRtGammaEstimate> defaultPriors(LocalDate dateValue, int profileId) {
+	private List<DatedRtEstimate> defaultPriors(LocalDate dateValue, int profileId) {
 		return IntStream.range(0,maxTau).mapToObj(i -> defaultPrior(i, dateValue, profileId)).collect(Collectors.toList());
 	}
 	
-	private List<DatedRtGammaEstimate> fixedPriors(double mean, double sd, LocalDate dateValue, int profileId) {
+	private List<DatedRtEstimate> fixedPriors(double mean, double sd, LocalDate dateValue, int profileId) {
 		return IntStream.range(0,maxTau).mapToObj(i -> fixedPrior(mean,sd,i, dateValue, profileId)).collect(Collectors.toList());
 	}
 	
-	protected DatedRtGammaEstimate defaultPrior(int tau, LocalDate dateValue, int profileId) {
-		return rZero.withDate(tau, dateValue, 0D, profileId);
+	protected DatedRtEstimate defaultPrior(int tau, LocalDate dateValue, int profileId) {
+		return rZero
+				.withDate(tau, dateValue, 0D, 0D)
+				.withProfileId(profileId);
 	}
 	
-	protected static DatedRtGammaEstimate fixedPrior(double mean, double sd, int tau, LocalDate dateValue, int profileId) {
-		return new GammaMoments(mean,sd).convert().withDate(tau, dateValue, 0D, profileId);
+	protected static DatedRtEstimate fixedPrior(double mean, double sd, int tau, LocalDate dateValue, int profileId) {
+		return new GammaMoments(mean,sd).convert()
+				.withDate(tau, dateValue, 0D, 0D)
+				.withProfileId(profileId);
 	}
 
 	protected int getMaxTau() {

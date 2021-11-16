@@ -7,6 +7,7 @@ import static uk.co.terminological.rjava.RFunctions.precisionEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 
 import org.github.terminological.jepidemic.IncompleteTimeseriesException;
 import org.junit.jupiter.api.Test;
@@ -75,7 +76,7 @@ public class TestEstimator {
 	private static CoriEstimator basicEst() throws IOException {
 		CoriEstimator est = new CoriEstimator(5,5,14);
 		est.atStartOfTimeseries();
-		est.withInfectivityProfile(getFlu2009SerialInterval().pull("prob",RNumericVector.class));
+		est.withInfectivityProfile(getFlu2009SerialInterval().pull("prob",RNumericVector.class),true);
 		return est;
 	}
 	
@@ -100,7 +101,7 @@ public class TestEstimator {
 				break;
 			}
 		
-			for (int j=1; j<=4; j++) {
+			for (int j=1; j<=5; j++) {
 				String jLab = null;
 				switch(j) {
 				case 1:
@@ -119,8 +120,13 @@ public class TestEstimator {
 					est.selectMixtureCombination();
 					jLab = "mixture";
 					break;
+				case 5:
+					est.selectWeightedMixtureCombination(new RNumericVector(new double[]{
+						1,1,2,2,3,3,4,4,5,5,4,4,2,2
+						}));
+					jLab = "weighted mixture";
+					break;
 				}
-				
 				for (int k=1; k<=4; k++) {
 					String kLab = null;
 					switch(k) {
@@ -218,16 +224,20 @@ public class TestEstimator {
 		
 		CoriEstimator est = CoriEstimator.defaultEpiEstim(getFlu2009SerialInterval().pull("prob",RNumericVector.class),5,5,7);
 		RDataframe out = est.estimateRtSingle(getFlu2009(), "dates", "I");
-		RDataframe out2 = out.filter("Mean(R)", n -> Double.isFinite(n.get()));
+		RDataframe out2 = out
+				.filter("Mean(R)", n -> Double.isFinite(n.get()))
+				.filter("Rt.EndDate", n -> LocalDate.of(2009, 05, 03).isBefore(n.get()));
 		
 		RNumericVector ref = out2.pull("Mean(R)", RNumericVector.class);
 		RNumericVector ref2 = getFlu2009Result().pull("Mean(R)", RNumericVector.class);
 		
-		assertTrue(all((v1,v2) -> precisionEquals(v1,v2,0.00001), ref, ref2));
+		
 		
 		System.out.println("Matches R output to 5 dp:");
 		System.out.println(ref);
 		System.out.println(ref2);
+		
+		assertTrue(all((v1,v2) -> precisionEquals(v1,v2,0.00001), ref, ref2));
 	}
 	
 	

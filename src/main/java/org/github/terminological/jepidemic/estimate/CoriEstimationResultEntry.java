@@ -11,8 +11,6 @@ import java.util.stream.Collectors;
 
 import org.github.terminological.jepidemic.Timeseries;
 import org.github.terminological.jepidemic.TimeseriesEntry;
-import org.github.terminological.jepidemic.gamma.GammaParameters;
-import org.github.terminological.jepidemic.gamma.WeightedGammaMixture;
 
 import uk.co.terminological.rjava.RConverter;
 import uk.co.terminological.rjava.types.RDate;
@@ -24,14 +22,14 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 	private CoriTimeseriesEntry tsEntry;
 	//private double incidence;
 	//private LocalDate date;
-	private TreeSet<DatedRtGammaEstimate> posteriors;
+	private TreeSet<DatedRtEstimate> posteriors;
 	private int profId;
 	private CoriEstimationResult series;
 	private Optional<CoriEstimationResultEntry> next;
 	private Optional<CoriEstimationResultEntry> prev;
 	
 	public CoriEstimationResultEntry(int profId, CoriTimeseriesEntry tsEntry, 
-			List<DatedRtGammaEstimate> posteriorsForTaus, CoriEstimationResult series) {
+			List<DatedRtEstimate> posteriorsForTaus, CoriEstimationResult series) {
 		this.tsEntry = tsEntry;
 		this.profId = profId;
 		//this.incidence = tsEntry.value();
@@ -41,12 +39,12 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 	}
 	
 	public CoriEstimationResultEntry(CoriEstimationResultEntry unfiltered, 
-			DatedRtGammaEstimate selectedPosterior) {
+			DatedRtEstimate selectedPosterior) {
 		this.tsEntry = unfiltered.tsEntry;
 		this.profId = unfiltered.profId;
 		//this.incidence = tsEntry.value();
 		//this.date = tsEntry.dateValue();
-		this.posteriors = new TreeSet<DatedRtGammaEstimate>();
+		this.posteriors = new TreeSet<DatedRtEstimate>();
 		this.posteriors.add(selectedPosterior);
 		this.series = unfiltered.series;
 	}
@@ -78,8 +76,8 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 		return this.prevWithinBootstrap().flatMap(p->p.lag(i-1));
 	}
 	
-	public DatedRtGammaEstimate selectWindowByCases(double minCases, int minWindow) {
-		for (DatedRtGammaEstimate result: posteriors) {
+	public DatedRtEstimate selectWindowByCases(double minCases, int minWindow) {
+		for (DatedRtEstimate result: posteriors) {
 			if (
 					result.tau >= minWindow-1 &&
 					this.tsEntry.casesInWindow(result.tau) > minCases
@@ -88,11 +86,11 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 		return posteriors.last();
 	}
 	
-	public DatedRtGammaEstimate selectWindowByMinimumUncertainty(double timeVsRt, int minWindow) {
+	public DatedRtEstimate selectWindowByMinimumUncertainty(double timeVsRt, int minWindow) {
 		timeVsRt = Math.sqrt(timeVsRt);
-		DatedRtGammaEstimate out = CoriEstimationResultEntry.na(-1, this.getDate(), this.getIncidence(),this.profId);
+		DatedRtEstimate out = CoriEstimationResultEntry.na(-1, this.getDate(), this.getIncidence(),tsEntry.casesInWindow(minWindow),this.profId);
 		double score = Double.POSITIVE_INFINITY;
-		for (DatedRtGammaEstimate result: posteriors) {
+		for (DatedRtEstimate result: posteriors) {
 			double tmp = Math.pow(result.tau+1,timeVsRt)*
 				Math.pow(result.convert().getSD(),1/timeVsRt);
 			if (tmp < score && result.tau >= minWindow-1) {
@@ -103,30 +101,35 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 		return out;
 	}
 	
-	public DatedRtGammaEstimate selectMixtureCombination() {
+	public DatedRtEstimate selectMixtureCombination() {
 		return selectMixtureCombination(x -> 1.0);
 	}
 	
-	public DatedRtGammaEstimate selectMixtureCombination(Function<DatedRtGammaEstimate,Double> weighting) {
-		List<DatedRtGammaEstimate> tmp = laterEstimatesForEffectiveDate();
+	public DatedRtEstimate selectMixtureCombination(Function<DatedRtEstimate,Double> weighting) {
+		List<DatedRtEstimate> tmp = laterEstimatesForThisDate();
 		int tmp2 = (int) Math.round(tmp.stream().mapToInt(t -> t.tau).average().orElse(-1));
-		return 
-			new WeightedGammaMixture(tmp, weighting).gammaApproximation()
-			.withDate(tmp2,this.dateValue(),this.getIncidence(),this.profId);
+		WeightedGammaMixture tmp3 = new WeightedGammaMixture(tmp, weighting);
+		return tmp3.gammaApproximation()
+			.withDate(tmp2,this.dateValue(),this.getIncidence(), tsEntry.casesInWindow(tmp2))
+			.withProfileId(this.profId);
 	}
 	
-	public DatedRtGammaEstimate selectSummaryForDayAndInfectivityProfile() {
+	public DatedRtEstimate selectSummaryForDayAndInfectivityProfile() {
 		return series.estimator.posteriorSelectionStrategy.apply(this);
 	}
 	
 	//public static DatedRtGammaEstimate NA = new GammaParameters(Double.NaN,Double.NaN).withDate(-1,null,0);  
 	
-	public static DatedRtGammaEstimate na(int window, LocalDate date, Double incidence, int profileId) {
-		return new GammaParameters(Double.NaN,Double.NaN).withDate(window, date, incidence, profileId);
+	public static DatedRtEstimate na(int window, LocalDate date, Double incidence, Double incidenceInWindow, int profileId) {
+		return new GammaParameters(Double.NaN,Double.NaN)
+				.withDate(window, date, incidence, incidenceInWindow)
+				.withProfileId(profileId);
 	}
 	
-	public DatedRtGammaEstimate forWindow(int window) {
-		return posteriors.stream().filter(wg -> wg.tau==window-1).findFirst().orElse(na(window,this.getDate(),this.getIncidence(),this.profId));
+	public DatedRtEstimate forWindow(int window) {
+		return posteriors.stream()
+				.filter(wg -> wg.tau==window-1).findFirst()
+				.orElse(na(window,this.getDate(),this.getIncidence(), tsEntry.casesInWindow(window),this.profId));
 	}
 	
 //	private List<DatedRtGammaEstimate> earlierEstimatesForEffectiveDate(LocalDate test) {
@@ -139,17 +142,17 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 	
 	// This might work for multiple bootstraps... but only if we are in the first bootstrap...
 	// Need bootstraps to be part of this class.... :-(
-	public List<DatedRtGammaEstimate> laterEstimatesForEffectiveDate() {
-		return laterEstimatesForEffectiveDate(getDate());
+	public List<DatedRtEstimate> laterEstimatesForThisDate() {
+		return laterEstimatesForGivenDate(getDate());
 	}
 	
 	// This might work for multiple bootstraps... but only if we are in the first bootstrap...
 	// Need bootstraps to be part of this class.... :-(
-	private List<DatedRtGammaEstimate> laterEstimatesForEffectiveDate(LocalDate date) {
-		if (this.getDate().isAfter(date.plusDays(series.estimator.getMaxTau()/2))) return Collections.emptyList();
-		List<DatedRtGammaEstimate> out = new ArrayList<>();
-		out.addAll(this.todayEstimatesForEffectiveDate(date));
-		this.nextWithinBootstrap().ifPresent(p -> out.addAll(p.laterEstimatesForEffectiveDate(date)));
+	private List<DatedRtEstimate> laterEstimatesForGivenDate(LocalDate date) {
+		if (this.getDate().isAfter(date.plusDays(series.estimator.getMaxTau()))) return Collections.emptyList();
+		List<DatedRtEstimate> out = new ArrayList<>();
+		out.addAll(this.todayEstimatesForGivenDate(date));
+		this.nextWithinBootstrap().ifPresent(p -> out.addAll(p.laterEstimatesForGivenDate(date)));
 		return out;
 	}
 	
@@ -177,12 +180,17 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 //		return results.stream().filter(wg -> wg.tau==window-1).findFirst().get();
 //	}
 //	
-	private List<DatedRtGammaEstimate> todayEstimatesForEffectiveDate(LocalDate effective) {
-		return posteriors.stream().filter(wg -> wg.getEffectiveDate().equals(effective)).collect(Collectors.toList());
+	private List<DatedRtEstimate> todayEstimatesForGivenDate(LocalDate effective) {
+		return posteriors.stream()
+				.filter(wg -> 
+					wg.getStartDate().minusDays(1).isBefore(effective) && 
+					wg.getEndDate().plusDays(1).isAfter(effective)
+			).collect(Collectors.toList());
 	}
 	
+	
 	// prior estimates Rt
-	public List<DatedRtGammaEstimate> adaptiveNextPrior(double factor) {
+	public List<DatedRtEstimate> adaptiveNextPrior(double factor) {
 		return this.posteriors.stream().map(
 				r -> r.wider(factor).orElse(series.estimator.defaultPrior(r.tau, r.date, r.profileId)))
 				.collect(Collectors.toList());
@@ -226,7 +234,7 @@ public class CoriEstimationResultEntry implements TimeseriesEntry.Incidence, Com
 		return this.profId;
 	}
 
-	public TreeSet<DatedRtGammaEstimate> posteriors() {
+	public TreeSet<DatedRtEstimate> posteriors() {
 		return this.posteriors;
 	}
 

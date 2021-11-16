@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Bayesian growth rate estimation
 
-Assume, as before $I_t$ is a Poisson distributed quantity, with a rate parameter which is a function of time:
+Assume $I_0, I_1, \dots, I_t$ is a time series of infection counts, assumed to be drawn from some discrete probability distribution with expected value $\overline{I_t}$. Assume, as before $I_t$ is a Poisson distributed quantity, with a rate parameter which is a function of time:
 
 
 $$
@@ -34,15 +34,10 @@ If we assume $\lambda_t$ to be gamma distributed with shape parameter $\alpha$ a
 $$
 \begin{aligned}
 P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t) &= \frac{e^{-n\lambda_t}\lambda_t^{\sum{I_s}}}{\prod_{s=t-\tau}^{t+\tau}I_s!} \\
-
 P(\lambda_{t}) &= \frac{\beta^\alpha}{\Gamma(\alpha)} \lambda_{t}^{\alpha-1}e^{-\beta\lambda_{t}} \\
-
 P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &= \frac{P(I_{t-\tau},\dots,I_{t+\tau}|\lambda_t)P(\lambda_{t})}{P(I_{t-\tau},\dots,I_{t+\tau})}\\
-
 P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &= \frac{e^{-n\lambda_t}\lambda_t^{\sum{I_s}}}{\prod_{s=t-\tau}^{t+\tau}I_s!}\frac{\beta^\alpha}{\Gamma(\alpha)} \lambda_{t}^{\alpha-1}e^{-\beta\lambda_{t}}\\
-
 P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &\propto \lambda_t^{\sum{I_s+\alpha-1}}e^{-(2\tau+1+\beta)\lambda_t} \\
-
 P(\lambda_t|I_{t-\tau},\dots,I_{t+\tau}) &\sim \Gamma\big(\sum_{t-\tau}^{t+\tau}{I_s}+\alpha, 2\tau+1+\beta\big)\\
 \alpha' &= \alpha+\sum_{t-\tau}^{t+\tau}{I_s}\\
 \beta' &= 2\tau+1+\beta
@@ -53,108 +48,228 @@ The posterior estimate of the Poisson rate $\lambda$ is gamma distributed by def
 
 $$
 \begin{aligned}
-
-\overline{I_t} &\sim NegBin\Big(\alpha',\frac{\beta'}{\beta'+1}\Big)\\
-
+\overline{I_t} &\sim NegBin\Big(\alpha',\frac{1}{\beta'+1}\Big)\\
 E(\overline{I_t}|I_{t-\tau},\dots,I_{t+\tau}) &= \frac{\alpha'}{\beta'} \\
-
 V(\overline{I_t}|I_{t-\tau},\dots,I_{t+\tau}) &= \alpha'\Big(\frac{\beta'+1}{\beta'^2}\Big)
 \end{aligned}
 $$
+
+There is probably something interesting we can do with the $P(\overline{I_t}|I_{t-\tau} \dots I_{t+\tau})$ to detect importation or anomaly events
+
+# Growth rate
 
 The exponential growth rate $r_t$ is the gradient of the logarithm of I ($\frac{d}{dt}log(\overline{I_t})$)
 
 $$
 \begin{aligned}
 r_t \approx \frac{1}{2m}(log(E(I_{t+m}))-log(E(I_{t-m}))) \\
-r_t = \frac{1}{2m}log\frac{\lambda_{t+m}}{\lambda_{t-m}} \\
-
+r_t = \frac{1}{2m}log\frac{\lambda_{t+m}}{\lambda_{t-m}}
 \end{aligned}
 $$
 if $m = \tau$ and $\phi_t = e^{2\tau r_t}$
 
 $$
 \begin{aligned}
-r_t &= \frac{1}{2\tau}log\frac{\lambda_{t+\tau}}{\lambda_{t-\tau}} \\
-\phi_t &\sim \Bigg(\frac{Gamma(\alpha+\sum_{s=t}^{t+2\tau}{I_s}, \beta')}{Gamma(\alpha+\sum_{r=t-2\tau}^{t}{I_r}, \beta')}\Bigg) \\
 
+y = g(r_t) &= e^{2\tau r_t}\\
+r_t = g^{-1}(y) &= \frac{1}{2\tau}log(y)\\
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+r_t &= \frac{1}{2\tau}log\frac{\lambda_{t+\tau}}{\lambda_{t-\tau}} \\
+g(r_t) &\sim \Bigg(\frac{Gamma(\alpha+\sum_{s=t}^{t+2\tau}{I_s}, \beta')}{Gamma(\alpha+\sum_{r=t-2\tau}^{t}{I_r}, \beta')}\Bigg) \\
 \alpha'_{\tau+} &= \alpha+\sum_{t}^{t+2\tau}{I_s}\\
 \alpha'_{\tau-} &= \alpha+\sum_{t-2\tau}^{t}{I_s}\\
-
-\phi_t &\sim \Bigg(\frac{
+g(r_t) &\sim \Bigg(\frac{
 Gamma(\alpha'_{\tau+}, \beta')
 }{
 Gamma(\alpha'_{\tau-}, \beta')
 }
 \Bigg)\\
-
 \end{aligned}
 $$
+
+Ratio of 2 gammas with same rate parameter is a BetaPrime (https://en.wikipedia.org/wiki/Beta_prime_distribution)
 
 $$
 \begin{aligned}
-\phi_t \sim BetaPrime\big(\sum_{t}^{t+2\tau}{I}+\alpha, \sum_{t-2\tau}^{t}{I}+\alpha\big) \\
+r_t \sim Y &= \frac{1}{2\tau}log\Big(BetaPrime\big(\alpha'_{\tau+}, \alpha'_{\tau-})\Big) \\
+g(r_t) \sim X &= BetaPrime\big(\sum_{t}^{t+2\tau}{I}+\alpha, \sum_{t-2\tau}^{t}{I}+\alpha\big) \\
 
-r_t \sim \frac{1}{2\tau}log\Big(BetaPrime\big(\alpha'_{\tau+}, \alpha'_{\tau-})\Big) \\
-
-P(r_t) = \frac{1}{2\tau B(\alpha'_{\tau+}, \alpha'_{\tau-})}
-e^{r_t}
-\Big(
-  e^{r_t(\alpha'_{\tau+}-1)}
-  (1+e^{r_t})^{(-\alpha'_{\tau+}-\alpha'_{\tau-})}
-\Big)\\
-
-P(r_t) = \frac{1}{2\tau B(\alpha'_{\tau+}, \alpha'_{\tau-})}
-\Big(
-  e^{r_t(\alpha'_{\tau+})}
-  (1+e^{r_t})^{(-\alpha'_{\tau+}-\alpha'_{\tau-})}
-\Big)\\
-
+BetaPrime(\alpha_1, \alpha_2) &: \\
+f(x) &= \frac{1}{B(\alpha_1,\alpha_2)}x^{\alpha_1-1}(1+x)^{-\alpha_1-\alpha_2} \\
+F(x) &= I_{
+\frac{x}{1+x}}(\alpha_1,\alpha_2)
 \end{aligned}
 $$
+Where $I$ is the regularised beta function and $B$ is the complete beta function.
 
-Strictly increasing functions:
-https://www.statlect.com/fundamentals-of-probability/functions-of-random-variables-and-their-distribution
 support for $x$ here is 0,inf as we are looking at ratio of gammas. Support for $r_t$ is -inf,inf.
 
+
+
+given that $g(r_t)$ can be differentiated and is a strictly increasing function we note:
+
+Give that Strictly increasing functions / Method of transformations:
+https://www.statlect.com/fundamentals-of-probability/functions-of-random-variables-and-their-distribution
+https://www.probabilitycourse.com/chapter4/4_1_3_functions_continuous_var.php
+
+$$
+Y = \frac{1}{2\tau}log(X) \\
+g(x) = \frac{1}{2\tau}log(x) \\
+g^{-1}(y) = e^{2\tau y} \\
+\frac{dg^{-1}}{dy} = 2\tau e^{2\tau y}\\
+
+F_Y(y) = F_X(g^{-1}(y)) \\
+f_Y(y) = f_X(g^{-1}(y)) \frac{dg^{-1}(y)}{dy}
+
+$$
+
+Giving a pdf for the posterior estimate of $r_t$:
 $$
 \begin{aligned}
-x &= e^{2\tau r_t}\\
-r_t &\sim \frac{1}{2\tau}log(\phi_t)\\
-P(r_t) &= P(\phi_t)\frac{d\phi_t}{dr_t}\\
-P(r_t) &= P(e^{2\tau r_t})\frac{d}{dr_t}(e^{2\tau r_t})\\
-P(r_t) &= 2\tau e^{2\tau r_t}P(e^{2\tau r_t})\\
-
-\end{aligned}
-$$
-
-$$
-\begin{aligned}
-
-P(r_t) =  \frac{2\tau e^{2\tau r_t}}{B(\alpha'_{\tau+}, \alpha'_{\tau-})}
-
+f_Y(r_t) &= f_X(g^{-1}(r_t))\frac{dg^{-1}(r_t)}{dr_t}\\
+f_Y(r_t) &= 2\tau e^{2\tau r_t}f_X(e^{2\tau r_t})\\
+f_Y(r_t) &=  2\tau e^{2\tau r_t}\frac{
 \Big(
   e^{r_t(\alpha'_{\tau+}-1)}
   (1+e^{r_t})^{(-\alpha'_{\tau+}-\alpha'_{\tau-})}
-\Big)\\
-
-P(r_t) =  \frac{2\tau}{B(\alpha'_{\tau+}, \alpha'_{\tau-})}
+\Big)}{B(\alpha'_{\tau+}, \alpha'_{\tau-})}\\
+f_Y(r_t) &=  \frac{2\tau}{B(\alpha'_{\tau+}, \alpha'_{\tau-})}
 \Big(
   e^{r_t(\alpha'_{\tau+}+2\tau-1)}
   (1+e^{r_t})^{(-\alpha'_{\tau+}-\alpha'_{\tau-})}
 \Big)\\
+\end{aligned}
+$$
 
+And a cdf for the posterior estimate of $r_t$:
 
+$$
+\begin{aligned}
+F_Y(r_t) &= F_Y(g^{-1}(r_t))\\
+F_X(r_t) &= F_Y(e^{2\tau r_t})\\
+F_X(r_t) &= I_{
+\frac{e^{2\tau r_t}}{1+e^{2\tau r_t}}}(\alpha_{\tau+},\alpha_{\tau-})
 \end{aligned}
 $$
 
 
+where $I_x(a,b)$ is the regularised beta function.
 
-
+https://mathworld.wolfram.com/RegularizedBetaFunction.html
+https://commons.apache.org/proper/commons-math/javadocs/api-3.3/org/apache/commons/math3/special/Beta.html
 https://en.wikipedia.org/wiki/Beta_prime_distribution#Properties
 
+I think (but I am not sure) that the quantile function for $g(r_t)$ can simply be transformed backwards to give a quantile estimate for $r_t$. This makes intuitive sense to me and looks OK experimentally. This would also suggest that we can sample from $Y$ and transform using $g^{-1}(y)$ to get unbiased samples of $r_t$.
+
+# R_t from Poisson rate
+
+If $I_t \sim Poisson(\lamda_t)$ and an estimate of $\lambda_t$ is available. $\omega_1, \omega_2, \dots, \omega_s$ is another probability distribution, the infectivity profile, that defines the likelihood that a case infected at time $t$ resulted from a case infected before time $t-s$. This definition implies that $\omega_0 = 0$, and that discrete time measures represent the upper bound of the equivalent continuous unit time interval, rather than, for example, the middle of the interval. 
+
+$$
+\overline{I_t} = \lambda_t\\
+R_t = \frac{\text{secondary cases}}{\text{contributing primary cases}} \\
+
+R_t = \frac{\lambda_t}{\sum_{s=1}^t \lambda_{t-s}\omega_s}
+$$
+
+since the denominator is all poisson distributions we can combine to give@
+
+$$
+R_t \sim \frac{Poisson(\lambda_t)}{Poisson(\sum_{s=1}^t \lambda_{t-s}\omega_s)}
+$$
+
+N.b. There is a finite probability of extinction in which case the denominator is zero:
+
+$$
+
+P(\text{extinction}_t) = P(\text{contributing primary cases} = 0)\\
+P(\text{extinction}_t) = P(Poisson(\sum_{s=1}^t \lambda_{t-s}\omega_s) = 0)\\
+P(\text{extinction}_t) = \Big(\sum_{s=1}^t \lambda_{t-s}\omega_s\Big)e^{-\Big(\sum_{s=1}^t \lambda_{t-s}\omega_s\Big)}
+$$
 
 
+Although PDF is not defined in the general case Cumulative probability is defined:
+
+https://stats.stackexchange.com/questions/10951/what-is-the-distribution-of-the-ratio-of-two-poisson-random-variables
+
+$$
+\mathbb{P}\left[\frac{X}{Y} \leq r \right] := \mathbb{P}\left[X \leq r Y\right]\\
+= \sum_{y = 0}^\infty \sum_{x=0}^{\left\lfloor ry \right\rfloor} \frac{\lambda_{2}^y }{y!}e^{-\lambda_2} \frac{\lambda_{1}^x }{x!}e^{-\lambda_1}
+$$
+And the PDF :
+"The density follows from the Radon-Nykodym theorem."
+https://en.wikipedia.org/wiki/Radon%E2%80%93Nikodym_theorem
+But this is mind-boggling
 
 
+There is a bayesian estimator of this ratio: ( I think it is the "simple ratio" bit of this paper:)
+https://arxiv.org/pdf/astro-ph/0606247.pdf
+but it maybe needs to be reworked here. There is no closed form solution to it. 
 
+
+The wikipedia entry has forms for mean and variance of this ratio:
+https://en.wikipedia.org/wiki/Ratio_distribution#Poisson_and_truncated_Poisson_distributions
+
+
+# R_t from Gamma posterior estimate of poisson rate (This maybe wrong)
+
+Damn it this is maybe wrong, because the posterior distribution of $\lambda_t$ is not equivalent to $\overline{I_t}$ distribution. If we were going to use this we would need to use the posterior predictive distribution (NegBinomial), or maybe we can do this as an approximation:
+
+If $I_t \sim Poisson(\lamda_t)$ and an estimate of $\lambda_t$ is available.
+
+$$
+R_t = \frac{\lambda_t}{\sum_{s=1}^t \lambda_{t-s}\omega_s}
+$$
+
+and the posterior distribution of $\lambda_t \sim Gamma(\alpha',\beta')$ as described above. Considering the denominator as the sum of scaled gamma distributions we can say the distribution of the denominator is a sum of Gammas of the form:
+
+$$
+\lambda_{t-s}\omega_s \sim Gamma\big(\alpha'_{t-s}, \frac{\beta'_{t-s}}{\omega_s}\big)\\ 
+$$
+We can use the Welch-Satterwaite equation to generate an approximation for the denominator sum as another gamma distribution. In the case of a set of gamma distributions, with parameters $\alpha_i$ and $\beta_i$, an approximation of the sum is another gamma distribution with parameters $\alpha_{sum}$ and $\beta_{sum}$:
+https://en.wikipedia.org/wiki/Welch%E2%80%93Satterthwaite_equation
+https://stats.stackexchange.com/questions/72479/generic-sum-of-gamma-random-variables
+
+$$
+\alpha_{sum} = \frac{
+\Big(\sum_i \frac{\alpha_i}{\beta_i}\Big)^2
+}{
+\sum_i \frac{\alpha_i}{\beta_i^2}
+}\\
+
+\beta_{sum} = \frac{\alpha_{sum}}{
+\sum_i \frac{\alpha_i}{\beta_i}
+}
+$$
+Using this approximation we estimate $R_t$ to be distributed as the ratio of 2 Gamma distributions where:
+
+$$
+R_t \sim \frac{
+  \frac{1}{\beta_t'}Gamma(\alpha_t',1)
+}{
+  \frac{1}{\beta_t''}Gamma(\alpha_t'',1)
+}\\
+
+R_t \sim BetaPrime(\alpha_t',\alpha_t'',1,\frac{\beta_t''}{\beta_t'})\\
+
+\text{Where given: } s \in (1 .. t) \\
+
+\alpha''_t = 
+\frac{
+  \Big(\sum_s \frac{\alpha'_{t-s}\omega_s}{\beta'_{t-s}}\Big)^2
+}{
+  \sum_s \frac{\alpha'_{t-s}\omega_s^2}{(\beta'_{t-s})^2}
+}\\
+
+\beta''_t = 
+\frac{
+  \alpha''_t
+}{
+  \sum_s{\frac{\alpha'_{t-s}\omega_s}{\beta'_{t-s}}}
+}
+$$
+This form of $R_t$ assumes the gamma posterior estimate and so can be applied directly to the posteriors from the earlier part of this method. This could overestimate confidence if the denominator of the ratio is less variable that the mixture in reality. This could be the case and the Welch-Satterbach estimator works best when the distributions are not completely different. However in this case the scaling of the $\lambda_t$ estimates by the infectivity profile does make it quite likely the mixture of distributions will have dissimilar means and variances. (note to self when implementing - this is weighted sum not weighted average as done previously)

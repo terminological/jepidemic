@@ -27,7 +27,7 @@ Some work in progress R functions related to the covid 19 epidemic
 
 Version: 0.03
 
-Generated: 2021-06-19T00:37:06.829169
+Generated: 2021-11-06T14:23:49.321748
 }
 
 \author{\email{rc538@exeter.ac.uk}}
@@ -167,7 +167,7 @@ J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, wind
 					\item{meanR0 - the mean prior of R0}{ - (java expects a double)}
 					\item{sdR0 - the sd prior of R0}{ - (java expects a double)}
 					\item{window - the window size}{ - (java expects a int)}
-					\item{n2 - the number of samples to}{ - (java expects a int)}
+					\item{n2 - the number of samples to use for estimating confidence limits on bootstrapped infectivity profiles}{ - (java expects a int)}
 				}
 			}
 			\if{html}{\out{</div>}}

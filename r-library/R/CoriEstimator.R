@@ -3,7 +3,7 @@
 #
 # Java Epidemic
 # Version: 0.03
-# Generated: 2021-06-19T00:37:06.873076
+# Generated: 2021-11-06T14:23:49.380636
 # Contact: rc538@exeter.ac.uk
 CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	.api = NULL,
@@ -263,11 +263,12 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 			return(out);
 		}
 	},
-	withInfectivityProfile = function(infectivityProfile) {
+	withInfectivityProfile = function(infectivityProfile, replace) {
 		# copy parameters
 		tmp_infectivityProfile = self$.api$.toJava$RNumericVector(infectivityProfile);
+		tmp_replace = self$.api$.toJava$boolean(replace);
 		#execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withInfectivityProfile" , tmp_infectivityProfile); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withInfectivityProfile" , tmp_infectivityProfile, tmp_replace); 
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {

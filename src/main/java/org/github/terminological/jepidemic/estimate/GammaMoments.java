@@ -1,9 +1,10 @@
-package org.github.terminological.jepidemic.gamma;
+package org.github.terminological.jepidemic.estimate;
 
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.util.FastMath;
+import org.github.terminological.jepidemic.distributions.Summary;
 
-public class GammaMoments implements StatSummary {
+public class GammaMoments implements Summary {
 	private double mean;
 	private double sd;
 	

@@ -270,3 +270,6 @@ R_{t,\tau} | I_0,\dots,I_{t},\omega &\sim Gamma\Big(\alpha+\sum_{s=t-\tau+1}^t I
 $$
 
 
+
+
+

@@ -7,14 +7,13 @@ import java.util.stream.Collectors;
 
 import org.github.terminological.jepidemic.Timeseries;
 import org.github.terminological.jepidemic.TimeseriesEntry;
-import org.github.terminological.jepidemic.gamma.GammaParameters;
 
 import uk.co.terminological.rjava.RConverter;
 import uk.co.terminological.rjava.types.RDate;
 import uk.co.terminological.rjava.types.RNumeric;
 
 /**
- * A timeseries entry in a ordered straucture with accessors for the previous and next items in the time series. <br>
+ * A timeseries entry in a ordered structure with accessors for the previous and next items in the time series. <br>
  * 
  * This is where the component calculations for the Cori method are performed. The calculations for the cori method are not
  * performed until the recache() method is called, which is done by the CoriEstimator::estimateForProfile method when considering a new infectivity profile.
@@ -93,17 +92,18 @@ public class CoriTimeseriesEntry implements TimeseriesEntry.Incidence, Comparabl
 	
 	// calculate posteriors basd on priors
 	
-	public DatedRtGammaEstimate posterior(DatedRtGammaEstimate prior, int tau) {
+	public DatedRtEstimate posterior(DatedRtEstimate prior, int tau) {
 		return new GammaParameters(
 				prior.getShape()+sumI_s(tau),
 				1/(1/prior.getScale()+sumLambda_s(tau)))
-				.withDate(tau, date, incidence().javaPrimitive(Double.NaN), prior.profileId)
-				.withPrior(prior);
+				.withDate(tau, date, incidence().javaPrimitive(Double.NaN), this.casesInWindow(tau))
+				.withPrior(prior)
+				.withProfileId(prior.profileId);
 		
 	}
 	
 	// must have a prior for every tau?	
-	public List<DatedRtGammaEstimate> results(List<DatedRtGammaEstimate> priors) {
+	public List<DatedRtEstimate> results(List<DatedRtEstimate> priors) {
 		return priors.stream().map(prior -> this.posterior(prior, prior.tau)
 				).collect(Collectors.toList());
 	}
@@ -125,9 +125,9 @@ public class CoriTimeseriesEntry implements TimeseriesEntry.Incidence, Comparabl
 	// Here we calculate it for all windows as we need that anyway for 
 	// calculating the max size window eventually
 	
-	private double sumI_s(int tau) {
-		if (this.inferred) return Double.NaN;
+	public double sumI_s(int tau) {
 		if (tau < 0) return 0;
+		if (this.inferred) return Double.NaN;
 		if (I_s == null) cacheI_s();
 		return I_s[tau];
 	}
@@ -135,8 +135,8 @@ public class CoriTimeseriesEntry implements TimeseriesEntry.Incidence, Comparabl
 	
 		
 	private void cacheI_s() {
-		I_s = new double[series.getMaxTau()];
-		for (int tau = 0; tau<series.getMaxTau(); tau++) {
+		I_s = new double[series.getMaxTau()+1];
+		for (int tau = 0; tau<=series.getMaxTau(); tau++) {
 			final int tmpTau = tau;
 			// sumI_s calculated here
 			I_s[tau] = this.value + prev().map(ts -> ts.sumI_s(tmpTau-1)).orElse(Double.NaN);
@@ -148,7 +148,7 @@ public class CoriTimeseriesEntry implements TimeseriesEntry.Incidence, Comparabl
 	// calculating the max size window eventually
 		
 	
-	private double sumLambda_s(int tau) {
+	public double sumLambda_s(int tau) {
 		if (tau < 0) return 0;
 		return Lambda_s[tau];
 	}
@@ -156,8 +156,8 @@ public class CoriTimeseriesEntry implements TimeseriesEntry.Incidence, Comparabl
 	
 	
 	private void cacheLambda_s() {
-		Lambda_s = new double[series.getMaxTau()];
-		for (int tau = 0; tau<series.getMaxTau(); tau++) {
+		Lambda_s = new double[series.getMaxTau()+1];
+		for (int tau = 0; tau<=series.getMaxTau(); tau++) {
 			final int tmpTau = tau;
 			// sumI_s calculated here
 			Lambda_s[tau] = this.Lambda_t() + prev().map(ts -> ts.sumLambda_s(tmpTau-1)).orElse(Double.NaN);

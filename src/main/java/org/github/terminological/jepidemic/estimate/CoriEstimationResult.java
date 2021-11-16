@@ -45,7 +45,7 @@ public class CoriEstimationResult extends Timeseries<CoriEstimationResultEntry> 
 		CoriEstimationSummary out = new CoriEstimationSummary(estimator);
 		byDateIndex.entrySet().stream().forEach(kv -> {
 			// streaming by date
-			List<DatedRtGammaEstimate> tmp = kv.getValue().stream()
+			List<DatedRtEstimate> tmp = kv.getValue().stream()
 				.map(c -> c.selectSummaryForDayAndInfectivityProfile())
 				.collect(Collectors.toList());
 			out.add(new CoriEstimationSummaryEntry(tmp,out));
