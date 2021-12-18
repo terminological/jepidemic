@@ -168,6 +168,10 @@ printIQR = function(x) do.call(sprintf, c("%1.2f [IQR %1.2f \u2013 %1.2f]",as.li
 # Flu2009 data
 data("Flu2009", package="EpiEstim")
 
+reload = function() {
+  devtools::load_all("~/Git/uk-covid-datatools/")
+  ukcovidtools::reload("~/Git/uk-covid-datatools/config.yml")
+}
 
 ## Synthetic data ----
 # generate new

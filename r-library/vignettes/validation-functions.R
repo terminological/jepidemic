@@ -124,7 +124,7 @@ standardSyntheticDataset = function(synth = SyntheticDatasetProvider$new(dpc)) {
   synthetic = options %>% group_by_all() %>% group_modify(function(d,g,...) {
     config = g
     tmp = synth$getGrowthRateBasedDataset(weekendEffect = config$weekendEffect, smooth= config$smooth, seed = config$seed, 
-                                          breaks = config$control[[1]]$breaks, rates = config$control[[1]]$rates,
+                                          breaks = config$control[[1]]$breaks, rates = c(0,config$control[[1]]$rates),
                                           bootstraps=10)
     tmp$serial = NULL
     enframe(tmp) %>% pivot_wider(names_from = name, values_from=value) 
