@@ -3,7 +3,7 @@
 #
 # Java Epidemic
 # Version: 0.03
-# Generated: 2021-11-06T14:23:49.380636
+# Generated: 2021-11-16T09:47:48.655408
 # Contact: rc538@exeter.ac.uk
 CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	.api = NULL,
@@ -103,6 +103,27 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		# copy parameters
 		#execute method call
 		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectMixtureCombination" ); 
+		# is this a fluent method?
+		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
+		if(self$.jobj$equals(tmp_out)) {
+			# return fluent method
+			self$.api$printMessages()
+			invisible(self)
+		} else {
+			# wrap return java object in R6 class  
+			out = CoriEstimator$new(
+				self$.api$.fromJava$CoriEstimator(tmp_out),
+				self$.api
+			);
+			self$.api$printMessages()
+			return(out);
+		}
+	},
+	selectWeightedMixtureCombination = function(weights) {
+		# copy parameters
+		tmp_weights = self$.api$.toJava$RNumericVector(weights);
+		#execute method call
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectWeightedMixtureCombination" , tmp_weights); 
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {

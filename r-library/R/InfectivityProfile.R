@@ -3,7 +3,7 @@
 #
 # Java Epidemic
 # Version: 0.03
-# Generated: 2021-11-06T14:23:49.368066
+# Generated: 2021-11-16T09:47:48.642935
 # Contact: rc538@exeter.ac.uk
 InfectivityProfile = R6::R6Class("InfectivityProfile", public=list(
 	.api = NULL,

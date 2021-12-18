@@ -98,9 +98,10 @@ epiest = bind_rows(lapply(1:14, function(window) {
                           Rt.Window = window
   ))
 }))
+p1 = incidencePlot(Flu2009$incidence %>% mutate(date = dates, value = I, subgroup="none"))
+p2 = rtPlot(epiest,ylim = c(0,5))+facet_wrap(vars(Rt.Window),ncol=7)
 
-rtPlot(epiest)
-
+p1+p2+plot_annotation(tag_levels = "A")+plot_layout(ncol=1)
 ```
 
 

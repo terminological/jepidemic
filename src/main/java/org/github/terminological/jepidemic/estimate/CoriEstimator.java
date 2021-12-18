@@ -161,6 +161,11 @@ public class CoriEstimator {
 		return this;
 	}
 	
+	public CoriEstimator selectAll() {
+		this.posteriorSelectionStrategy = null;
+		return this;
+	}
+	
 	/**
 	 * The adaptive windowing strategy selects a posterior estimate of \(R_t\) by selecting the shortest window length (&gt; minWindow) which spans at least incidenceSum infection 
 	 * (or observation) counts. This ensures that where numbers are low the estimation window is lengthened (up ot the value of maxWindow provided to the CoriEstimator::new constructor) to 
@@ -313,6 +318,7 @@ public class CoriEstimator {
 	 */
 	@RMethod 
 	public CoriEstimator detailedOutput() {
+		this.selectAll();
 		this.combiningStrategy = null;
 		this.summarise = false;
 		return this;
@@ -465,7 +471,7 @@ public class CoriEstimator {
 			// doing this independently would mena the following has to change as woudl be a summay entry rather than a result entry
 			
 			RDataframe out = filteredResults.stream().collect(
-					CoriEstimationSummaryEntry.collector(dateColName,incidenceColName,epiEstimMode));
+				CoriEstimationSummaryEntry.collector(dateColName,incidenceColName,epiEstimMode));
 			return out;
 		
 		} else { 

@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"org.github.terminological.jepidemic"},{"l":"org.github.terminological.jepidemic.estimate"},{"l":"org.github.terminological.jepidemic.gamma"},{"l":"org.github.terminological.jepidemic.simulation"}]
+packageSearchIndex = [{"l":"org.github.terminological.jepidemic"},{"l":"org.github.terminological.jepidemic.distributions"},{"l":"org.github.terminological.jepidemic.estimate"},{"l":"org.github.terminological.jepidemic.growth"}]

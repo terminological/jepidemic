@@ -20,7 +20,7 @@ An estimator of the reproduction number (\(R_t\)) using a renewal equation metho
 
 Version: 0.03
 
-Generated: 2021-11-06T14:23:49.368647
+Generated: 2021-11-16T09:47:48.643236
 }
 
 \details{
@@ -69,6 +69,10 @@ instance = J$CoriEstimator$new(r0Mean, r0SD, maxWindow)
 
 ## -----------------------------------
 ## Method `CoriEstimator$selectMixtureCombination`
+## -----------------------------------
+
+## -----------------------------------
+## Method `CoriEstimator$selectWeightedMixtureCombination`
 ## -----------------------------------
 
 ## -----------------------------------
@@ -154,6 +158,7 @@ instance = J$CoriEstimator$new(r0Mean, r0SD, maxWindow)
 			\item \href{#method-selectAdaptiveWindow}{\code{instance$selectAdaptiveWindow(incidenceSum, minWindow)}}
 			\item \href{#method-selectMinimumUncertainty}{\code{instance$selectMinimumUncertainty(timeVsRt, minWindow)}}
 			\item \href{#method-selectMixtureCombination}{\code{instance$selectMixtureCombination()}}
+			\item \href{#method-selectWeightedMixtureCombination}{\code{instance$selectWeightedMixtureCombination(weights)}}
 			\item \href{#method-withDefaultPrior}{\code{instance$withDefaultPrior()}}
 			\item \href{#method-withFixedPrior}{\code{instance$withFixedPrior(mean, sd)}}
 			\item \href{#method-withAdaptivePrior}{\code{instance$withAdaptivePrior(factor)}}
@@ -475,6 +480,44 @@ instance$selectMixtureCombination()
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
 				\item{none}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 CoriEstimator object: The estimator itself (a fluent method)
+		}
+
+		\subsection{Examples}{
+			\if{html}{\out{<div class="r example copy">}}
+			\preformatted{
+not available
+			}
+			\if{html}{\out{</div>}}
+		}
+	}
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-selectWeightedMixtureCombination"></a>}}
+	
+	\subsection{Method \code{selectWeightedMixtureCombination()}}{
+		The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows.
+	
+
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+instance = J$CoriEstimator$new(...);
+instance$selectWeightedMixtureCombination(weights)
+  			}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\itemize{
+				\item{weights}{ - (java expects a RNumericVector)}
 			}
 			\if{html}{\out{</div>}}
 		}

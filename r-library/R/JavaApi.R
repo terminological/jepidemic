@@ -3,7 +3,7 @@
 #
 # Java Epidemic
 # Version: 0.03
-# Generated: 2021-11-06T14:23:49.353315
+# Generated: 2021-11-16T09:47:48.585616
 # Contact: rc538@exeter.ac.uk
 JavaApi = R6::R6Class("JavaApi", public=list( 
 	#### fields ----
@@ -11,6 +11,7 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 	.fromJava = NULL,
 	.toJava = NULL,
 	.reg = list(),
+	GrowthRateEstimator = NULL,
 	InfectivityProfile = NULL,
 	CoriEstimator = NULL,
   
@@ -34,7 +35,7 @@ JavaApi = R6::R6Class("JavaApi", public=list(
  	
  		message("Initialising Java Epidemic")
  		message("Version: 0.03")
-		message("Generated: 2021-11-06T14:23:49.353469")
+		message("Generated: 2021-11-16T09:47:48.586610")
  	
 		if (!.jniInitialized) 
 	        .jinit(parameters=getOption("java.parameters"),silent = TRUE, force.init = FALSE)
@@ -53,7 +54,7 @@ JavaApi = R6::R6Class("JavaApi", public=list(
     	self$.log = .jcall("org/slf4j/LoggerFactory", returnSig = "Lorg/slf4j/Logger;", method = "getLogger", "jepidemic");
     	.jcall(self$.log,returnSig = "V",method = "info","Initialised jepidemic");
 		.jcall(self$.log,returnSig = "V",method = "debug","Version: 0.03");
-		.jcall(self$.log,returnSig = "V",method = "debug","Generated: 2021-11-06T14:23:49.353561");
+		.jcall(self$.log,returnSig = "V",method = "debug","Generated: 2021-11-16T09:47:48.586762");
 		.jcall(self$.log,returnSig = "V",method = "debug","Contact: rc538@exeter.ac.uk");
 		self$printMessages()
 		# initialise type conversion functions
@@ -67,18 +68,18 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmpDim = dim(rObj)
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RNumericArray',rJava::.jarray(tmpVec),rJava::.jarray(tmpDim)))
 			},
-			RDateVector=function(rObj) {
-				if (is.null(rObj)) return(rJava::.new('uk/co/terminological/rjava/types/RDateVector'))
-				if (any(na.omit(rObj)<'0001-01-01')) message('dates smaller than 0001-01-01 will be converted to NA')
-				tmp = as.character(rObj,format='%C%y-%m-%d')
-				return(rJava::.jnew('uk/co/terminological/rjava/types/RDateVector',rJava::.jarray(tmp)))
-			},
 			RDate=function(rObj) {
 				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RDate'))
 				if (length(rObj) > 1) stop('input too long')
 			   if (rObj<'0001-01-01') message('dates smaller than 0001-01-01 will be converted to NA')
 				tmp = as.character(rObj,format='%C%y-%m-%d')[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RDate',tmp))
+			},
+			RDateVector=function(rObj) {
+				if (is.null(rObj)) return(rJava::.new('uk/co/terminological/rjava/types/RDateVector'))
+				if (any(na.omit(rObj)<'0001-01-01')) message('dates smaller than 0001-01-01 will be converted to NA')
+				tmp = as.character(rObj,format='%C%y-%m-%d')
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RDateVector',rJava::.jarray(tmp)))
 			},
 			RCharacterVector=function(rObj) {
 				if (is.null(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RCharacterVector'))
@@ -92,13 +93,6 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp = as.numeric(rObj)[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RNumeric',tmp))
 			},
-			RLogical=function(rObj) {
-				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RLogical'))
-				if (length(rObj) > 1) stop('input too long')
-				if (!is.logical(rObj)) stop('expected a logical')
-				tmp = as.integer(rObj)[[1]]
-				return(rJava::.jnew('uk/co/terminological/rjava/types/RLogical',tmp))
-			},
 			RFactor=function(rObj) {
 				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RFactor'))
 				if (length(rObj) > 1) stop('input too long')
@@ -106,9 +100,12 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmpLabel = levels(rObj)[[tmp]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RFactor',tmp, tmpLabel))
 			},
-			RNull=function(rObj) {
-				if (!is.null(rObj)) stop('input expected to be NULL')
-				return(rJava::.jnew('uk/co/terminological/rjava/types/RNull'))
+			RLogical=function(rObj) {
+				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RLogical'))
+				if (length(rObj) > 1) stop('input too long')
+				if (!is.logical(rObj)) stop('expected a logical')
+				tmp = as.integer(rObj)[[1]]
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RLogical',tmp))
 			},
 			RLogicalVector=function(rObj) {
 				if (is.null(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RLogicalVector'))
@@ -121,8 +118,13 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp = as.character(rObj)[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RCharacter',tmp))
 			},
+			RNull=function(rObj) {
+				if (!is.null(rObj)) stop('input expected to be NULL')
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RNull'))
+			},
 			String=function(rObj) return(as.character(rObj)),
 			CoriEstimator=function(rObj) return(rObj$.jobj),
+			GrowthRateEstimator=function(rObj) return(rObj$.jobj),
 			void=function(rObj) stop('no input expected'),
 			double=function(rObj) {
 			    if (is.na(rObj)) stop('cant use NA as input to java double')
@@ -269,17 +271,18 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 			   if (length(tmpDim)==2) return(matrix(tmpVec,tmpDim))
 				return(array(tmpVec,tmpDim))
 			},
-			RDateVector=function(jObj) as.Date(rJava::.jcall(jObj,returnSig='[Ljava/lang/String;',method='rPrimitive'),'%Y-%m-%d'),
 			RDate=function(jObj) as.Date(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive'),'%Y-%m-%d'),
+			RDateVector=function(jObj) as.Date(rJava::.jcall(jObj,returnSig='[Ljava/lang/String;',method='rPrimitive'),'%Y-%m-%d'),
 			RCharacterVector=function(jObj) as.character(rJava::.jcall(jObj,returnSig='[Ljava/lang/String;',method='rPrimitive')),
 			RNumeric=function(jObj) as.numeric(rJava::.jcall(jObj,returnSig='D',method='rPrimitive')),
-			RLogical=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='I',method='rPrimitive')),
 			RFactor=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rLabel')),
-			RNull=function(jObj) return(NULL),
+			RLogical=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='I',method='rPrimitive')),
 			RLogicalVector=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='[I',method='rPrimitive')),
 			RCharacter=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive')),
+			RNull=function(jObj) return(NULL),
 			String=function(jObj) return(as.character(jObj)),
 			CoriEstimator=function(jObj) return(jObj),
+			GrowthRateEstimator=function(jObj) return(jObj),
 			void=function(jObj) invisible(NULL),
 			double=function(jObj) return(as.numeric(jObj)),
 			RList=function(jObj) {
@@ -315,6 +318,78 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 	
 		# initialise java class constructors and static method definitions
 		
+		self$GrowthRateEstimator = list(
+			new = function(minWindow, maxWindow) {
+				# constructor
+				# convert parameters to java
+				tmp_minWindow = self$.toJava$int(minWindow);
+				tmp_maxWindow = self$.toJava$int(maxWindow);
+				# invoke constructor method
+				tmp_out = .jnew("org/github/terminological/jepidemic/growth/GrowthRateEstimator" , tmp_minWindow, tmp_maxWindow); 
+				# convert result back to R (should be a identity conversion)
+				tmp_r6 = GrowthRateEstimator$new(
+					self$.fromJava$GrowthRateEstimator(tmp_out),
+					self
+				);
+				self$printMessages()
+				return(tmp_r6)
+			},
+			strictGrowthRateAndRtEstimator = function(minWindow, maxWindow, infectivityProfiles) {
+				# copy parameters
+				tmp_minWindow = self$.toJava$int(minWindow);
+				tmp_maxWindow = self$.toJava$int(maxWindow);
+				tmp_infectivityProfiles = self$.toJava$RNumericArray(infectivityProfiles);
+				#execute static call
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="strictGrowthRateAndRtEstimator" , tmp_minWindow, tmp_maxWindow, tmp_infectivityProfiles); 
+				# wrap return java object in R6 class 
+				out = GrowthRateEstimator$new(
+					self$.fromJava$GrowthRateEstimator(tmp_out),
+					self
+				);
+				self$printMessages()
+				return(out)
+			},
+			defaultGrowthRateAndRtEstimator = function(minWindow, maxWindow, initialIncidence) {
+				# copy parameters
+				tmp_minWindow = self$.toJava$int(minWindow);
+				tmp_maxWindow = self$.toJava$int(maxWindow);
+				tmp_initialIncidence = self$.toJava$double(initialIncidence);
+				#execute static call
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="defaultGrowthRateAndRtEstimator" , tmp_minWindow, tmp_maxWindow, tmp_initialIncidence); 
+				# wrap return java object in R6 class 
+				out = GrowthRateEstimator$new(
+					self$.fromJava$GrowthRateEstimator(tmp_out),
+					self
+				);
+				self$printMessages()
+				return(out)
+			},
+			defaultGrowthRateEstimator = function(minWindow, maxWindow) {
+				# copy parameters
+				tmp_minWindow = self$.toJava$int(minWindow);
+				tmp_maxWindow = self$.toJava$int(maxWindow);
+				#execute static call
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="defaultGrowthRateEstimator" , tmp_minWindow, tmp_maxWindow); 
+				# wrap return java object in R6 class 
+				out = GrowthRateEstimator$new(
+					self$.fromJava$GrowthRateEstimator(tmp_out),
+					self
+				);
+				self$printMessages()
+				return(out)
+			},
+			basicGrowthRateEstimator = function() {
+				# copy parameters
+				#execute static call
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="basicGrowthRateEstimator" ); 
+				# wrap return java object in R6 class 
+				out = GrowthRateEstimator$new(
+					self$.fromJava$GrowthRateEstimator(tmp_out),
+					self
+				);
+				self$printMessages()
+				return(out)
+			}	)
 		self$InfectivityProfile = list(
 			new = function(discretePdf, id) {
 				# constructor

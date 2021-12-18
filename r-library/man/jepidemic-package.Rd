@@ -13,6 +13,7 @@ Version: 0.03
 Classes:
 \itemize{ 
 	\item \code{JavaApi}
+	\item \code{GrowthRateEstimator}
 	\item \code{InfectivityProfile}
 	\item \code{CoriEstimator}
 }

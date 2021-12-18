@@ -33,6 +33,8 @@ public class TransformerDistribution<X extends AbstractRealDistribution> extends
 	 * @param transform - Y = g(X) what is the transformation of X that gives us Y? e.g. Y=e^X
 	 * @param inverseTransform - Y = g^{-1}(Y) what is the inverse? X=log(Y)
 	 * @param inverseTransformDifferential - dg^{-1}/dy the differential of the inverse with respect to Y? e.g. DY = 1/Y
+	 * @param meanPrecision - the quantile limit of the integration to estimate the mean
+	 * @param sdPrecision - the quantile limit of the integration to estimate the sd
 	 */
 	public TransformerDistribution(
 			X distribution, 

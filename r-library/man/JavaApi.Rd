@@ -27,7 +27,7 @@ Some work in progress R functions related to the covid 19 epidemic
 
 Version: 0.03
 
-Generated: 2021-11-06T14:23:49.321748
+Generated: 2021-11-16T09:47:48.532844
 }
 
 \author{\email{rc538@exeter.ac.uk}}
@@ -37,12 +37,177 @@ Generated: 2021-11-06T14:23:49.321748
 \section{Static methods and constructors}{
 	\itemize{
 		\item \code{JavaApi$get()}
+		\item \href{#method-GrowthRateEstimator-new}{\code{J$GrowthRateEstimator$new(minWindow, maxWindow)}}
+		\item \href{#method-GrowthRateEstimator-strictGrowthRateAndRtEstimator}{\code{J$GrowthRateEstimator$strictGrowthRateAndRtEstimator(minWindow, maxWindow, infectivityProfiles)}}
+		\item \href{#method-GrowthRateEstimator-defaultGrowthRateAndRtEstimator}{\code{J$GrowthRateEstimator$defaultGrowthRateAndRtEstimator(minWindow, maxWindow, initialIncidence)}}
+		\item \href{#method-GrowthRateEstimator-defaultGrowthRateEstimator}{\code{J$GrowthRateEstimator$defaultGrowthRateEstimator(minWindow, maxWindow)}}
+		\item \href{#method-GrowthRateEstimator-basicGrowthRateEstimator}{\code{J$GrowthRateEstimator$basicGrowthRateEstimator()}}
 		\item \href{#method-InfectivityProfile-new}{\code{J$InfectivityProfile$new(discretePdf, id)}}
 		\item \href{#method-CoriEstimator-new}{\code{J$CoriEstimator$new(r0Mean, r0SD, maxWindow)}}
 		\item \href{#method-CoriEstimator-defaultEpiEstim}{\code{J$CoriEstimator$defaultEpiEstim(infectivityProfile, meanR0, sdR0, window)}}
 		\item \href{#method-CoriEstimator-defaultUncertainEpiEstim}{\code{J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, window, n2)}}
 	}
 	
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-GrowthRateEstimator-new"></a>}}
+	
+	\subsection{Method \code{GrowthRateEstimator$new()}}{
+		Produces a GrowthRateEstimator that is configured to behave in a sensible fashion, with sane defaults. 
+In that it estimates an initial poisson rate prior from the first entry and returns a fixed window size and aggregates uncertain SI 
+distributions with a random resampling strategy<br><br>
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$GrowthRateEstimator$new(minWindow, maxWindow)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount .}{ - (java expects a int)}
+					\item{maxWindow}{ - (java expects a int)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a default growth rate estimator
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-GrowthRateEstimator-strictGrowthRateAndRtEstimator"></a>}}
+	
+	\subsection{Method \code{GrowthRateEstimator$strictGrowthRateAndRtEstimator()}}{
+		Produces a GrowthRateEstimator that will estimate growth rate and $R_t$, with sane defaults. The $R_t$ estimation is 
+done using bootstrapping, and combining the results using a mixture distribution. This will be relatively slow.
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$GrowthRateEstimator$strictGrowthRateAndRtEstimator(minWindow, maxWindow, infectivityProfiles)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
+					\item{maxWindow}{ - (java expects a int)}
+					\item{infectivityProfiles - a numeric matrix with each column containing a discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)}{ - (java expects a RNumericArray)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a strict growth rate and $R_t$ estimator that accounts for uncertainty in the infectivity profile.
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-GrowthRateEstimator-defaultGrowthRateAndRtEstimator"></a>}}
+	
+	\subsection{Method \code{GrowthRateEstimator$defaultGrowthRateAndRtEstimator()}}{
+		Produces a GrowthRateEstimator that will estimate growth rate and $R_t$, with sane defaults. The $R_t$ estimation is 
+done using a single infectivity profile and does not account for infectivity profile uncertainty. This is comparatively fast.<br><br>
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$GrowthRateEstimator$defaultGrowthRateAndRtEstimator(minWindow, maxWindow, initialIncidence)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
+					\item{maxWindow}{ - (java expects a int)}
+					\item{initialIncidence}{ - (java expects a double)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-GrowthRateEstimator-defaultGrowthRateEstimator"></a>}}
+	
+	\subsection{Method \code{GrowthRateEstimator$defaultGrowthRateEstimator()}}{
+		Produces a GrowthRateEstimator that will estimate growth rate only, with sane defaults, unless an infectivity profile is lated added<br><br>
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$GrowthRateEstimator$defaultGrowthRateEstimator(minWindow, maxWindow)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
+					\item{maxWindow}{ - (java expects a int)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-GrowthRateEstimator-basicGrowthRateEstimator"></a>}}
+	
+	\subsection{Method \code{GrowthRateEstimator$basicGrowthRateEstimator()}}{
+		Produces a GrowthRateEstimator that will estimate growth rate only, with sane defaults, and estimating using windows between 4 and 14 days<br><br>
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$GrowthRateEstimator$basicGrowthRateEstimator()
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{none}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+		}
+	}
 
 	\if{html}{\out{<hr>}}
 	\if{html}{\out{<a id="method-InfectivityProfile-new"></a>}}
