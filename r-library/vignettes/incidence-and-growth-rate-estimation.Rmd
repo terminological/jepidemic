@@ -106,7 +106,7 @@ $$
 I_{t+1}^+ &= I_{t}^+e^{r^+_t}\\
 I_{t+1}^- &= I_{t}^-e^{r^-_t}\\
 N_t &= I_t^++I_t^-\\
-p_t &= \frac{I_t^+}{N_t} \\
+p_t^+ &= \frac{I_t^+}{N_t} \\
 r_t &= r_t^+-r_t^- \\
 \end{aligned}
 $$
