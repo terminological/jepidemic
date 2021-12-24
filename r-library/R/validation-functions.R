@@ -3,12 +3,11 @@
 
 ## Lag analysis ----
 
-lagAnalysis = function(estimators, trueVar = "Rt.actual", estimateVar = "Rt.Quantile.0.5", synth = SyntheticDatasetProvider$new(dpc)) {
+lagAnalysis = function(estimators, trueVar = "Rt.actual", estimateVar = "Rt.Quantile.0.5") {
   trueVar = ensym(trueVar)
   estimateVar = ensym(estimateVar)
   
-  triangularSim = synth$getGrowthRateBasedDataset(weekendEffect = 0, smooth= FALSE, seed = 1000, baseline=0, periodic=TRUE, bootstraps=10)
-  triangularSim$serial = NULL
+  triangularSim = getGrowthRateBasedDataset(weekendEffect = 0, smooth= FALSE, seed = 1000, baseline=0, periodic=TRUE, bootstraps=10)
   triangular = enframe(triangularSim) %>% pivot_wider()
 
   periodicEstimates = triangular %>% inner_join(estimators, by=character()) %>% mutate(
@@ -83,8 +82,8 @@ lagPlot = function(lagAnalysis) {
 }
 
 ## Quality analysis ----
-
-standardSyntheticDataset = function(synth = SyntheticDatasetProvider$new(dpc)) {
+# TODO: make this a validation dataset
+standardSyntheticDataset = function() {
   # control points
   control = tibble(
     smooth = c(TRUE,FALSE),
@@ -123,7 +122,7 @@ standardSyntheticDataset = function(synth = SyntheticDatasetProvider$new(dpc)) {
   # Combine configurtation with generated dataset
   synthetic = options %>% group_by_all() %>% group_modify(function(d,g,...) {
     config = g
-    tmp = synth$getGrowthRateBasedDataset(weekendEffect = config$weekendEffect, smooth= config$smooth, seed = config$seed, 
+    tmp = getGrowthRateBasedDataset(weekendEffect = config$weekendEffect, smooth= config$smooth, seed = config$seed, 
                                           breaks = config$control[[1]]$breaks, rates = c(0,config$control[[1]]$rates),
                                           bootstraps=10)
     tmp$serial = NULL
@@ -211,7 +210,7 @@ calculateMetrics = function(quantileEstimate, originalTs, medianLag, trueVar = "
     )
 }
 
-qualityAnalysis = function(estimators, modelLag, estimatePrefix = "Rt.", trueVar = "Rt.actual", criticalValue = 1, synthetic = standardSyntheticDataset()) {
+qualityAnalysis = function(estimators, modelLag, estimatePrefix = "Rt.", trueVar = "Rt.actual", criticalValue = 1, synthetic = standardedxcvSyntheticDataset()) {
   trueVar = ensym(trueVar)
   
   syntheticEstimates = synthetic %>% inner_join(estimators, by=character()) %>% mutate(
