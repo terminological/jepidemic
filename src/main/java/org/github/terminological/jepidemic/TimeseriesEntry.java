@@ -27,10 +27,10 @@ public interface TimeseriesEntry {
 	public Optional<? extends TimeseriesEntry> prev();
 	
 	public default Stream<? extends TimeseriesEntry> laggingWindow(int count) {
-		if (count == 1) return this.prev().stream();
+		if (count == 1) return this.prev().map(o -> Stream.of(o)).orElse(Stream.empty());
 		return Stream.concat(
-				this.prev().stream(),
-				this.prev().stream().flatMap(p -> p.laggingWindow(count-1))
+				this.prev().map(o -> Stream.of(o)).orElse(Stream.empty()),
+				this.prev().map(o -> Stream.of(o)).orElse(Stream.empty()).flatMap(p -> p.laggingWindow(count-1))
 				);
 	};
 	
@@ -38,7 +38,7 @@ public interface TimeseriesEntry {
 		if (count == 0) return Stream.of(this);
 		return Stream.concat(
 				Stream.of(this),
-				this.prev().stream().flatMap(p -> p.laggingWindowInclusive(count-1))
+				this.prev().map(o -> Stream.of(o)).orElse(Stream.empty()).flatMap(p -> p.laggingWindowInclusive(count-1))
 				);
 	};
 	

@@ -119,7 +119,7 @@ generateGrowthRate = function(name, dateAtTime0 = "2020-01-01", length=365, brea
       Growth.actual = sp$y
     )
   } else {
-    int = approx(x=breaks, y=rates, xout = 0:(length-1), method=(if(sawtooth) "linear" else "constant"),f=1, rule=2)
+    int = approx(x=breaks, y=rates, xout = 0:(length-1), method=(if(sawtooth) "linear" else "constant"),ties = "ordered",f=1, rule=2)
     tmp = tibble(
       time = int$x,
       date = as.Date(dateAtTime0)+time,
@@ -133,11 +133,11 @@ generateGrowthRate = function(name, dateAtTime0 = "2020-01-01", length=365, brea
     Gt.sd = Gt.sd
   )
   events = tibble(
-    `Start date` = as.Date(dateAtTime0)+c(breaks,length),
+    `Start date` = as.Date(dateAtTime0)+breaks,
     `End date` = NA, 
     Label = paste0("Growth: ",sprintf("%1.3f", rates)), 
     rates=rates, 
-    breaks=c(breaks,length)
+    breaks=breaks
     ) %>% 
     arrange(breaks)
   #FIXME serial = SerialIntervalProvider$fixedGamma(controller,mean = Gt.mean, sd=Gt.sd)
@@ -192,7 +192,12 @@ generateRt = function(name, dateAtTime0 = "2020-01-01", length=365, breaks = sor
     Gt.mean = Gt.mean,
     Gt.sd = Gt.sd
   )
-  events = tibble(`Start date` = as.Date(dateAtTime0)+breaks,`End date` = NA, Label = paste0("Rt: ",sprintf("%1.3f", rt)), rt=rt, breaks=breaks) %>% arrange(breaks)
+  events = tibble(
+    `Start date` = as.Date(dateAtTime0)+breaks,
+    `End date` = NA, 
+    Label = paste0("Rt: ",sprintf("%1.3f", rt)), 
+    rt=rt, 
+    breaks=breaks) %>% arrange(breaks)
   sim = list(
     name = name,
     ts = tmp %>% mutate(source=name), 
@@ -240,7 +245,7 @@ addPoissonRate = function(growthSimulation) {
 #'
 #' @return the timeseries with an expected binomial proportion in the column Proportion.actual.
 #' @export
-addBinomialRate = function(growthSimulation,baselineExpr) {
+addBinomialRate = function(growthSimulation,baselineExpr = rpois(n(),Est.actual)) {
   baselineExpr = enexpr(baselineExpr)
   if(!("Est.actual" %in% colnames(growthSimulation$ts))) growthSimulation = growthSimulation %>% addPoissonRate()
   growthSimulation$ts = growthSimulation$ts %>% mutate(total = !!baselineExpr) %>% mutate(Proportion.actual = Est.actual/total)
@@ -275,6 +280,7 @@ addObservedRate = function(growthSimulation, observedFractionExpr = 1, weekendEf
     TRUE ~ 0
   )*weekendEffect+1
   growthSimulation$ts = growthSimulation$ts %>% 
+    ungroup() %>%
     mutate(
       Fraction.observed = !!observedFractionExpr,
       weekday = format(date,"%A"),
@@ -298,27 +304,23 @@ addObservedRate = function(growthSimulation, observedFractionExpr = 1, weekendEf
 #'
 #' @return a growth_simulation with a time series including bootstrapped observations (as "value" column, bootstrap id in "subgroup")
 #' @export
-addBootrappedObservations = function(growthSimulation, bootstraps = 100, delayMean = 0, delaySd = 1, lastObservation = nrow(growthSimulation$ts)) {
+addBootstrappedObservations = function(growthSimulation, bootstraps = 100, delayMean = 0, delaySd = 1, lastObservation = nrow(growthSimulation$ts)-1) {
   if(!("Est.observed" %in% colnames(growthSimulation$ts))) growthSimulation = growthSimulation %>% addObservedRate()
   delayShape = delayMean^2/delaySd^2
   delayRate = delayMean/delaySd^2
   datedProb = growthSimulation$ts %>% filter(time %in% lastObservation) %>% select(endTime = time,observationDate = date) %>% distinct()
   if(delayMean == 0) {
     datedProb = datedProb %>% group_by_all() %>% summarise(
-      list(
-        time = 0:endTime,
-        Fraction.available = 1
-      )
+      time = 0:endTime,
+      Fraction.available = 1
     )
   } else {
     datedProb = datedProb %>% group_by_all() %>% summarise(
-      list(
-        time = 0:endTime,
-        Fraction.available = rev(pgamma(0:endTime, delayShape, delayRate))
-      )
+      time = 0:endTime,
+      Fraction.available = rev(pgamma((0:endTime+1), delayShape, delayRate))
     )
   }
-  output = tibble(subgroup = 1:bootstraps) %>% inner_join(datedProb)
+  output = tibble(subgroup = 1:bootstraps) %>% inner_join(datedProb, by=character())
   
   growthSimulation$ts = growthSimulation$ts %>% 
     inner_join(output, by="time") %>%
@@ -366,7 +368,7 @@ getGrowthRateBasedDataset = function(
     addImportations(importDf = tibble(time = 0, import = seed)) %>%
     addPoissonRate() %>%
     addObservedRate(weekendEffect = weekendEffect) %>%
-    addBootstrappedObservations(delayMean = 0, delaySd = 1)
+    addBootstrappedObservations(bootstraps = bootstraps,delayMean = 0, delaySd = 1)
   
   return(out)
 }
@@ -395,10 +397,10 @@ getTwoAlternativesDataset = function(
 ) {
   
   scenario1Ts = scenario1 %>%
-        addBootrappedObservations(delayMean = delayMean1,delaySd = delaySd1, lastObservation = timepoints)
+        addBootstrappedObservations(delayMean = delayMean1,delaySd = delaySd1, lastObservation = timepoints)
 
   scenario2Ts = scenario2 %>%
-         addBootrappedObservations(delayHalfLife = delayHalfLife2, lastObservation = timepoints)
+         addBootstrappedObservations(delayMean = delayMean1,delaySd = delaySd1, lastObservation = timepoints)
   
   combinedTs = scenario1Ts$ts %>% inner_join(scenario2Ts$ts, by=c("time","date","observationDate","subgroup","statistic","type","code","name","codeType","gender","ageCat"), suffix=c(".s1",".s2")) 
   combinedTs = combinedTs %>%

@@ -20,7 +20,7 @@ An estimator of the reproduction number (\(R_t\)) using a renewal equation metho
 
 Version: 0.03
 
-Generated: 2021-11-16T09:47:48.643236
+Generated: 2021-12-27T10:30:11.690
 }
 
 \details{

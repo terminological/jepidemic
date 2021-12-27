@@ -2,7 +2,8 @@ Package: jepidemic
 Title: Java Epidemic
 Version: 0.03
 Authors@R: c(
-    person(given = "Rob",family = "Challen",email = "rc538@exeter.ac.uk",comment = structure("0000-0002-5504-7768", .Names = "ORCID"),role = c("aut", "cre")))
+    person(given = "Rob",family = "Challen",email = "rc538@exeter.ac.uk",comment = structure("0000-0002-5504-7768", .Names = "ORCID"),role = c("aut", "cre")),
+    person(given = "terminological",role = "aut"))
 Description: Some work in progress R functions related to the covid 19 epidemic
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -13,5 +14,3 @@ Imports:
 	rJava,
 	R6,
 	xptr
-Depends: 
-    R (>= 2.10)

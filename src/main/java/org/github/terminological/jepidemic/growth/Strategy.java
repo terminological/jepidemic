@@ -1,13 +1,11 @@
 package org.github.terminological.jepidemic.growth;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.apache.commons.math3.distribution.AbstractIntegerDistribution;
 import org.apache.commons.math3.distribution.AbstractRealDistribution;
@@ -20,11 +18,8 @@ import org.github.terminological.jepidemic.distributions.WeightedMixtureIntegerD
 import org.github.terminological.jepidemic.distributions.WeightedMixtureRealDistribution;
 import org.github.terminological.jepidemic.growth.DatedEstimate.Continuous;
 import org.github.terminological.jepidemic.growth.DatedEstimate.Discrete;
-import org.github.terminological.jepidemic.growth.DatedEstimate.GrowthRate;
-import org.github.terminological.jepidemic.growth.DatedEstimate.LambdaBasedRt;
 import org.github.terminological.jepidemic.growth.DatedEstimate.PoissonRate;
 import org.github.terminological.jepidemic.growth.EstimateMetadata.GrowthMetadata;
-import org.github.terminological.jepidemic.growth.GrowthRateTimeseriesEntry.PrimaryEstimates;
 
 
 public class Strategy {

@@ -14,14 +14,16 @@ Classes:
 \itemize{ 
 	\item \code{JavaApi}
 	\item \code{GrowthRateEstimator}
-	\item \code{InfectivityProfile}
 	\item \code{CoriEstimator}
+	\item \code{Serialiser}
+	\item \code{InfectivityProfile}
 }
 }
 
 \author{
 \itemize{ 
    \item Rob Challen rc538@exeter.ac.uk 0000-0002-5504-7768
+   \item terminological   
 }
 }
 

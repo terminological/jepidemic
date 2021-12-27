@@ -27,7 +27,7 @@ Some work in progress R functions related to the covid 19 epidemic
 
 Version: 0.03
 
-Generated: 2021-11-16T09:47:48.532844
+Generated: 2021-12-27T10:30:11.523
 }
 
 \author{\email{rc538@exeter.ac.uk}}
@@ -42,10 +42,17 @@ Generated: 2021-11-16T09:47:48.532844
 		\item \href{#method-GrowthRateEstimator-defaultGrowthRateAndRtEstimator}{\code{J$GrowthRateEstimator$defaultGrowthRateAndRtEstimator(minWindow, maxWindow, initialIncidence)}}
 		\item \href{#method-GrowthRateEstimator-defaultGrowthRateEstimator}{\code{J$GrowthRateEstimator$defaultGrowthRateEstimator(minWindow, maxWindow)}}
 		\item \href{#method-GrowthRateEstimator-basicGrowthRateEstimator}{\code{J$GrowthRateEstimator$basicGrowthRateEstimator()}}
-		\item \href{#method-InfectivityProfile-new}{\code{J$InfectivityProfile$new(discretePdf, id)}}
 		\item \href{#method-CoriEstimator-new}{\code{J$CoriEstimator$new(r0Mean, r0SD, maxWindow)}}
 		\item \href{#method-CoriEstimator-defaultEpiEstim}{\code{J$CoriEstimator$defaultEpiEstim(infectivityProfile, meanR0, sdR0, window)}}
 		\item \href{#method-CoriEstimator-defaultUncertainEpiEstim}{\code{J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, window, n2)}}
+		\item \href{#method-Serialiser-new}{\code{J$Serialiser$new()}}
+		\item \href{#method-Serialiser-serialiseDataframe}{\code{J$Serialiser$serialiseDataframe(dataframe, filename)}}
+		\item \href{#method-Serialiser-deserialiseDataframe}{\code{J$Serialiser$deserialiseDataframe(filename)}}
+		\item \href{#method-Serialiser-serialiseList}{\code{J$Serialiser$serialiseList(dataframe, filename)}}
+		\item \href{#method-Serialiser-deserialiseList}{\code{J$Serialiser$deserialiseList(filename)}}
+		\item \href{#method-Serialiser-serialiseNamedList}{\code{J$Serialiser$serialiseNamedList(dataframe, filename)}}
+		\item \href{#method-Serialiser-deserialiseNamedList}{\code{J$Serialiser$deserialiseNamedList(filename)}}
+		\item \href{#method-InfectivityProfile-new}{\code{J$InfectivityProfile$new(discretePdf, id)}}
 	}
 	
 
@@ -210,37 +217,6 @@ J$GrowthRateEstimator$basicGrowthRateEstimator()
 	}
 
 	\if{html}{\out{<hr>}}
-	\if{html}{\out{<a id="method-InfectivityProfile-new"></a>}}
-	
-	\subsection{Method \code{InfectivityProfile$new()}}{
-		no description
-	
-		\subsection{Usage}{
-			\if{html}{\out{<div class="r">}}
-			\preformatted{
-J = jepidemic::JavaApi$get()
-J$InfectivityProfile$new(discretePdf, id)
-	  		}
-			\if{html}{\out{</div>}}
-		}
-	
-		\subsection{Arguments}{
-			\if{html}{\out{<div class="arguments">}}
-			\describe{
-				\itemize{
-					\item{discretePdf - A discrete pdf of probabilities over time of secondary infection given priamry infection where probability at time 0 is 0}{ - (java expects a RNumericVector)}
-					\item{id - a numeric index or id for this profile}{ - (java expects a int)}
-				}
-			}
-			\if{html}{\out{</div>}}
-		}
-
-		\subsection{Returns}{
-			R6 InfectivityProfile object: 
-		}
-	}
-
-	\if{html}{\out{<hr>}}
 	\if{html}{\out{<a id="method-CoriEstimator-new"></a>}}
 	
 	\subsection{Method \code{CoriEstimator$new()}}{
@@ -340,6 +316,250 @@ J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, wind
 
 		\subsection{Returns}{
 			R6 CoriEstimator object: a default cori estimator
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-Serialiser-new"></a>}}
+	
+	\subsection{Method \code{Serialiser$new()}}{
+		the default no-args constructor
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$Serialiser$new()
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{none}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 Serialiser object: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-Serialiser-serialiseDataframe"></a>}}
+	
+	\subsection{Method \code{Serialiser$serialiseDataframe()}}{
+		no description
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$Serialiser$serialiseDataframe(dataframe, filename)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{dataframe}{ - (java expects a RDataframe)}
+					\item{filename}{ - (java expects a String)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			void: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-Serialiser-deserialiseDataframe"></a>}}
+	
+	\subsection{Method \code{Serialiser$deserialiseDataframe()}}{
+		no description
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$Serialiser$deserialiseDataframe(filename)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{filename}{ - (java expects a String)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			RDataframe: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-Serialiser-serialiseList"></a>}}
+	
+	\subsection{Method \code{Serialiser$serialiseList()}}{
+		no description
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$Serialiser$serialiseList(dataframe, filename)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{dataframe}{ - (java expects a RList)}
+					\item{filename}{ - (java expects a String)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			void: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-Serialiser-deserialiseList"></a>}}
+	
+	\subsection{Method \code{Serialiser$deserialiseList()}}{
+		no description
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$Serialiser$deserialiseList(filename)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{filename}{ - (java expects a String)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			RList: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-Serialiser-serialiseNamedList"></a>}}
+	
+	\subsection{Method \code{Serialiser$serialiseNamedList()}}{
+		no description
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$Serialiser$serialiseNamedList(dataframe, filename)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{dataframe}{ - (java expects a RNamedList)}
+					\item{filename}{ - (java expects a String)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			void: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-Serialiser-deserialiseNamedList"></a>}}
+	
+	\subsection{Method \code{Serialiser$deserialiseNamedList()}}{
+		no description
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$Serialiser$deserialiseNamedList(filename)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{filename}{ - (java expects a String)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			RNamedList: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-InfectivityProfile-new"></a>}}
+	
+	\subsection{Method \code{InfectivityProfile$new()}}{
+		no description
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$InfectivityProfile$new(discretePdf, id)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{discretePdf - A discrete pdf of probabilities over time of secondary infection given priamry infection where probability at time 0 is 0}{ - (java expects a RNumericVector)}
+					\item{id - a numeric index or id for this profile}{ - (java expects a int)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 InfectivityProfile object: 
 		}
 	}
 

@@ -2,6 +2,14 @@ library(tidyverse)
 library(patchwork)
 
 here::i_am("vignettes/common-setup.R")
+# load jepidemic
+# try(detach("package:jepidemic", unload = TRUE),silent = TRUE)
+# remove.packages("jepidemic")
+# rm(list = ls()) may be required to clear old versions of the library code
+# Restarting R maybe also required if there was a running java VM otherwise changes to the jars on the classpath are not picked up.
+# install locally compiled R library:
+# devtools::install("~/Git/jepidemic/r-library/", upgrade = "never")
+devtools::load_all()
 
 devtools::load_all("~/Git/uk-covid-datatools/")
 ukcovidtools::reload("~/Git/uk-covid-datatools/config.yml")
@@ -11,19 +19,8 @@ output = ukcovidtools::output("~/Dropbox/sarscov2/r-estimation-methodology")
 devtools::load_all("~/Git/standard-print-output/")
 standardPrintOutput::setDefaults()
 
-# load jepidemic
-# try(detach("package:jepidemic", unload = TRUE),silent = TRUE)
-# remove.packages("jepidemic")
-# rm(list = ls()) may be required to clear old versions of the library code
-# Restarting R maybe also required if there was a running java VM otherwise changes to the jars on the classpath are not picked up.
-# install locally compiled R library:
-# devtools::install("~/Git/jepidemic/r-library/", upgrade = "never")
+
 J = jepidemic::JavaApi$new()
-
-# TODO: if I am submitting to CRAN I'll need to remove these dependencies
-synth = SyntheticDatasetProvider$new(dpc)
-
-source(here::here("vignettes/validation-functions.R"))
 
 ## Plots ----
 
@@ -181,7 +178,7 @@ reload = function() {
 # paste0("c(",paste0(tmp$events$rates,collapse = ", "),")") %>% clipr::write_clip()
 # paste0("c(",paste0(tmp$events$breaks,collapse = ", "),")") %>% clipr::write_clip()
 
-synthetic = standardSyntheticDataset()
+# synthetic = standardSyntheticDataset()
 
 # set.seed(101)
 # options2 = tibble(weekendEffect = c(0,0.03,0.1)) %>% 
@@ -204,27 +201,27 @@ synthetic = standardSyntheticDataset()
 
 ## Divergence and comparison metrics ----
 # KL divergence for 
-
-klGammaVsGamma = function(mean1, sd1, mean2, sd2) {
-  if (sd1>mean1 | sd2>mean2) stop("sd must be smaller than mean")
-  range = seq(0,10,length=200)
-  g1 = dgamma(range, shape=mean1^2/sd1^2,rate = mean1/sd1^2)
-  g2 = dgamma(range, shape=mean2^2/sd2^2,rate = mean2/sd2^2)
-  kl = flexmix::KLdiv(cbind(g1=g1,g2=g2))[1,2]
-  # A matrix of KL divergences where the rows correspond to using the respective distribution as  in the formula above.
-  return(kl)
-}
-
-klGammaVsUnif = function(value1, precision1, mean2, sd2) {
-  if (sd2>mean2) stop("sd must be smaller than mean")
-  range = seq(0,10,length=200)
-  g1 = dunif(range, min = value1-precision1,max = value1+precision1)
-  g2 = dgamma(range, shape=mean2^2/sd2^2,rate = mean2/sd2^2)
-  kl = flexmix::KLdiv(cbind(g1=g1,g2=g2))[1,2]
-  # A matrix of KL divergences where the rows correspond to using the respective distribution as  in the formula above.
-  return(kl)
-}
-
-
-klGammaVsGamma(mean1=2,sd1=1.5,mean2=2.3,sd2=2.1)
-klGammaVsUnif(value1=2,precision1=0.0001,mean2=2,sd2=0.002)
+# 
+# klGammaVsGamma = function(mean1, sd1, mean2, sd2) {
+#   if (sd1>mean1 | sd2>mean2) stop("sd must be smaller than mean")
+#   range = seq(0,10,length=200)
+#   g1 = dgamma(range, shape=mean1^2/sd1^2,rate = mean1/sd1^2)
+#   g2 = dgamma(range, shape=mean2^2/sd2^2,rate = mean2/sd2^2)
+#   kl = flexmix::KLdiv(cbind(g1=g1,g2=g2))[1,2]
+#   # A matrix of KL divergences where the rows correspond to using the respective distribution as  in the formula above.
+#   return(kl)
+# }
+# 
+# klGammaVsUnif = function(value1, precision1, mean2, sd2) {
+#   if (sd2>mean2) stop("sd must be smaller than mean")
+#   range = seq(0,10,length=200)
+#   g1 = dunif(range, min = value1-precision1,max = value1+precision1)
+#   g2 = dgamma(range, shape=mean2^2/sd2^2,rate = mean2/sd2^2)
+#   kl = flexmix::KLdiv(cbind(g1=g1,g2=g2))[1,2]
+#   # A matrix of KL divergences where the rows correspond to using the respective distribution as  in the formula above.
+#   return(kl)
+# }
+# 
+# 
+# klGammaVsGamma(mean1=2,sd1=1.5,mean2=2.3,sd2=2.1)
+# klGammaVsUnif(value1=2,precision1=0.0001,mean2=2,sd2=0.002)

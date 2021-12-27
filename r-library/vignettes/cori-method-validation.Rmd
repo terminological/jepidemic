@@ -1,4 +1,4 @@
-devtioo---
+---
 title: "Appendix A1 - Reproduction number estimate validation"
 author: "Rob Challen"
 date: '`r format(Sys.Date(), "%d-%m-%Y")`'
@@ -121,6 +121,13 @@ estim$withInfectivityProfile(infectivityProfile = Flu2009$si_distr, replace=FALS
 # estim$detailedOutput() -->
 estim$withDefaultPrior()
 estim$atStartOfTimeseries()
+
+# sudo R CMD javareconf JAVA_HOME=/usr/lib/jvm/java-9-oracle
+# install.packages("rJava")
+Sys.setenv('JAVA_HOME' = '/usr/lib/jvm/java-9-oracle/jre')
+Sys.setenv('LD_LIBRARY_PATH' = '/usr/lib/jvm/java-9-oracle/lib/server')
+rJava::.jinit()
+rJava::.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
 # 
 # <!-- jepidem = estim$estimateRtSingle(incidence = Flu2009$incidence,dateColName = "dates", incidenceColName = "I") -->
 # 
@@ -200,7 +207,7 @@ We simulate using one smooth and one stepped growth rate time series in combinat
 
 rtEstimator = function(window, estimator=estim) {
   return(function(ts, infectivityProfile) {
-    estimator$withInfectivityProfile(infectivityProfile, replace = TRUE)
+    estimator$withInfectivityProfileMatrix(infectivityProfile, replace = TRUE)
     estimator$selectSpecificWindow(window)
     estimator$estimateRt(ts %>% group_by(subgroup),dateColName = "date",incidenceColName = "value")
   })

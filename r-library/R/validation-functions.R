@@ -3,13 +3,25 @@
 
 ## Lag analysis ----
 
-lagAnalysis = function(estimators, trueVar = "Rt.actual", estimateVar = "Rt.Quantile.0.5") {
-  trueVar = ensym(trueVar)
-  estimateVar = ensym(estimateVar)
+#' Title
+#'
+#' @param estimators - a tibble of estimator methods to compare. This should have 2 columns - "model" the model name, and estimFn: the estimation function as a list column.
+#' This function should take 2 parameters, "ts" which will be a simple time series and "infectivityProfile" which will be the passed the infectivity profile yMatrix  
+#' @param trueVar - the column in the ts time series which contains the actual value of the growth rate or reproduction number
+#' @param estimateVar - the column in the estimated time series that we can compare to the true value of the the estimate.
+#'
+#' @return a list containing 3 elements: the "estimates" containing the estimates from each of the methods being compared, the "rmseByOffset" which summarises the
+#' estimates for each model compared to the actual value with a series of offsets, and the "modelLag", the value of the offset woth the minimum rmse of each of the methods
+#' being compared.
+#' @export 
+lagAnalysis = function(estimators, estimation = "Rt") {
+  trueVar = as.symbol(paste0(estimation, ".actual"))
+  estimateVar = as.symbol(paste0(estimation, ".Quantile.0.5"))
   
-  triangularSim = getGrowthRateBasedDataset(weekendEffect = 0, smooth= FALSE, seed = 1000, baseline=0, periodic=TRUE, bootstraps=10)
-  triangular = enframe(triangularSim) %>% pivot_wider()
-
+  triangularSim = jepidemic::lagAnalysisDataset
+  #triangular = enframe(triangularSim) %>% pivot_wider()
+  triangular = tibble(name = triangularSim$name, ts = list(triangularSim$ts), infectivityProfile = list(triangularSim$infectivityProfile$yMatrix))
+  
   periodicEstimates = triangular %>% inner_join(estimators, by=character()) %>% mutate(
     estimate = pmap(.l=list(fn = estimFn, ts = ts, infectivityProfile = infectivityProfile), .f = function(fn,ts,infectivityProfile) {
       #browser()
@@ -21,7 +33,7 @@ lagAnalysis = function(estimators, trueVar = "Rt.actual", estimateVar = "Rt.Quan
   periodicTs = periodicEstimates %>% select(model,ts) %>% unnest(ts)
 
   offset = tibble(shift = c(0:28)) %>% inner_join(
-    periodicTs %>% select(theoretical.date = date,Rt.actual), by=character()) %>% 
+    periodicTs %>% select(theoretical.date = date, Rt.actual), by=character()) %>% 
     mutate(
       estimate.date = theoretical.date+shift
     )
@@ -46,20 +58,38 @@ lagAnalysis = function(estimators, trueVar = "Rt.actual", estimateVar = "Rt.Quan
     return(out)
   }) %>% mutate(label = sprintf("%1.2f days",medianLag))
 
-  return(list(
+  out = list(
     estimates = periodicRt %>% inner_join(periodicTs, by=c("model","date","subgroup")),
     rmseByOffset = offsetSummary,
     modelLag = offsetSummarySummary
-  ))
+  )
   
+  class(out) = "lag_analysis_result"
+  
+  return(out)
 }
 
 ## Lag analysis visualisation ----
 
-lagTimeseriesPlot = function(estimates, ncol=1) {
+lagTimeseriesPlot = function(lagAnalysisResult, estimation = "Rt", ncol=1) {
+  estimates = lagAnalysisResult$estimates
+  trueVar = as.symbol(paste0(estimation, ".actual"))
+  estimateVar = as.symbol(paste0(estimation, ".Quantile.0.5"))
+  lowVar = as.symbol(paste0(estimation, ".Quantile.0.025"))
+  highVar = as.symbol(paste0(estimation, ".Quantile.0.975"))
+  
+  defaultAes = aes(x=date, y=Rt.Mean)
+  dots = rlang::list2(...)
+  combinedAes = modifyList(defaultAes,mapping)
+  
   suppressWarnings(
-    rtRibbon(estimates,ylim = c(0.4,1.6))+geom_line(mapping = aes(x=date,y=Rt.actual), inherit.aes = FALSE, colour="red")+xlab(NULL)+
-      ylab(latex2exp::TeX("$R_t$ estimate"))+
+    ggplot(estimates %>% filter(!is.nan(!!trueVar)), mapping = aes(x=date))+
+      geom_ribbon(aes(ymin = !!lowVar, ymax = !!highVar), alpha=0.2,colour = NA,fill="grey20")+
+      geom_line(aes(y=!!estimateVar),colour="black")+
+      guides(colour="none")+
+      geom_line(mapping = aes(x=date,y=!!trueVar), inherit.aes = FALSE, colour="red")+
+      xlab(NULL)+
+      ylab(paste0(estimation," estimate"))+
       facet_wrap(vars(model),ncol=ncol)
   )
 }
@@ -81,56 +111,6 @@ lagPlot = function(lagAnalysis) {
   return(p3)
 }
 
-## Quality analysis ----
-# TODO: make this a validation dataset
-standardSyntheticDataset = function() {
-  # control points
-  control = tibble(
-    smooth = c(TRUE,FALSE),
-    control = list(
-      tibble(
-        # SMOOTH
-        rates = c(0.03, -0.0261293028360427, 0.00472741863318508, 0.0421778375461848, -0.042958304850032, -0.0693039179026735),
-        breaks = c(0, 45, 96, 197, 254, 351)
-      ),
-      tibble(
-        # STEP
-        rates = c(0.035, -0.03, 0.025, -0.015, 0.01, -0.005),
-        breaks = c(0, 30, 130, 200, 250, 300)
-      )
-    )
-  )
-  
-  # kept
-  set.seed(101)
-  options = tibble(weekendEffect = c(0,0.03,0.1)) %>% 
-    inner_join(control, by = character()) %>%
-    inner_join(tibble(seed = c(100,10000)), by=character()) %>% 
-    mutate(
-      smoothLabel = ifelse(smooth,"spline","step") %>% ordered(levels=c("spline","step")),
-      weekendLabel = case_when(
-        weekendEffect == 0 ~ "no weekly variation",
-        weekendEffect == 0.03 ~ "\u00B1 3% variation",
-        weekendEffect == 0.1 ~ "\u00B1 10% variation",
-      ) %>% ordered(levels=c("no weekly variation","\u00B1 3% variation","\u00B1 10% variation")),
-      seedLabel = case_when(
-        seed == 100 ~ "low incidence",
-        seed == 10000 ~ "high incidence"
-      ) %>% ordered(levels=c("low incidence","high incidence")),
-    )
-  
-  # Combine configurtation with generated dataset
-  synthetic = options %>% group_by_all() %>% group_modify(function(d,g,...) {
-    config = g
-    tmp = getGrowthRateBasedDataset(weekendEffect = config$weekendEffect, smooth= config$smooth, seed = config$seed, 
-                                          breaks = config$control[[1]]$breaks, rates = c(0,config$control[[1]]$rates),
-                                          bootstraps=10)
-    tmp$serial = NULL
-    enframe(tmp) %>% pivot_wider(names_from = name, values_from=value) 
-  })
-  
-  return(synthetic)
-}
 
 # reconstruct a CDF on a regular grid from the quantiles
 inferQuantiles = function(rtEstimate, prefix="Rt.") {
@@ -210,7 +190,7 @@ calculateMetrics = function(quantileEstimate, originalTs, medianLag, trueVar = "
     )
 }
 
-qualityAnalysis = function(estimators, modelLag, estimatePrefix = "Rt.", trueVar = "Rt.actual", criticalValue = 1, synthetic = standardedxcvSyntheticDataset()) {
+qualityAnalysis = function(estimators, modelLag, estimatePrefix = "Rt.", trueVar = "Rt.actual", criticalValue = 1, synthetic = jepidemic::validationDataset) {
   trueVar = ensym(trueVar)
   
   syntheticEstimates = synthetic %>% inner_join(estimators, by=character()) %>% mutate(

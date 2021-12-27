@@ -5,7 +5,8 @@ c(
 		year = 2021,
 		note = "R package version 0.03",
 		author = c(
-			person(given = "Rob",family = "Challen",email = "rc538@exeter.ac.uk",comment = structure("0000-0002-5504-7768", .Names = "ORCID"),role = c("aut", "cre"))		)
+			person(given = "Rob",family = "Challen",email = "rc538@exeter.ac.uk",comment = structure("0000-0002-5504-7768", .Names = "ORCID"),role = c("aut", "cre")),
+			person(given = "terminological",role = "aut")		)
 	),
 	bibentry(bibtype = "Manual",
 		title = "R6 generator maven plugin",

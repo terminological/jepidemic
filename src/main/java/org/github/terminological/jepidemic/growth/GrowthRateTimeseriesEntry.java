@@ -162,8 +162,8 @@ public class GrowthRateTimeseriesEntry implements TimeseriesEntry.Incidence, Com
 	}
 	
 	@SuppressWarnings("unchecked")
-	Summary.Impl<? extends AbstractRealDistribution> getLambdaSummary() {
-		return (Impl<? extends AbstractRealDistribution>) this.getSummaryEstimates().getLambda();
+	Summary.Impl<AbstractRealDistribution> getLambdaSummary() {
+		return (Impl<AbstractRealDistribution>) this.getSummaryEstimates().getLambda();
 	}
 	
 //	public Optional<ExtendedGammaDistribution> getLambdaPosterior(GrowthMetadata metadata) {
@@ -178,8 +178,8 @@ public class GrowthRateTimeseriesEntry implements TimeseriesEntry.Incidence, Com
 	}
 	
 	@SuppressWarnings("unchecked")
-	Summary.Impl<? extends AbstractRealDistribution> getGrowthRateSummary() {
-		return (Impl<? extends AbstractRealDistribution>) this.getSummaryEstimates().getGrowth();
+	Summary.Impl<AbstractRealDistribution> getGrowthRateSummary() {
+		return (Impl<AbstractRealDistribution>) this.getSummaryEstimates().getGrowth();
 	}
 //	
 //	List<DatedEstimate.Incidence> getAllIncidenceEstimates() {}
@@ -474,7 +474,7 @@ public class GrowthRateTimeseriesEntry implements TimeseriesEntry.Incidence, Com
 		if (maxDaysAhead < 0) return Stream.empty();
 		return Stream.concat(
 				Stream.of(this), 
-				this.next().stream().flatMap(n -> n.streamForward(maxDaysAhead-1)));
+				this.next().map(o -> Stream.of(o)).orElse(Stream.empty()).flatMap(n -> n.streamForward(maxDaysAhead-1)));
 		
 	}
 	
@@ -482,7 +482,7 @@ public class GrowthRateTimeseriesEntry implements TimeseriesEntry.Incidence, Com
 		if (maxDaysBefore < 0) return Stream.empty();
 		return Stream.concat(
 				Stream.of(this), 
-				this.prev().stream().flatMap(n -> n.streamForward(maxDaysBefore-1)));
+				this.prev().map(o -> Stream.of(o)).orElse(Stream.empty()).flatMap(n -> n.streamForward(maxDaysBefore-1)));
 		
 	}
 

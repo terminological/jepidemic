@@ -1,14 +1,17 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.terminological</groupId>
-  <artifactId>jepidemic</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
-  <description>Epidemic tools in java</description>
-  
-  	<properties>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.github.terminological</groupId>
+	<artifactId>jepidemic</artifactId>
+	<version>0.0.3-SNAPSHOT</version>
+	<description>Epidemic tools in java</description>
+
+	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>9</maven.compiler.source>
-		<maven.compiler.target>9</maven.compiler.target>
+		<!-- Must be Java 8 for standard rJava implementation -->
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<r6.version>master-SNAPSHOT</r6.version>
 	</properties>
 
@@ -20,7 +23,7 @@
 			<artifactId>r6-generator-runtime</artifactId>
 			<version>${r6.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -34,29 +37,29 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-		  <groupId>org.apache.commons</groupId>
-		  <artifactId>commons-math3</artifactId>
-		  <version>3.6.1</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.6.1</version>
 		</dependency>
-		
+
 	</dependencies>
 
 	<!-- Resolve runtime library on github -->
 	<repositories>
 		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 
 	<!-- Resolve maven plugin on github -->
 	<pluginRepositories>
 		<pluginRepository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</pluginRepository>
 	</pluginRepositories>
-		
+
 	<build>
 		<plugins>
 			<plugin>
@@ -68,6 +71,14 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19</version>
+				<configuration>
+					<argLine>-Xmx4096m</argLine>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>com.github.terminological</groupId>
 				<artifactId>r6-generator-maven-plugin</artifactId>
 				<version>${r6.version}</version>
@@ -76,7 +87,7 @@
 						<title>Java Epidemic</title>
 						<version>0.03</version>
 						<debug>false</debug>
-<!-- 						<usePkgdown>true</usePkgdown> -->
+						<!-- <usePkgdown>true</usePkgdown> -->
 						<useJavadoc>true</useJavadoc>
 						<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
 						<rjavaOpts>
@@ -85,7 +96,8 @@
 						<packageName>jepidemic</packageName>
 						<license>MIT</license>
 						<description>
-							Some work in progress R functions related to the covid 19 epidemic
+							Some work in progress R functions related to the
+							covid 19 epidemic
 						</description>
 						<maintainerName>Rob</maintainerName>
 						<maintainerFamilyName>Challen</maintainerFamilyName>

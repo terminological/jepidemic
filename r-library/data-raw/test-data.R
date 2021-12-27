@@ -7,7 +7,7 @@ tsp = dpc$timeseriesProcessor()
 
 devtools::install("~/Git/r6-generator-maven-plugin-test/r-library/")
 
-J = testRapi::JavaApi$new()
+J = jepidemic::JavaApi$new()
 
 tmp = dpc$datasets$getPHEApiNations()
 tmp = tmp %>% tsp$estimateRt()

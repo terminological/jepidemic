@@ -1,5 +1,6 @@
 package org.github.terminological.jepidemic;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.github.terminological.jepidemic.estimate.CoriEstimationSummary;
@@ -25,7 +26,7 @@ public interface RtTimeseriesEntry extends TimeseriesEntry.Incidence {
 		if (this instanceof CoriEstimationSummaryEntry) return (CoriEstimationSummaryEntry) this;
 		return 
 			new	CoriEstimationSummaryEntry(
-				List.of(
+				Collections.singletonList(
 						new GammaMoments(this.mean().get(), this.sd().get()).convert()
 						.withDate(-1, date().get(), incidence().get(), 0D)
 						.withProfileId(profileId)
