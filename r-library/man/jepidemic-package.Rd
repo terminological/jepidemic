@@ -6,7 +6,8 @@
 \title{jepidemic: Java Epidemic}
 \description{
 \if{html}{\figure{logo.png}{options: align='right'}}
-Some work in progress R functions related to the covid 19 epidemic
+Some work in progress R functions related to the
+							covid 19 epidemic
 
 Version: 0.03
 
@@ -14,9 +15,9 @@ Classes:
 \itemize{ 
 	\item \code{JavaApi}
 	\item \code{GrowthRateEstimator}
-	\item \code{CoriEstimator}
 	\item \code{Serialiser}
 	\item \code{InfectivityProfile}
+	\item \code{CoriEstimator}
 }
 }
 

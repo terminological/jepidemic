@@ -55,7 +55,7 @@ ggplot() +
   #geom_bar(data=weekend$ts, mapping=aes(x=date,y=import), stat="identity")+
   #geom_line(data=weekend$ts, mapping=aes(x=date,y=Est.actual), colour="red")+
   #geom_line(data=weekend$ts, mapping=aes(x=date,y=Est.observed), colour="blue")+
-  geom_point(data=vignetteDataset$ts, mapping=aes(x=date,y=value, colour=as.factor(observationDate), group=subgroup), size=0.1)+
+  geom_point(data=vignetteDataset$ts, mapping=aes(x=date,y=value, colour=as.factor(observationDate), group=bootstrap), size=0.1)+
   facet_wrap(vars(observationDate))
 
 usethis::use_data(vignetteDataset,overwrite = TRUE)
@@ -66,16 +66,16 @@ The final synthetic time series have 3 biases, firstly a weekend effect, secondl
 
 ```{r}
 ggplot()+
-  geom_line(data=boot$ts, aes(x=date,y=Fraction.observed,colour="observed"))+
-  geom_line(data=boot$ts, aes(x=date,y=Fraction.weekend,colour="weekend"))+
-  geom_line(data=boot$ts, aes(x=date,y=Fraction.available,colour="available"))+
+  geom_line(data=vignetteDataset$ts, aes(x=date,y=Fraction.observed,colour="observed"))+
+  geom_line(data=vignetteDataset$ts, aes(x=date,y=Fraction.weekend,colour="weekend"))+
+  geom_line(data=vignetteDataset$ts, aes(x=date,y=Fraction.available,colour="available"))+
   facet_wrap(vars(observationDate))+ylab("fraction")
 
 ```
 
 ## Validation scenarios ----
 
-The synthetic time series generated in this manner can be used to test estimators of growth rate and R_t, against theoretical values. For validation of accuracy of predictions we use 2 data sets, firstly a period regular function with zero randomwness to assess the lag in estimation:
+The synthetic time series generated in this manner can be used to test estimators of growth rate and R_t, against theoretical values. For validation of accuracy of predictions we use 2 data sets, firstly a period regular function with zero randomness to assess the lag in estimation:
 
 ```{r}
 lagAnalysisDataset = jepidemic::periodicGrowthRate("lag test",smooth=FALSE) %>%
@@ -83,7 +83,9 @@ lagAnalysisDataset = jepidemic::periodicGrowthRate("lag test",smooth=FALSE) %>%
   jepidemic::addPoissonRate() 
 
 lagAnalysisDataset$ts = lagAnalysisDataset$ts %>%
-  mutate(value = Est.actual)
+  mutate(
+    value = Est.actual
+  )
 
 usethis::use_data(lagAnalysisDataset,overwrite = TRUE)
 # J$Serialiser$serialiseDataframe(lagAnalysisDataset$ts,here::here("../src/main/resources/lagAnalysisDataframe.ser"))
@@ -162,10 +164,9 @@ usethis::use_data(validationDataset,overwrite = TRUE)
 ```
 
 ```{r}
-subgroups = c(1,2,3)
 tmp = validationDataset %>% mutate(rowLabel = paste0(smoothLabel,"; ",seedLabel), colLabel=weekendLabel)
-tmp2 = tmp %>% ungroup() %>% select(rowLabel,colLabel,ts) %>% distinct() %>% unnest(ts) %>% filter(subgroup %in% subgroups)
-tmp3 = validationDataset %>% filter(weekendEffect==0, seed==100) %>% unnest(ts) %>% filter(subgroup==1)
+tmp2 = tmp %>% ungroup() %>% select(rowLabel,colLabel,ts) %>% distinct() %>% unnest(ts) %>% filter(bootstrap==1)
+tmp3 = validationDataset %>% filter(weekendEffect==0, seed==100) %>% unnest(ts) %>% filter(bootstrap==1)
 ggplot(tmp3, aes(x=date,y=Growth.actual))+
   geom_line(colour="red")+
   facet_wrap(vars(smoothLabel), scales = "free_y", ncol=1)
@@ -174,7 +175,7 @@ ggplot(tmp3, aes(x=date,y=Growth.actual))+
 and the resulting incidence rates are modified with a range of different combinations of weekend periodicity (between 0, 0.03 and 0.1), and 2 varying levels of initial incidence generating epidemics of different sizes. 
 
 ```{r}
-ggplot(tmp2, aes(x=date,y=value,group=subgroup))+
+ggplot(tmp2, aes(x=date,y=value))+
   geom_point(size=0.5)+
   geom_line(alpha=0.1)+
   ylab("cases")+
@@ -182,7 +183,9 @@ ggplot(tmp2, aes(x=date,y=value,group=subgroup))+
   facet_grid(rows = vars(rowLabel), cols=vars(colLabel), scales = "free_y")
 ```
 
-The various combinations allow us to investigate
+The various combinations allow us to investigate the properties of the estimators under a range of different scenarios. 
+
+TODO: we have to option to look at different reporting delay distributions also on the accuracy of the estiamtes at the tail of the time series. This is slightly involved though as the accuracy is a function of the delay and the amount of data we truncate the time series by before estimating. This is probably best investigated as a separate strand as will increase the dimensions of the validation scenarios by 2 and involve at least 4x the number of validation scenarios.
 
 ## 2 strain validation
 
@@ -221,7 +224,7 @@ sPosOmicronScenario = function(weekendEffect) {
 
 de = sPosOmicronScenario(weekendEffect = 0.05)
 
-omicronDataset = jepidemic::getTwoAlternativesDataset(scenario1 = om,scenario2 = de, delayMean1 = 0.8, delayMean2 = 1, timepoints = c(35,45,55,65,100))
+omicronDataset = getTwoAlternativesDataset(scenario1 = om,scenario2 = de, delayMean1 = 0.8, delayMean2 = 1, timepoints = c(35,45,55,65,100))
 # TODO: play with topLevel etc.
 usethis::use_data(omicronDataset,overwrite = TRUE)
 
@@ -241,8 +244,8 @@ ggplot() +
   #geom_bar(data=weekend$ts, mapping=aes(x=date,y=import), stat="identity")+
   #geom_line(data=weekend$ts, mapping=aes(x=date,y=Est.actual), colour="red")+
   #geom_line(data=weekend$ts, mapping=aes(x=date,y=Est.observed), colour="blue")+
-  geom_point(data=omicronDataset$ts, mapping=aes(x=date,y=value.s1, colour=source.s1, group=subgroup), size=0.1)+
-  geom_point(data=omicronDataset$ts, mapping=aes(x=date,y=value.s2, colour=source.s2, group=subgroup), size=0.1)+
+  geom_point(data=omicronDataset$ts, mapping=aes(x=date,y=value.s1, colour=source.s1), size=0.1)+
+  geom_point(data=omicronDataset$ts, mapping=aes(x=date,y=value.s2, colour=source.s2), size=0.1)+
   facet_wrap(vars(observationDate))+scale_y_continuous(trans="log1p", breaks = c(0,10,100,1000,10000,100000))+
   ylab("cases")+xlab("date")
 

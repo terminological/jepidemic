@@ -23,11 +23,12 @@
 }
 
 \description{
-Some work in progress R functions related to the covid 19 epidemic
+Some work in progress R functions related to the
+							covid 19 epidemic
 
 Version: 0.03
 
-Generated: 2021-12-27T10:30:11.523
+Generated: 2021-12-28T11:33:45.818291
 }
 
 \author{\email{rc538@exeter.ac.uk}}
@@ -42,9 +43,6 @@ Generated: 2021-12-27T10:30:11.523
 		\item \href{#method-GrowthRateEstimator-defaultGrowthRateAndRtEstimator}{\code{J$GrowthRateEstimator$defaultGrowthRateAndRtEstimator(minWindow, maxWindow, initialIncidence)}}
 		\item \href{#method-GrowthRateEstimator-defaultGrowthRateEstimator}{\code{J$GrowthRateEstimator$defaultGrowthRateEstimator(minWindow, maxWindow)}}
 		\item \href{#method-GrowthRateEstimator-basicGrowthRateEstimator}{\code{J$GrowthRateEstimator$basicGrowthRateEstimator()}}
-		\item \href{#method-CoriEstimator-new}{\code{J$CoriEstimator$new(r0Mean, r0SD, maxWindow)}}
-		\item \href{#method-CoriEstimator-defaultEpiEstim}{\code{J$CoriEstimator$defaultEpiEstim(infectivityProfile, meanR0, sdR0, window)}}
-		\item \href{#method-CoriEstimator-defaultUncertainEpiEstim}{\code{J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, window, n2)}}
 		\item \href{#method-Serialiser-new}{\code{J$Serialiser$new()}}
 		\item \href{#method-Serialiser-serialiseDataframe}{\code{J$Serialiser$serialiseDataframe(dataframe, filename)}}
 		\item \href{#method-Serialiser-deserialiseDataframe}{\code{J$Serialiser$deserialiseDataframe(filename)}}
@@ -53,6 +51,9 @@ Generated: 2021-12-27T10:30:11.523
 		\item \href{#method-Serialiser-serialiseNamedList}{\code{J$Serialiser$serialiseNamedList(dataframe, filename)}}
 		\item \href{#method-Serialiser-deserialiseNamedList}{\code{J$Serialiser$deserialiseNamedList(filename)}}
 		\item \href{#method-InfectivityProfile-new}{\code{J$InfectivityProfile$new(discretePdf, id)}}
+		\item \href{#method-CoriEstimator-new}{\code{J$CoriEstimator$new(r0Mean, r0SD, maxWindow)}}
+		\item \href{#method-CoriEstimator-defaultEpiEstim}{\code{J$CoriEstimator$defaultEpiEstim(infectivityProfile, meanR0, sdR0, window)}}
+		\item \href{#method-CoriEstimator-defaultUncertainEpiEstim}{\code{J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, window, n2)}}
 	}
 	
 
@@ -213,109 +214,6 @@ J$GrowthRateEstimator$basicGrowthRateEstimator()
 
 		\subsection{Returns}{
 			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
-		}
-	}
-
-	\if{html}{\out{<hr>}}
-	\if{html}{\out{<a id="method-CoriEstimator-new"></a>}}
-	
-	\subsection{Method \code{CoriEstimator$new()}}{
-		The Estimator is configured with the baseline \(R_0\) assumptions which are used as prior values for \(R_t\) when no other 
-values are available, or the {@link CoriEstimator#withDefaultPrior()} option is used.
-	
-		\subsection{Usage}{
-			\if{html}{\out{<div class="r">}}
-			\preformatted{
-J = jepidemic::JavaApi$get()
-J$CoriEstimator$new(r0Mean, r0SD, maxWindow)
-	  		}
-			\if{html}{\out{</div>}}
-		}
-	
-		\subsection{Arguments}{
-			\if{html}{\out{<div class="arguments">}}
-			\describe{
-				\itemize{
-					\item{r0Mean - The mean of the gamma distribution of the baseline prior assumption about R0 - the theorerical reproduction number in an infinite pool of evenly mixing susceptible individuals}{ - (java expects a double)}
-					\item{r0SD - The SD of the prior gamma distribution}{ - (java expects a double)}
-					\item{maxWindow - The maximum sliding window over which to estimate \(R_t\).}{ - (java expects a int)}
-				}
-			}
-			\if{html}{\out{</div>}}
-		}
-
-		\subsection{Returns}{
-			R6 CoriEstimator object: 
-		}
-	}
-
-	\if{html}{\out{<hr>}}
-	\if{html}{\out{<a id="method-CoriEstimator-defaultEpiEstim"></a>}}
-	
-	\subsection{Method \code{CoriEstimator$defaultEpiEstim()}}{
-		Produces a CoriEstimator that is configured to behave like the default settings of EpiEstim. 
-In that it uses a fixed prior for Rt and returns a fixed window size<br><br>
-	
-		\subsection{Usage}{
-			\if{html}{\out{<div class="r">}}
-			\preformatted{
-J = jepidemic::JavaApi$get()
-J$CoriEstimator$defaultEpiEstim(infectivityProfile, meanR0, sdR0, window)
-	  		}
-			\if{html}{\out{</div>}}
-		}
-	
-		\subsection{Arguments}{
-			\if{html}{\out{<div class="arguments">}}
-			\describe{
-				\itemize{
-					\item{infectivityProfile - a vector with the discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)}{ - (java expects a RNumericVector)}
-					\item{meanR0 - the mean prior of R0}{ - (java expects a double)}
-					\item{sdR0 - the sd prior of R0}{ - (java expects a double)}
-					\item{window - the window size}{ - (java expects a int)}
-				}
-			}
-			\if{html}{\out{</div>}}
-		}
-
-		\subsection{Returns}{
-			R6 CoriEstimator object: a default cori estimator
-		}
-	}
-
-	\if{html}{\out{<hr>}}
-	\if{html}{\out{<a id="method-CoriEstimator-defaultUncertainEpiEstim"></a>}}
-	
-	\subsection{Method \code{CoriEstimator$defaultUncertainEpiEstim()}}{
-		Produces a CoriEstimator that is configured to behave like the default settings of EpiEstim. 
-In that it uses a fixed prior for Rt and returns a fixed window size and aggregates uncertain SI 
-distributions with a random resampling strategy<br><br>
-	
-		\subsection{Usage}{
-			\if{html}{\out{<div class="r">}}
-			\preformatted{
-J = jepidemic::JavaApi$get()
-J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, window, n2)
-	  		}
-			\if{html}{\out{</div>}}
-		}
-	
-		\subsection{Arguments}{
-			\if{html}{\out{<div class="arguments">}}
-			\describe{
-				\itemize{
-					\item{infectivityProfiles - a numeric matrix with the discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)}{ - (java expects a RNumericArray)}
-					\item{meanR0 - the mean prior of R0}{ - (java expects a double)}
-					\item{sdR0 - the sd prior of R0}{ - (java expects a double)}
-					\item{window - the window size}{ - (java expects a int)}
-					\item{n2 - the number of samples to use for estimating confidence limits on bootstrapped infectivity profiles}{ - (java expects a int)}
-				}
-			}
-			\if{html}{\out{</div>}}
-		}
-
-		\subsection{Returns}{
-			R6 CoriEstimator object: a default cori estimator
 		}
 	}
 
@@ -560,6 +458,109 @@ J$InfectivityProfile$new(discretePdf, id)
 
 		\subsection{Returns}{
 			R6 InfectivityProfile object: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-CoriEstimator-new"></a>}}
+	
+	\subsection{Method \code{CoriEstimator$new()}}{
+		The Estimator is configured with the baseline \(R_0\) assumptions which are used as prior values for \(R_t\) when no other 
+values are available, or the {@link CoriEstimator#withDefaultPrior()} option is used.
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$CoriEstimator$new(r0Mean, r0SD, maxWindow)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{r0Mean - The mean of the gamma distribution of the baseline prior assumption about R0 - the theorerical reproduction number in an infinite pool of evenly mixing susceptible individuals}{ - (java expects a double)}
+					\item{r0SD - The SD of the prior gamma distribution}{ - (java expects a double)}
+					\item{maxWindow - The maximum sliding window over which to estimate \(R_t\).}{ - (java expects a int)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 CoriEstimator object: 
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-CoriEstimator-defaultEpiEstim"></a>}}
+	
+	\subsection{Method \code{CoriEstimator$defaultEpiEstim()}}{
+		Produces a CoriEstimator that is configured to behave like the default settings of EpiEstim. 
+In that it uses a fixed prior for Rt and returns a fixed window size<br><br>
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$CoriEstimator$defaultEpiEstim(infectivityProfile, meanR0, sdR0, window)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{infectivityProfile - a vector with the discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)}{ - (java expects a RNumericVector)}
+					\item{meanR0 - the mean prior of R0}{ - (java expects a double)}
+					\item{sdR0 - the sd prior of R0}{ - (java expects a double)}
+					\item{window - the window size}{ - (java expects a int)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 CoriEstimator object: a default cori estimator
+		}
+	}
+
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-CoriEstimator-defaultUncertainEpiEstim"></a>}}
+	
+	\subsection{Method \code{CoriEstimator$defaultUncertainEpiEstim()}}{
+		Produces a CoriEstimator that is configured to behave like the default settings of EpiEstim. 
+In that it uses a fixed prior for Rt and returns a fixed window size and aggregates uncertain SI 
+distributions with a random resampling strategy<br><br>
+	
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+J$CoriEstimator$defaultUncertainEpiEstim(infectivityProfiles, meanR0, sdR0, window, n2)
+	  		}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\describe{
+				\itemize{
+					\item{infectivityProfiles - a numeric matrix with the discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)}{ - (java expects a RNumericArray)}
+					\item{meanR0 - the mean prior of R0}{ - (java expects a double)}
+					\item{sdR0 - the sd prior of R0}{ - (java expects a double)}
+					\item{window - the window size}{ - (java expects a int)}
+					\item{n2 - the number of samples to use for estimating confidence limits on bootstrapped infectivity profiles}{ - (java expects a int)}
+				}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 CoriEstimator object: a default cori estimator
 		}
 	}
 

@@ -124,8 +124,8 @@ estim$atStartOfTimeseries()
 
 # sudo R CMD javareconf JAVA_HOME=/usr/lib/jvm/java-9-oracle
 # install.packages("rJava")
-Sys.setenv('JAVA_HOME' = '/usr/lib/jvm/java-9-oracle/jre')
-Sys.setenv('LD_LIBRARY_PATH' = '/usr/lib/jvm/java-9-oracle/lib/server')
+# Sys.setenv('JAVA_HOME' = '/usr/lib/jvm/java-9-oracle/jre')
+# Sys.setenv('LD_LIBRARY_PATH' = '/usr/lib/jvm/java-9-oracle/lib/server')
 rJava::.jinit()
 rJava::.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
 # 
@@ -207,11 +207,14 @@ We simulate using one smooth and one stepped growth rate time series in combinat
 
 rtEstimator = function(window, estimator=estim) {
   return(function(ts, infectivityProfile) {
-    estimator$withInfectivityProfileMatrix(infectivityProfile, replace = TRUE)
+    estimator$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
     estimator$selectSpecificWindow(window)
-    estimator$estimateRt(ts %>% group_by(subgroup),dateColName = "date",incidenceColName = "value")
+    estimator$estimateRt(ts, dateColName = "date",incidenceColName = "value")
   })
 }
+
+# each estimator function must take a single time series and a single infectivity_profile object and produce a single 
+# time series of the estimates. The input time-series will have a "date" and a "value" column.
 
 estimators = tibble(
   model = forcats::as_factor(c(

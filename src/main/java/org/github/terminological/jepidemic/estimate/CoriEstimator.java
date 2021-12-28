@@ -438,7 +438,7 @@ public class CoriEstimator {
 		if (!incidence.getTypeOfColumn(dateColName).equals(RDate.class)) throw new ParameterOutOfRangeException("The date column: "+dateColName+" is not of type RDate");
 		if (!incidence.containsKey(incidenceColName)) throw new ParameterOutOfRangeException("The dataframe does not contain a column: "+incidenceColName);
 		if (!incidence.getTypeOfColumn(incidenceColName).equals(RNumeric.class)) {
-			if (!incidence.getTypeOfColumn(incidenceColName).equals(RInteger.class)) {
+			if (incidence.getTypeOfColumn(incidenceColName).equals(RInteger.class)) {
 				incidence.mutate(incidenceColName, RInteger.class, i -> RFunctions.asNumeric(i));
 			} else {
 				throw new ParameterOutOfRangeException("The incidence column: "+incidenceColName+" is not of type RNumeric (or RInteger)");
