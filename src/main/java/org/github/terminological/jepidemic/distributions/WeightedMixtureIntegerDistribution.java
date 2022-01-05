@@ -154,8 +154,8 @@ public class WeightedMixtureIntegerDistribution extends AbstractIntegerDistribut
 	/**
      * Creates a Mixture of distributions.
      *
-     * @param <X> - Dated or undated gamma parameters
-     * @param gammas - a list of the gamma distributions of the mixture
+     * @param distributions - a collection of the distributions of the mixture
+     * @return a weighted mixture distribtion
      */
     public static WeightedMixtureIntegerDistribution unweighted(Collection<? extends AbstractIntegerDistribution> distributions) {
     	return(
@@ -166,10 +166,11 @@ public class WeightedMixtureIntegerDistribution extends AbstractIntegerDistribut
     }
     
     /**
-     * Creates a Mixture of distributions.
+     * Creates a Weighted mixture of distributions.
      *
-     * @param <X> - Dated or undated gamma parameters
-     * @param gammas - a list of the gamma distributions of the mixture
+     * @param distributions - a list of the distributions of the mixture
+     * @param weights - a list of the distribution weights of the mixture
+     * @return a weighted mixture distribtion
      */
     public static WeightedMixtureIntegerDistribution weighted(List<? extends AbstractIntegerDistribution> distributions, List<Double> weights) {
     	if (weights.size() != distributions.size()) throw new MultiDimensionMismatchException(new Integer[] {distributions.size()}, new Integer[] {weights.size()});

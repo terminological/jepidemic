@@ -10,8 +10,8 @@ public class GrowthRateDistribution extends TransformerDistribution<BetaPrimeDis
 		super(
 				BetaPrimeDistribution.extraDistrParameters(alphaPlus, alphaMinus, 1),
 				/*y=g(x)*/ x -> Math.log(x) / (2.0*tau),
-				/*x=g^-1(y)*/ y -> Math.exp(2*tau*y),
-				/*dg-1/dy =*/ y -> 2.0*tau*Math.exp(2*tau*y), 
+				/*x=g^-1(y)*/ y -> Math.exp(2.0*tau*y),
+				/*dg-1/dy =*/ y -> 2.0*tau*Math.exp(2.0*tau*y), 
 				TransformerDistribution.MEAN_PRECISION, TransformerDistribution.SD_PRECISION);
 		this.alphaPlus = alphaPlus;
 		this.alphaMinus = alphaMinus;
@@ -25,7 +25,7 @@ public class GrowthRateDistribution extends TransformerDistribution<BetaPrimeDis
 		double betap_variance = this.getBareDistribution().getNumericalVariance();
 		// https://stats.stackexchange.com/questions/57715/expected-value-and-variance-of-loga
 		// taylor exansion for log
-		double mean = 1/(2.0*tau)*(Math.log(betap_mean) - betap_variance/(2*Math.pow(betap_mean,2)));
+		double mean = 1/(2.0*tau)*(Math.log(betap_mean) - betap_variance/(2.0*Math.pow(betap_mean,2)));
 		return mean;
 	}
 

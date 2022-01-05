@@ -2,7 +2,7 @@
 c(
 	bibentry(bibtype = "Manual",
 		title = "Java Epidemic",
-		year = 2021,
+		year = 2022,
 		note = "R package version 0.03",
 		author = c(
 			person(given = "Rob",family = "Challen",email = "rc538@exeter.ac.uk",comment = structure("0000-0002-5504-7768", .Names = "ORCID"),role = c("aut", "cre")),

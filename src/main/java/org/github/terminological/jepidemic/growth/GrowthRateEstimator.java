@@ -127,11 +127,8 @@ public class GrowthRateEstimator {
 	 * In that it estimates an initial poisson rate prior from the first entry and returns a fixed window size and aggregates uncertain SI 
 	 * distributions with a random resampling strategy<br><br>
 	 * 
-	 * 
-	 * @param infectivityProfiles - a numeric matrix with the discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)
-	 * @param minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.
-	 * @param minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount .
-	 * @return a default growth rate estimator
+	 * @param minWindow - the smallest amount of data considered in estimating the growth rate, 4 is a sensible default unless you want bang up to date estimate.
+	 * @param maxWindow - the largest amount of data considered in estimating the growth rate, 14 is a sensible amount.
 	 */
 	@RMethod 
 	public GrowthRateEstimator(int minWindow, int maxWindow) {
@@ -147,9 +144,9 @@ public class GrowthRateEstimator {
 	 * done using bootstrapping, and combining the results using a mixture distribution. This will be relatively slow.
 	 *  
 	 * @param minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.
-	 * @param minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.
+	 * @param maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.
 	 * @param infectivityProfiles - a numeric matrix with each column containing a discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)
-	 * @return a strict growth rate and $R_t$ estimator that accounts for uncertainty in the infectivity profile.  
+	 * @return a strict growth rate and \(R_t\) estimator that accounts for uncertainty in the infectivity profile.  
 	 */
 	@RMethod 
 	public static GrowthRateEstimator strictGrowthRateAndRtEstimator(int minWindow, int maxWindow, RNumericArray infectivityProfiles) {
@@ -164,9 +161,9 @@ public class GrowthRateEstimator {
 	 * 
 	 * 
 	 * @param minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.
-	 * @param minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.
-	 * @param infectivityProfiles - a numeric matrix with each column containing a discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)
-	 * @return a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.  
+	 * @param maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.
+	 * @param initialIncidence - a guess at the initial incidence of the time series
+	 * @return a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.  
 	 */
 	@RMethod 
 	public static GrowthRateEstimator defaultGrowthRateAndRtEstimator(int minWindow, int maxWindow, double initialIncidence) {
@@ -179,8 +176,8 @@ public class GrowthRateEstimator {
 	 * Produces a GrowthRateEstimator that will estimate growth rate only, with sane defaults, unless an infectivity profile is lated added<br><br>
 	 * 
 	 * @param minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.
-	 * @param minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.
-	 * @return a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.  
+	 * @param maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.
+	 * @return a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.  
 	 */
 	@RMethod 
 	public static GrowthRateEstimator defaultGrowthRateEstimator(int minWindow, int maxWindow) {
@@ -191,7 +188,7 @@ public class GrowthRateEstimator {
 	/** 
 	 * Produces a GrowthRateEstimator that will estimate growth rate only, with sane defaults, and estimating using windows between 4 and 14 days<br><br>
 	 * 
-	 * @return a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.  
+	 * @return a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.  
 	 */
 	@RMethod 
 	public static GrowthRateEstimator basicGrowthRateEstimator() {
@@ -212,14 +209,14 @@ public class GrowthRateEstimator {
 	
 	/**
 	 * Provides a sensible baseline configuration for the estimator that involves estimating the poisson rate using the 
-	 * previous timestep's posterior with standard deviation scaled by a factor determined by the t-2 value. Multiple posterior
+	 * previous timestep's posterior and growth rate estimates. Multiple posterior
 	 * estimates are combined using a weighted average based on a discretised normal distributed weight with mean of 7 and SD of 4.
 	 * @return a fluent method
 	 */
 	@RMethod 
 	public GrowthRateEstimator withSaneDefaults() {
 		this.withGaussianEstimateWeighting(7, 4);
-		this.priorIncidenceFromScaledPreviousPosterior();
+		this.priorIncidenceFromPosteriorMeanAndGrowthRate();
 		this.useAllPosteriorEstimates();
 		this.combineEstimatesWithWeightedMixture();
 		return this;
@@ -227,7 +224,7 @@ public class GrowthRateEstimator {
 	
 	/**
 	 * Allows configuration of the initial incidence. If this is omitted the initial incidence is guessed from the first entry in the timeseries
-	 * @param incidence
+	 * @param incidence - the prior incidence estimate prior to the the beginning of the time series. 
 	 * @return a fluent method
 	 */
 	@RMethod
@@ -344,6 +341,46 @@ public class GrowthRateEstimator {
 		return this;
 	}
 	
+	/**
+	 * Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+	 * mean and sd both equal to the mean of the previous posterior.
+	 * @return a fluent method
+	 */
+	@RMethod public GrowthRateEstimator priorIncidenceFromPosteriorMean() {
+		this.priorSelectionStrategy = Strategy.PriorSelection.poissonPrior(1.0);
+		return this;
+	}
+	
+	/**
+	 * Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+	 * mean and sd both equal to the mean of the previous posterior plus the growth rate.
+	 * @return a fluent method
+	 */
+	@RMethod public GrowthRateEstimator priorIncidenceFromPosteriorMeanAndGrowthRate() {
+		this.priorSelectionStrategy = Strategy.PriorSelection.mechanisticPoissonPrior(1.0);
+		return this;
+	}
+	
+	/**
+	 * Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+	 * mean and sd both equal to the mean of the previous posterior.
+	 * @return a fluent method
+	 */
+	@RMethod public GrowthRateEstimator priorIncidenceFromPosteriorMeanAndCoefVariation(double kappa) {
+		this.priorSelectionStrategy = Strategy.PriorSelection.poissonPrior(kappa);
+		return this;
+	}
+	
+	/**
+	 * Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+	 * mean and sd both equal to the mean of the previous posterior plus the growth rate.
+	 * @return a fluent method
+	 */
+	@RMethod public GrowthRateEstimator priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation(double kappa) {
+		this.priorSelectionStrategy = Strategy.PriorSelection.mechanisticPoissonPrior(kappa);
+		return this;
+	}
+	
 	// ===== Posterior selection =================
 	
 	/**
@@ -370,7 +407,7 @@ public class GrowthRateEstimator {
 	/**
 	 * The posterior estimates for data windows that include a reasonable amount of data are retained and combined. This 
 	 * suppresses noisy estimates made on a very few data points when incidence is low.
-	 * @param sumIndidence - the minimum number of cases that must be observed in a data window before the estimate is ignored.
+	 * @param sumIncidence - the minimum number of cases that must be observed in a data window before the estimate is ignored.
 	 * @return a fluent method
 	 */
 	@RMethod public GrowthRateEstimator usePosteriorEstimatesWithEnoughData(int sumIncidence) {

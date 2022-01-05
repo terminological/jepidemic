@@ -20,7 +20,7 @@ An estimator of the reproduction number (\(R_t\)) using a renewal equation metho
 
 Version: 0.03
 
-Generated: 2021-12-28T11:33:45.895321
+Generated: 2022-01-03T21:00:49.723546
 }
 
 \details{
@@ -517,7 +517,7 @@ instance$selectWeightedMixtureCombination(weights)
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{weights}{ - (java expects a RNumericVector)}
+				\item{weights - the weighting of the different windows as a vector which much be the same length as the longest window, maxTau.}{ - (java expects a RNumericVector)}
 			}
 			\if{html}{\out{</div>}}
 		}

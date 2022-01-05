@@ -8,8 +8,8 @@
 
 \arguments{
 	\if{html}{\out{<div class="arguments">}}
-	\item{minWindow}{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount . - (java expects a int)}
-	\item{maxWindow}{maxWindow - (java expects a int)}
+	\item{minWindow}{minWindow - the smallest amount of data considered in estimating the growth rate, 4 is a sensible default unless you want bang up to date estimate. - (java expects a int)}
+	\item{maxWindow}{maxWindow - the largest amount of data considered in estimating the growth rate, 14 is a sensible amount. - (java expects a int)}
 	\if{html}{\out{</div>}}
 }
 
@@ -19,7 +19,7 @@ An estimator of the reproduction number (\(R_t\)) using a renewal equation metho
 
 Version: 0.03
 
-Generated: 2021-12-28T11:33:45.875915
+Generated: 2022-01-03T21:00:49.709425
 }
 
 \details{
@@ -99,6 +99,14 @@ instance = J$GrowthRateEstimator$new(minWindow, maxWindow)
 ## -----------------------------------
 
 ## -----------------------------------
+## Method `GrowthRateEstimator$priorIncidenceFromPosteriorMean`
+## -----------------------------------
+
+## -----------------------------------
+## Method `GrowthRateEstimator$priorIncidenceFromPosteriorMeanAndGrowthRate`
+## -----------------------------------
+
+## -----------------------------------
 ## Method `GrowthRateEstimator$useAllPosteriorEstimates`
 ## -----------------------------------
 
@@ -156,6 +164,8 @@ instance = J$GrowthRateEstimator$new(minWindow, maxWindow)
 			\item \href{#method-priorIncidenceFromScaledPreviousPosterior}{\code{instance$priorIncidenceFromScaledPreviousPosterior()}}
 			\item \href{#method-priorIncidenceFromPosteriorAndGrowthRate}{\code{instance$priorIncidenceFromPosteriorAndGrowthRate(multiplyingSDby)}}
 			\item \href{#method-priorIncidenceFromScaledPosteriorAndGrowthRate}{\code{instance$priorIncidenceFromScaledPosteriorAndGrowthRate()}}
+			\item \href{#method-priorIncidenceFromPosteriorMean}{\code{instance$priorIncidenceFromPosteriorMean()}}
+			\item \href{#method-priorIncidenceFromPosteriorMeanAndGrowthRate}{\code{instance$priorIncidenceFromPosteriorMeanAndGrowthRate()}}
 			\item \href{#method-useAllPosteriorEstimates}{\code{instance$useAllPosteriorEstimates()}}
 			\item \href{#method-usePosteriorEstimatesFromOneWindow}{\code{instance$usePosteriorEstimatesFromOneWindow(tau)}}
 			\item \href{#method-usePosteriorEstimatesWithEnoughData}{\code{instance$usePosteriorEstimatesWithEnoughData(sumIncidence)}}
@@ -189,14 +199,14 @@ J$GrowthRateEstimator$new(minWindow, maxWindow)
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount .}{ - (java expects a int)}
-				\item{maxWindow}{ - (java expects a int)}
+				\item{minWindow - the smallest amount of data considered in estimating the growth rate, 4 is a sensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+				\item{maxWindow - the largest amount of data considered in estimating the growth rate, 14 is a sensible amount.}{ - (java expects a int)}
 			}
 			\if{html}{\out{</div>}}
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a default growth rate estimator
+			R6 GrowthRateEstimator object: 
 		}
 
 		\subsection{Examples}{
@@ -227,15 +237,15 @@ J$GrowthRateEstimator$strictGrowthRateAndRtEstimator(minWindow, maxWindow, infec
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
-				\item{maxWindow}{ - (java expects a int)}
+				\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+				\item{maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
 				\item{infectivityProfiles - a numeric matrix with each column containing a discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)}{ - (java expects a RNumericArray)}
 			}
 			\if{html}{\out{</div>}}
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a strict growth rate and $R_t$ estimator that accounts for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a strict growth rate and \(R_t\) estimator that accounts for uncertainty in the infectivity profile.
 		}
 
 		\subsection{Examples}{
@@ -266,15 +276,15 @@ J$GrowthRateEstimator$defaultGrowthRateAndRtEstimator(minWindow, maxWindow, init
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
-				\item{maxWindow}{ - (java expects a int)}
-				\item{initialIncidence}{ - (java expects a double)}
+				\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+				\item{maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
+				\item{initialIncidence - a guess at the initial incidence of the time series}{ - (java expects a double)}
 			}
 			\if{html}{\out{</div>}}
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.
 		}
 
 		\subsection{Examples}{
@@ -304,14 +314,14 @@ J$GrowthRateEstimator$defaultGrowthRateEstimator(minWindow, maxWindow)
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
-				\item{maxWindow}{ - (java expects a int)}
+				\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+				\item{maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
 			}
 			\if{html}{\out{</div>}}
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.
 		}
 
 		\subsection{Examples}{
@@ -347,7 +357,7 @@ J$GrowthRateEstimator$basicGrowthRateEstimator()
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.
 		}
 
 		\subsection{Examples}{
@@ -454,7 +464,7 @@ instance$withInitialIncidence(incidence)
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{incidence}{ - (java expects a double)}
+				\item{incidence - the prior incidence estimate prior to the the beginning of the time series.}{ - (java expects a double)}
 			}
 			\if{html}{\out{</div>}}
 		}
@@ -747,6 +757,82 @@ not available
 		}
 	}
 	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-priorIncidenceFromPosteriorMean"></a>}}
+	
+	\subsection{Method \code{priorIncidenceFromPosteriorMean()}}{
+		Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+mean and sd both equal to the mean of the previous posterior.
+	
+
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+instance = J$GrowthRateEstimator$new(...);
+instance$priorIncidenceFromPosteriorMean()
+  			}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\itemize{
+				\item{none}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a fluent method
+		}
+
+		\subsection{Examples}{
+			\if{html}{\out{<div class="r example copy">}}
+			\preformatted{
+not available
+			}
+			\if{html}{\out{</div>}}
+		}
+	}
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-priorIncidenceFromPosteriorMeanAndGrowthRate"></a>}}
+	
+	\subsection{Method \code{priorIncidenceFromPosteriorMeanAndGrowthRate()}}{
+		Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+mean and sd both equal to the mean of the previous posterior plus the growth rate.
+	
+
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+instance = J$GrowthRateEstimator$new(...);
+instance$priorIncidenceFromPosteriorMeanAndGrowthRate()
+  			}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\itemize{
+				\item{none}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a fluent method
+		}
+
+		\subsection{Examples}{
+			\if{html}{\out{<div class="r example copy">}}
+			\preformatted{
+not available
+			}
+			\if{html}{\out{</div>}}
+		}
+	}
+	\if{html}{\out{<hr>}}
 	\if{html}{\out{<a id="method-useAllPosteriorEstimates"></a>}}
 	
 	\subsection{Method \code{useAllPosteriorEstimates()}}{
@@ -842,7 +928,7 @@ instance$usePosteriorEstimatesWithEnoughData(sumIncidence)
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{sumIncidence}{ - (java expects a int)}
+				\item{sumIncidence - the minimum number of cases that must be observed in a data window before the estimate is ignored.}{ - (java expects a int)}
 			}
 			\if{html}{\out{</div>}}
 		}

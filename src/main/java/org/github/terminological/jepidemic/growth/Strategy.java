@@ -116,6 +116,33 @@ public class Strategy {
 			};
 		}
 		
+		// the poisson prior hase equal mean = mu and SD = mu which implides shape = mu/mu and rate = mu/(mu^2)  
+		public static PriorSelection poissonPrior(double kappa) {
+			return (ts,meta) -> { 
+				Optional<AbstractRealDistribution> ePost1 = ts.prev().flatMap(t -> t.getLambdaSummary().getDistribution());
+				Optional<ExtendedGammaDistribution> prior = ePost1
+						.map(s-> ExtendedGammaDistribution.fromShapeAndRate(kappa, kappa/s.getNumericalMean()));
+				
+				return new PoissonRate(prior.orElse(meta.defaultLambdaPrior()), ts, meta);
+				
+			};
+		}
+		
+		//Make a list of priors associated with a time series entry
+			public static PriorSelection mechanisticPoissonPrior(double kappa) {
+				return (ts,meta) -> {
+					ExtendedGammaDistribution prior = ts.prev().map(prev -> {
+						Optional<ExtendedGammaDistribution> lambda = prev.getLambdaEstimate(meta).getDist();
+						Optional<GrowthRateDistribution> growth = prev.getGrowthRate(meta).getDist();
+						if (!lambda.isPresent() || !growth.isPresent()) return meta.defaultLambdaPrior();
+						double newMean = lambda.get().getNumericalMean() * Math.exp(growth.get().getNumericalMean());
+						ExtendedGammaDistribution gPrior = ExtendedGammaDistribution.fromShapeAndRate(kappa,kappa/newMean);
+						return gPrior;
+					}).orElse(meta.defaultLambdaPrior());
+					return new DatedEstimate.PoissonRate(prior,ts,meta);
+				};
+			}
+		
 	}
 	
 	//TODO: the use of this this is not implemented as it is for the Cori method when

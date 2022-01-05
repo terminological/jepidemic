@@ -39,8 +39,8 @@ public class WeightedGammaMixture extends AbstractRealDistribution implements Su
     		double wt = mapper.apply(g);
     		weightedMap.add(new Pair<>(g, wt));
     		totalWeight += wt;
-    		double ul = g.convert().getMean()+10*g.convert().getSD();
-    		if (acc_max<ul) acc_max=ul;
+//    		double ul = g.convert().getMean()+10*g.convert().getSD();
+//    		if (acc_max<ul) acc_max=ul;
 //    		double ll = g.convert().getMean()-10*g.convert().getSD();
 //    		if (acc_min>ll) acc_min=ll;
     	});

@@ -188,8 +188,10 @@ public class WeightedMixtureRealDistribution extends AbstractRealDistribution {
 	/**
      * Creates a Mixture of distributions.
      *
-     * @param <X> - Dated or undated gamma parameters
-     * @param gammas - a list of the gamma distributions of the mixture
+     * @param distributions - a collection of the distributions of the mixture
+     * @param hardLowerLimit - the min value of the support for the mixture
+     * @param hardUpperLimit - the max value of the support for the mixture
+     * @return a weighted mixture distribtion
      */
     public static WeightedMixtureRealDistribution unweighted(Collection<? extends AbstractRealDistribution> distributions, double hardLowerLimit, double hardUpperLimit) {
     	return(
@@ -203,8 +205,11 @@ public class WeightedMixtureRealDistribution extends AbstractRealDistribution {
     /**
      * Creates a Mixture of distributions.
      *
-     * @param <X> - Dated or undated gamma parameters
-     * @param gammas - a list of the gamma distributions of the mixture
+     * @param distributions - a list of the distributions of the mixture
+     * @param weights - a list of the weights of the distributions of the mixture
+     * @param hardLowerLimit - the min value of the support for the mixture
+     * @param hardUpperLimit - the max value of the support for the mixture
+     * @return a weighted mixture distribtion
      */
     public static WeightedMixtureRealDistribution weighted(List<? extends AbstractRealDistribution> distributions, List<Double> weights, double hardLowerLimit, double hardUpperLimit) {
     	if (weights.size() != distributions.size()) throw new MultiDimensionMismatchException(new Integer[] {distributions.size()}, new Integer[] {weights.size()});

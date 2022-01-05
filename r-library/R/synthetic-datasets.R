@@ -16,20 +16,40 @@ alternatingRandom = function(n=6,meanHi=0.005,meanLo=-meanHi,sd=0.005,fn = rnorm
 #' @export
 #'
 #' @examples
-#' discreteGammaInfectivityProfile(c(4,3),c(5,4),10, c("delta","omicron"))
+#' discreteGammaInfectivityProfile(c(4,3),c(5,4),names=c("delta","omicron"),range=20)
 discreteGammaInfectivityProfile = function(mean,sd,names=NULL,range=20) {
   shape = mean^2/sd^2
   rate = mean/sd^2
-  a = rep(0:range,length(shape))
+  a = as.vector(t(matrix(rep(0:20,length(shape)),ncol = length(shape))))
   pg = pgamma(a, shape, rate) - pgamma(a-1, shape, rate)
-  pg = matrix(pg,ncol=length(shape))
+  pg = t(matrix(pg,nrow=length(shape)))
+  pg = apply(pg,MARGIN = 2,FUN = function(v) v/sum(v))
   if (!is.null(names)) colnames(pg) = names
   ip = list(
-    aVector = a,
-    yMatrix = pg
+    aVector = 0:range,
+    yMatrix = pg,
+    mean = mean,
+    sd = sd
   )
   class(ip) = "infectivity_profile"
   return(ip)
+}
+
+#' Generate a set of infectivity profiles based on uncertain 
+#'
+#' @param meanOfMean - the mean value of the mean of the gamma infectivity profile
+#' @param sdOfMean  - the sd value of the mean of the gamma infectivity profile
+#' @param meanOfSd  - the mean value of the sd of the gamma infectivity profile
+#' @param sdOfSd  - the sd value of the sd of the gamma infectivity profile
+#' @param n  - number of samples
+#' @param range - length of desired infectivity profile output
+#'
+#' @return a set of infectivity profiles
+#' @export
+uncertainGammaInfectivityProfiles = function(meanOfMean,sdOfMean,meanOfSd, sdOfSd, n=100,range=20) {
+  means = rnorm(n, meanOfMean, sdOfMean)
+  sds = rgamma(n, shape = meanOfSd^2/sdOfSd^2, rate = meanOfSd/sdOfSd^2)
+  return(discreteGammaInfectivityProfile(means,sds,range=range))
 }
 
 #' Generate a periodic growth timeseries simulation

@@ -172,10 +172,10 @@ class DistributionTests {
 //		
 		
 		TransformerDistribution<NormalDistribution> trans = TransformerDistribution.of(
-				new NormalDistribution(0.5,0.25),
-				x -> Math.exp(x),
-				y -> Math.log(y),
-				dy -> 1/dy
+				new NormalDistribution(0.25,0.125),
+				x -> Math.exp(2.0*x),
+				y -> 0.5*Math.log(y),
+				dy -> 0.5/dy
 				);
 		
 		LogNormalDistribution lnorm = new LogNormalDistribution(0.5,0.25);

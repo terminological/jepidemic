@@ -25,7 +25,6 @@ lagAnalysis = function(estimators, estimation = "Rt") {
   periodicEstimates = triangular %>% inner_join(estimators, by=character()) %>% mutate(
     
     estimate = pmap(.l=list(fn = estimFn, ts = ts, infectivityProfile = infectivityProfile), .f = function(fn,ts,infectivityProfile) {
-      #browser()
       fn(ts,infectivityProfile)
     })
   )
@@ -33,14 +32,15 @@ lagAnalysis = function(estimators, estimation = "Rt") {
   periodicRt = periodicEstimates %>% select(model,estimate) %>% unnest(estimate)
   periodicTs = periodicEstimates %>% select(model,ts) %>% unnest(ts)
 
-  offset = tibble(shift = c(0:28)) %>% inner_join(
-    periodicTs %>% select(theoretical.date = date, Rt.actual), by=character()) %>% 
+  offset = tibble(shift = c(-7:21)) %>% inner_join(
+    periodicTs %>% select(theoretical.date = date, !!trueVar), by=character()) %>% 
     mutate(
       estimate.date = theoretical.date+shift
     )
   
-  offsetPeriodicRt = periodicRt %>% 
-    inner_join(offset, by=c("date"="estimate.date"))
+  offsetPeriodicRt = periodicRt %>% select(-any_of(as_label(trueVar))) %>% 
+    inner_join(offset, by=c("date"="estimate.date"), suffix=c("",".offset")) %>%
+    filter(date >= min(date)+28 & date <= max(date)-28)
   
   offsetSummary = offsetPeriodicRt %>% 
     mutate(sqrdErr = (!!trueVar-!!estimateVar)^2) %>%
@@ -60,7 +60,7 @@ lagAnalysis = function(estimators, estimation = "Rt") {
   }) %>% mutate(label = sprintf("%1.2f days",medianLag))
 
   out = list(
-    estimates = periodicRt %>% inner_join(periodicTs, by=c("model","date")),
+    estimates = periodicRt %>% inner_join(periodicTs, by=c("model","date"), suffix=c(".estimate","")),
     rmseByOffset = offsetSummary,
     modelLag = offsetSummarySummary
   )
@@ -72,42 +72,39 @@ lagAnalysis = function(estimators, estimation = "Rt") {
 
 ## Lag analysis visualisation ----
 
-lagTimeseriesPlot = function(lagAnalysisResult, estimation = "Rt", ncol=1) {
+lagTimeseriesPlot = function(lagAnalysisResult, estimation = "Rt", ylim=c(0.4,1.6), ncol=1) {
   estimates = lagAnalysisResult$estimates
   trueVar = as.symbol(paste0(estimation, ".actual"))
   estimateVar = as.symbol(paste0(estimation, ".Quantile.0.5"))
   lowVar = as.symbol(paste0(estimation, ".Quantile.0.025"))
   highVar = as.symbol(paste0(estimation, ".Quantile.0.975"))
   
-  defaultAes = aes(x=date, y=Rt.Mean)
-  dots = rlang::list2(...)
-  combinedAes = modifyList(defaultAes,mapping)
-  
   suppressWarnings(
-    ggplot(estimates %>% filter(!is.nan(!!trueVar)), mapping = aes(x=date))+
+    ggplot(estimates %>% filter(!is.nan(!!estimateVar)), mapping = aes(x=date))+
       geom_ribbon(aes(ymin = !!lowVar, ymax = !!highVar), alpha=0.2,colour = NA,fill="grey20")+
       geom_line(aes(y=!!estimateVar),colour="black")+
       guides(colour="none")+
       geom_line(mapping = aes(x=date,y=!!trueVar), inherit.aes = FALSE, colour="red")+
       xlab(NULL)+
       ylab(paste0(estimation," estimate"))+
-      facet_wrap(vars(model),ncol=ncol)
+      facet_wrap(vars(model),ncol=ncol)+coord_cartesian(ylim=ylim)
   )
 }
 
-lagOffsetPlot = function(rmseByOffset, modelLag, ncol=1) {
-  ggplot(rmseByOffset, aes(x=shift,y=rmse))+
+lagOffsetPlot = function(lagAnalysisResult, ncol=1) {
+  labelSize = 8/ggplot2:::.pt/(96/72)
+  ggplot(lagAnalysisResult$rmseByOffset, aes(x=shift,y=rmse))+
     geom_point()+
     geom_line()+
-    geom_vline(data = modelLag, mapping=aes(xintercept = medianLag), colour="blue")+
-    geom_label(data = modelLag, mapping=aes(label=label,x = medianLag), y=Inf, fill=NA, label.size=0, label.padding = unit(1, "lines"),hjust=0, vjust="inward", colour="blue",size=standardPrintOutput::labelInPoints(8))+
-    ylab(latex2exp::TeX("$R_t$ RMSE"))+xlab("shift (days)")+
+    geom_vline(data = lagAnalysisResult$modelLag, mapping=aes(xintercept = medianLag), colour="blue")+
+    geom_label(data = lagAnalysisResult$modelLag, mapping=aes(label=label,x = medianLag), y=Inf, fill=NA, label.size=0, label.padding = unit(1, "lines"),hjust=0, vjust="inward", colour="blue",size=labelSize)+
+    ylab("RMSE")+xlab("shift (days)")+
     facet_wrap(vars(model),ncol=ncol)
 }
 
-lagPlot = function(lagAnalysis) {
-  p1 = lagTimeseriesPlot(lagAnalysis$estimates, ncol=1)
-  p2 = lagOffsetPlot(lagAnalysis$rmseByOffset, lagAnalysis$modelLag, ncol=1)
+lagPlot = function(lagAnalysisResult, ...) {
+  p1 = lagTimeseriesPlot(lagAnalysisResult, ...)
+  p2 = lagOffsetPlot(lagAnalysisResult, ncol=1)
   p3 = p1+p2+plot_layout(nrow=1,widths = c(2,1))+plot_annotation(tag_levels = "A")
   return(p3)
 }
@@ -156,16 +153,22 @@ inferQuantiles = function(rtEstimate, prefix="Rt") {
   # })) 
 }
 
-calculateMetrics = function(quantileEstimate, originalTs, medianLag, trueVar = "Rt.actual", criticalValue = 1) {
+calculateMetrics = function(quantileEstimate, originalTs, medianLag, estimation = "Rt", criticalValue = 1) {
+  
+  trueVar = as.symbol(paste0(estimation, ".actual"))
+  estimateVar = as.symbol(paste0(estimation, ".Quantile.0.5"))
+  lowVar = as.symbol(paste0(estimation, ".Quantile.0.025"))
+  highVar = as.symbol(paste0(estimation, ".Quantile.0.975"))
+  
   trueVar = ensym(trueVar)
   originalTs %>% 
-    select(subgroup,date, actual = !!trueVar) %>%
+    select(bootstrap,date, actual = !!trueVar) %>%
     left_join( # here is the point where we truncate the data set as a result of shifting the estiamtes by the lag. If this were a left join
       quantileEstimate %>% 
         mutate(
           estimate.date = date,
           date = estimate.date-round(medianLag)),
-      by=c("subgroup","date")
+      by=c("bootstrap","date")
     ) %>%
     mutate(
       boundaryEffect = case_when(
@@ -179,7 +182,15 @@ calculateMetrics = function(quantileEstimate, originalTs, medianLag, trueVar = "
       residual = median-actual,
       calibration = ifelse(actual > lo & actual < hi,1,0),
       critical_threshold = ifelse(sign(actual-criticalValue)!=sign(lo-criticalValue) & sign(actual-criticalValue)!=sign(hi-criticalValue),1,0)
-    ) %>% mutate(
+    ) %>%
+    mutate(
+      quantile.actual = case_when(
+        quantile.actual < 0 ~ 0,
+        quantile.actual > 1 ~ 1,
+        TRUE ~ quantile.actual
+      )
+    ) %>% 
+    mutate(
       crps = pmap_dbl(
         .l = list(F = quantile.model, limits = quantile.model.range, y = actual), 
         .f = function(F,limits,y) {
@@ -192,8 +203,13 @@ calculateMetrics = function(quantileEstimate, originalTs, medianLag, trueVar = "
 }
 
 qualityAnalysis = function(estimators, modelLag, estimation = "Rt", criticalValue = 1, synthetic = jepidemic::validationDataset) {
-  trueVar = as.symbol(paste0(estimation, ".actual"))
   
+  syntheticEstimates(estimators,synthetic) %>%
+    validationMetrics(modelLag, estimation)
+  
+}
+
+syntheticEstimates = function(estimators, synthetic = jepidemic::validationDataset) {
   syntheticEstimates = synthetic %>% inner_join(estimators, by=character()) %>% 
     mutate(
       estimate = pmap(.l=list(fn = estimFn, ts = ts, infectivityProfile = infectivityProfile), .f = function(fn,ts,infectivityProfile) {
@@ -202,23 +218,29 @@ qualityAnalysis = function(estimators, modelLag, estimation = "Rt", criticalValu
         })
       })
     )
-  
-  syntheticEstimates2 = syntheticEstimates %>% 
+}
+
+validationMetrics = function(syntheticEstimates,modelLag, estimation = "Rt", criticalValue = 1) {
+  syntheticEstimates %>% 
     mutate(
-      quantileEstimate = map(estimate, inferQuantiles, prefix=estimatePrefix)
+      quantileEstimate = map(estimate, inferQuantiles, prefix=estimation)
     ) %>%
     inner_join(modelLag, by="model") %>%
     mutate(
-      comparison = pmap(.l=list(quantileEstimate, ts, medianLag), .f=calculateMetrics, trueVar=!!trueVar, criticalValue = criticalValue)
+      comparison = pmap(.l=list(quantileEstimate, ts, medianLag), .f=calculateMetrics, estimation=estimation, criticalValue = criticalValue)
     ) %>%
     select(-quantileEstimate)
-  
-  
-}
+} 
 
 ## Validation plots ----
 
-estimationExamplePlot = function(qualityAnalysisResult, simFilterExpr = {weekendEffect == 0.1 & seed == 100}, modelFilterExpr = TRUE, subgroups = 1) {
+estimationExamplePlot = function(qualityAnalysisResult, estimation = "Rt", ylim = c(0.6,1.4), simFilterExpr = {weekendEffect == 0.1 & seed == 100}, modelFilterExpr = TRUE, bootstraps = 1) {
+  
+  trueVar = as.symbol(paste0(estimation, ".actual"))
+  estimateVar = as.symbol(paste0(estimation, ".Quantile.0.5"))
+  lowVar = as.symbol(paste0(estimation, ".Quantile.0.025"))
+  highVar = as.symbol(paste0(estimation, ".Quantile.0.975"))
+  
   simFilterExpr = enexpr(simFilterExpr)
   modelFilterExpr = enexpr(modelFilterExpr)
   
@@ -227,14 +249,22 @@ estimationExamplePlot = function(qualityAnalysisResult, simFilterExpr = {weekend
     filter(!!modelFilterExpr) %>%
     mutate(label = paste0(smoothLabel,"; ",seedLabel,"; ",weekendLabel))
   
-  tmp2 = tmp %>% ungroup() %>% select(label,ts) %>% distinct() %>% unnest(ts) %>% filter(subgroup %in% subgroups) %>% mutate(row="simulation")
-  tmp3 = tmp %>% ungroup() %>% select(model,label,estimate) %>% unnest(estimate) %>% filter(subgroup %in% subgroups)
+  tmp2 = tmp %>% ungroup() %>% select(label,ts) %>% distinct() %>% unnest(ts) %>% filter(bootstrap %in% bootstraps) %>% mutate(row="simulation")
+  tmp3 = tmp %>% ungroup() %>% select(model,label,estimate) %>% unnest(estimate) %>% filter(bootstrap %in% bootstraps)
   
-  p1 = incidencePlot(tmp2)+geom_line(aes(y=lambda_t),colour="red")+facet_grid(rows = vars(row), cols=vars(label))
+  p1 = ggplot(tmp2, aes(x=date,y=value,group=bootstrap))+
+    geom_point(size=0.5)+
+    geom_line(alpha=0.1)+
+    ylab("cases")+
+    geom_line(aes(y=Est.actual),colour="red")+facet_grid(rows = vars(row), cols=vars(label))
   
-  p2 = rtRibbon(tmp3,ylim = c(0.6,1.4), aes(group=subgroup))+
-    geom_line(data=tmp2,mapping=aes(x=date,y=Rt.actual),colour="red")+
-    ylab(latex2exp::TeX("$R_t$ estimate"))+xlab(NULL) +facet_grid(rows = vars(model),cols = vars(label))
+  p2 = ggplot(tmp3 %>% filter(!is.nan(!!estimateVar)), mapping = aes(x=date, group=bootstrap))+
+    geom_ribbon(aes(ymin = !!lowVar, ymax = !!highVar), alpha=0.2,colour = NA,fill="grey20")+
+    geom_line(aes(y=!!estimateVar)) +
+    guides(colour="none")+
+    coord_cartesian(ylim=ylim)+
+    geom_line(data=tmp2,mapping=aes(x=date,y=!!trueVar),colour="red")+
+    ylab(paste0(estimation," estimate"))+xlab(NULL) +facet_grid(rows = vars(model),cols = vars(label))
   
   p3 = p1+standardPrintOutput::hideX() + p2 +patchwork::plot_layout(ncol=1, heights=c(1,4))+patchwork::plot_annotation(tag_levels = "A")
   return(p3)
@@ -259,6 +289,19 @@ boxplotData = function(groupedDf, var) {
       ), .groups="drop_last"
     ) %>% pivot_wider(names_from = names, values_from = values) %>%
     ungroup()
+}
+
+densityData = function(groupedDf, var,bw=0.025) {
+  var = ensym(var)
+  groupedDf %>% summarise(
+    tibble(
+      x=seq(0,1,length.out = 1001),
+      y=density(x = !!var, from = 0, to = 1, n = 1001, na.rm = TRUE,bw=bw)$y,
+    ) %>% mutate(
+      dydx = signal::sgolayfilt(y, n = 11, p=2,ts = 1/1000,m = 1)
+    ), 
+    .groups="drop_last"
+  )
 }
 
 estimateSummaryPlot = function(qualityAnalysisResult, errorLimits = NULL, crpsLimits = NULL, critLimits = NULL) {
@@ -411,12 +454,12 @@ estimateTimeseriesPlot = function(qualityAnalysisResult, simFilterExpr, modelFil
   # ggplot(tmp4,aes(x=quantile.actual))+geom_density(bw=0.025)+facet_wrap(vars(label))
   
   # The theoretical values:
-  p1 = ggplot(tmp3 %>% filter(subgroup==1), aes(x=date))+
+  p1 = ggplot(tmp3 %>% filter(bootstrap==1), aes(x=date))+
     geom_point(aes(x=date,y=value),size=0.1)+ 
-    geom_line(aes(y=lambda_t), colour="red")+
+    geom_line(aes(y=Est.actual), colour="red")+
     facet_wrap(vars(label),nrow = 1)+ylab(latex2exp::TeX("model cases"))+scale_y_continuous(trans="log1p",breaks = ukcovidtools::breaks_log1p())
   
-  p2 = ggplot(tmp4 %>% filter(subgroup==1), aes(x=date))+
+  p2 = ggplot(tmp4 %>% filter(bootstrap==1), aes(x=date))+
     geom_ribbon(aes(ymin=lo, ymax=hi),fill="grey80",colour=NA)+
     geom_line(aes(y=median),colour="black")+
     geom_line(aes(y=actual), colour="red")+
@@ -469,4 +512,23 @@ estimateTimeseriesPlot = function(qualityAnalysisResult, simFilterExpr, modelFil
     plot_annotation(tag_levels = "A")+plot_layout(ncol=1, heights = c(1,1,2,2,2,2,2))
   
   return(p)
+}
+
+printMedianAndCI = function(x) do.call(sprintf, c("%1.2g [95%% CI %1.2g \u2013 %1.2g]",as.list(quantile(x,c(0.5,0.025,0.975),na.rm = TRUE))))
+printMedianAndCI3 = function(x) do.call(sprintf, c("%1.3f [95%% CI %1.3f \u2013 %1.3f]",as.list(quantile(x,c(0.5,0.025,0.975),na.rm = TRUE))))
+printBinomCI = function(x) do.call(sprintf, c("%1.1f%% [95%% CI %1.1f%% \u2013 %1.1f%%]", as.list(binom::binom.confint(x=sum(x==1,na.rm=TRUE),n=length(na.omit(x)),methods = "wilson")[4:6]*100)))
+printIQR = function(x) do.call(sprintf, c("%1.2g [IQR %1.2g \u2013 %1.2g]",as.list(quantile(x,c(0.5,0.25,0.75),na.rm = TRUE))))
+
+
+summaryAnalysis = function(qualityAnalysisResult,lagAnalysisResult) {
+  tmp4 = qualityAnalysisResult %>% ungroup() %>% select(model, comparison) %>% unnest(comparison)
+  summ = tmp4 %>% group_by(model) %>% summarise(
+    `average bias` = printIQR(residual),
+    `average calibration` = printBinomCI(calibration),
+    `average critical threshold` = printBinomCI(critical_threshold),
+    `CRPS` = printIQR(crps),
+    `quantile deviation` = sprintf("%1.3g", sqrt(sum((quantile.actual-0.5)^2,na.rm = TRUE)/(length(na.omit(quantile.actual))-1))-sqrt(1/12))
+  )
+  lag = lagAnalysisResult$modelLag %>% select(model,`estimate delay` = label)
+  summ %>% inner_join(lag, by="model") %>% pivot_longer(cols = -model, values_to = "value",names_to="metric") %>% pivot_wider(values_from = "value", names_from="model")
 }

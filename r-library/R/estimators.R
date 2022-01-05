@@ -45,15 +45,15 @@ weekendEffect = function(simpleTimeseries, valueVar="value", ...) {
   valueVar = ensym(valueVar)
   if (simpleTimeseries %>% is.grouped_df()) stop("this does not work on grouped data. use a group_modify.")
   
-  if (!"weekday" %in% colnames(simpleTimeseries)) simpleTimeseries = simpleTimeseries %>% 
+  simpleTimeseries = simpleTimeseries %>% weekdayFromDates()
   
   # set the default uniform weighting
-  default = tibble(
+  defaultWt = tibble(
     weekday = ordered(1:7,labels=c("sun","mon","tue","wed","thur","fri","sat")),
     weekday.wt = rep(1,7)
   )
   
-  if(nrow(tmp)>=21) {
+  if(nrow(simpleTimeseries)>=21) {
   
     # if there is enough data estimate how much weight each day should have
     weight = simpleTimeseries %>% 
@@ -69,11 +69,11 @@ weekendEffect = function(simpleTimeseries, valueVar="value", ...) {
       mutate(weekday.wt=weekday.wt/mean(weekday.wt, na.rm=TRUE))
       
     if(nrow(weight) !=7 | any(is.na(weight$weekday.wt))) {
-      weight = default
+      weight = defaultWt
     }
   
   } else {
-    weight = default
+    weight = defaultWt
   }
       
   simpleTimeseries %>% inner_join(weight, by="weekday") %>% return()
@@ -133,13 +133,13 @@ formatResult = function(df, fit, se.fit, t, estimate, modelName,link) {
   df %>% mutate(
     !!(paste0(estimate,".",link)) := fit,
     !!(paste0(estimate,".SE.",link)) := se.fit,
-    !!(paste0(estimate,".Quantile.0.025.value")) := opt(t(qnorm(0.025,fit,se.fit))), 
-    !!(paste0(estimate,".Quantile.0.05.value")) := opt(t(qnorm(0.05,fit,se.fit))), 
-    !!(paste0(estimate,".Quantile.0.25.value")) := opt(t(qnorm(0.25,fit,se.fit))), 
-    !!(paste0(estimate,".Quantile.0.5.value")) := t(fit), 
-    !!(paste0(estimate,".Quantile.0.75.value")) := opt(t(qnorm(0.75,fit,se.fit))), 
-    !!(paste0(estimate,".Quantile.0.95.value")) := opt(t(qnorm(0.95,fit,se.fit))), 
-    !!(paste0(estimate,".Quantile.0.975.value")) := opt(t(qnorm(0.975,fit,se.fit))), 
+    !!(paste0(estimate,".Quantile.0.025")) := opt(t(qnorm(0.025,fit,se.fit))), 
+    !!(paste0(estimate,".Quantile.0.05")) := opt(t(qnorm(0.05,fit,se.fit))), 
+    !!(paste0(estimate,".Quantile.0.25")) := opt(t(qnorm(0.25,fit,se.fit))), 
+    !!(paste0(estimate,".Quantile.0.5")) := t(fit), 
+    !!(paste0(estimate,".Quantile.0.75")) := opt(t(qnorm(0.75,fit,se.fit))), 
+    !!(paste0(estimate,".Quantile.0.95")) := opt(t(qnorm(0.95,fit,se.fit))), 
+    !!(paste0(estimate,".Quantile.0.975")) := opt(t(qnorm(0.975,fit,se.fit))), 
     !!(paste0(estimate,".model")) := modelName)
 }
 
@@ -172,7 +172,7 @@ renameResult = function(df, prefix, estimates = c("Growth","Est","Proportion","R
 locfitFormula = function(valueVar, nrowDf, window, polynomialDegree, nearestNeighbours = TRUE, ...) {
   valueVar=ensym(valueVar)
   tmp_alpha = min(window/nrowDf,1)
-  tmp_alpha_2 = min(window*2/nrowDf,1)
+  tmp_alpha_2 = min((window*2+1)/nrowDf,1)
   lpParams = list(
     nn = if( nearestNeighbours ) tmp_alpha_2 else tmp_alpha, # this is given in fraction of total observations
     h = if( !nearestNeighbours ) window else 0, # this is given in units of X
@@ -381,8 +381,8 @@ locfitGrowthEstimate = function(simpleTimeseries, degree = 2, window = 14, weigh
   simpleTimeseries %>% checkValid(c("date","value"))
   simpleTimeseries = simpleTimeseries %>% 
     arrange(date) %>%
-    ensureExists("weekday.wt", orElse = function(ts,...) ts %>% weekendEffect(valueVar=value)) %>%
-    ensureExists("time", orElse = function(ts,...) ts %>% mutate(time = as.integer(date-max(date)))) %>%
+    ensureExists("weekday.wt", orElse = function(ts,...) weekendEffect(ts,valueVar=value)) %>%
+    ensureExists("time", orElse = function(ts,...) mutate(ts, time = as.integer(date-max(date)))) %>%
     mutate(.prop = value)
   
   if(sum(na.omit(simpleTimeseries$.prop) != 0) < degree) {
@@ -422,7 +422,7 @@ locfitGrowthEstimate = function(simpleTimeseries, degree = 2, window = 14, weigh
 #' @return  a timeseries with doubling time estimates (columns starting with "doublingTime")
 #' @export
 doublingTimeFromGrowthRate = function(simpleTimeseries) {
-  reorder = function(x) (1-(stringr::str_extract(x,"[0-9]\\.[0-9]+") %>% as.numeric())) %>% sprintf(fmt="doublingTime.Quantile.%1.3g.value")
+  reorder = function(x) (1-(stringr::str_extract(x,"[0-9]\\.[0-9]+") %>% as.numeric())) %>% sprintf(fmt="doublingTime.Quantile.%1.3g")
   simpleTimeseries %>% mutate(across(.cols = starts_with("Growth.Quantile"), .fns = ~ log(2)/.x, .names = "{reorder(.col)}"))
 }
 
@@ -438,19 +438,19 @@ doublingTimeFromGrowthRate = function(simpleTimeseries) {
 #'
 #' @return a timeseries with "Rt" estimates
 #' @export
-rtFromGrowthRate = function(simpleTimeseries, yMatrix, aVector = 0:(dim(yMatrix)[1]-1), bootstraps = 1000, quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975)) {
+rtFromGrowthRate = function(simpleTimeseries, infectivityProfile, yMatrix = infectivityProfile$yMatrix, aVector = infectivityProfile$aVector, bootstraps = 20*dim(yMatrix)[2], quantiles = c(0.025,0.05,0.25,0.5,0.75,0.95,0.975)) {
   if (simpleTimeseries %>% is.grouped_df()) stop("this does not work on grouped data. use a group_modify.")
   
   simpleTimeseries %>% checkValid(c("date","value","Growth.value","Growth.SE.value"))
   
   # grab the y matrix from the list column
-  y_cols = yMatrix
+  y_cols = matrix(yMatrix)
   a = aVector
   # figure out how many bootstraps we need:
   bootsPerInf = max(c(bootstraps %/% dim(yMatrix)[2],1))
   # lose the zero values in y and a, if present (which they will be):
   if (a[1]==0) {
-    y_cols = y_cols[-1,]
+    y_cols = matrix(y_cols[-1,])
     a = a[-1]
   }
   # get the infectivity profiles as a list of vectors, each bootstrap profile will be a vector.
@@ -458,7 +458,9 @@ rtFromGrowthRate = function(simpleTimeseries, yMatrix, aVector = 0:(dim(yMatrix)
   
   d3 = simpleTimeseries %>% mutate(R = map2(Growth.value, Growth.SE.value, function(mean_r,sd_r) {
       
-    r_samples = rnorm(bootsPerInf*length(ys),mean_r,sd_r)
+    #r_samples = rnorm(bootsPerInf*length(ys),mean_r,sd_r)
+    qnts = seq(0,1,length.out = bootsPerInf)[2:(bootsPerInf-1)]
+    r_samples = qnorm(p=qnts,mean_r,sd_r)
     rs = asplit(matrix(r_samples,nrow=length(ys)), MARGIN=1)
     # browser()
     out = map2(rs,ys,function(r10,y) {
@@ -669,7 +671,36 @@ pointPoissonEstimate = function(simpleTimeseries, dates, window, weekly = "weekd
 }
 
 
+## EpiEstim wrapper ----
+#' Minimal epiestim wrapper to execute a time series R_t using a discrete infectivity profile matrix, and format the result to be consistent with the rest of this..
+epiestimRtEstimate = function(simpleTimeseries, yMatrix, bootstraps = 10*dim(yMatrix)[2], window = 14) {
+  if (simpleTimeseries %>% is.grouped_df()) stop("this does not work on grouped data. use a group_modify.")
+  
+  siConfig = EpiEstim::make_config(method = "si_from_sample")
+  tmp = simpleTimeseries %>% dplyr::select(dates=date,I=value)
+  
+  simpleTimeseries = simpleTimeseries %>% dplyr::mutate(seq_id=row_number())
+  bootsPerInf = max(c(bootstraps %/% dim(yMatrix)[2],1))
+  
+  siConfig$t_start = c(2:(nrow(tmp)-window))
+  siConfig$t_end = siConfig$t_start+window
+  siConfig$n2 = bootsPerInf
+  
+  warn = NA
+  
+  tmp4 = 
+    withCallingHandlers(
+      tryCatch(EpiEstim::estimate_R(tmp, method = "si_from_sample",config=siConfig,si_sample = yMatrix), error = stop), warning= function(w) {
+        warn <<- w$message
+        invokeRestart("muffleWarning")
+      })
+  tmp5 = tmp4$R %>% mutate(seq_id=t_end, errors=NA, `Rt.window`=window) #warn)
+  tmp5 = tmp5 %>% rename_with(.cols = contains("(R)"),.fn=function(x) paste0("Rt.",stringr::str_remove(x,fixed("(R)")))) %>%
+    rename(`Rt.Quantile.0.5` = Rt.Median)
+  tmp6 = simpleTimeseries %>% dplyr::left_join(tmp5, by="seq_id")
+  return(tmp6 %>% select(-seq_id))
 
+}
 
 # plotProportionEstimate = function(simpleTimeseries, mapping = aes(), ...) {
 #   

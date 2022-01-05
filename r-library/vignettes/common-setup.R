@@ -158,8 +158,6 @@ plotRollingDensity = function(data, observationVar, n=50, orderVar = "date", col
   )
 }
 
-printMedianAndCI = function(x) do.call(sprintf, c("%1.2f [95%% CI %1.2f \u2013 %1.2f]",as.list(quantile(x,c(0.5,0.025,0.975),na.rm = TRUE))))
-printIQR = function(x) do.call(sprintf, c("%1.2f [IQR %1.2f \u2013 %1.2f]",as.list(quantile(x,c(0.5,0.25,0.75),na.rm = TRUE))))
 
 ## EpiEstim data ----
 # Flu2009 data

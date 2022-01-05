@@ -1,0 +1,732 @@
+---
+title: "Appendix B - Renewal equation reproduction number estimation and Jepidemic implementation validation"
+author: "Rob Challen"
+date: '`r format(Sys.Date(), "%d-%m-%Y")`'
+output: 
+  pdf_document :
+    fig_caption: yes
+    keep_tex: TRUE
+header-includes:
+ \usepackage{float}
+ \usepackage{mathtools}
+ \usepackage{amsmath}
+ \floatplacement{figure}{H}    
+ \DeclareRobustCommand{\[}{\begin{equation*}}
+ \DeclareRobustCommand{\]}{\end{equation*}}
+ \newcounter{tagno}
+ \setcounter{tagno}{0}
+ \let\amsmathtag\tag
+ \renewcommand{\tag}[1]{\amsmathtag{\thetagno} \label{#1} \stepcounter{tagno}}
+knit: (function(inputFile, encoding,...) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-B-cori-method-jepidemic-',Sys.Date(),'.pdf')) })
+fig_width: 7
+fig_height: 5
+out.width: "100%"
+bibliography: jepidemic.bib
+csl: jepidemic.csl
+vignette: >
+  %\VignetteIndexEntry{Cori method}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  error = TRUE
+)
+
+here::i_am("vignettes/appendix-B-cori-method-jepidemic.Rmd")
+source(here::here("vignettes/common-setup.R"))
+
+```
+
+This appendix provides a detailed review of the renewal equation methodology for estimating the effective reproduction number as presented by Cori et al. [CITE]. This supported much of the analysis contained in this thesis, and was applied to data from the SARS-CoV-2 outbreak in the UK to support the work of the Scientific Pandemic Influenza - Modelling subgroup (SPI-M) and track the progress of the epidemic in the UK. The implementation of this method changed over the course of the pandemic to address specific issue that arose. These changes have been implemented in a Java library with bindings to the R language called "jepidemic", which is open source and available on GitHub [CITE]. The implementation of this library diverges from the reference implementation, EpiEstim, and this appendix summarises those changes and quantifies the benefits expected in terms of estimation accuracy, using the validation methodology described in appendix A.
+
+# Review of the renewal equation method for estimating the effective reproduction number.
+
+We assume $I_0, I_1, \dots, I_t$ is a time series of infection counts, assumed to be a single sample drawn from some time varying discrete probability distribution with expected value $\overline{I_t}$. The infectivity profile is another probability distribution, that defines the likelihood that a case infected at time $t$ resulted from a case infected between the times $t-s$ and $t-s+1$, and as defined here most often represented in discrete form $\omega_1, \omega_2, \dots, \omega_s$. This definition implies that $\omega_{s \leq 0} = 0$ as that would apply to secondary infections resulting from primary infections in the future. The discrete time measure $s$ here represents the upper bound of the equivalent continuous unit time interval, rather than, for example, the middle of the interval.
+
+As in appendix A, we can define the backward-looking effective reproduction number as the inverse ratio of the number of primary infections that cause the secondary infections observed at time $t$, this is known as the instantaneous reproduction number, $R_t^i$. In an evolving epidemic the instantaneous reproduction number is able to be calculated using data that has already been observed, and is hence a more useful quantity than the other forms of the reproduction number presented in Appendix A. The rest of this summary considers only the instantaneous version of the effective reproduction number, which we refer to as the reproduction number or $R_t$.
+
+$$
+\begin{aligned}
+R_t^i &= \frac{\overline{I_t}}{\sum_{s=1}^t \overline{I_{t-s}}\omega_s} \\
+\end{aligned} 
+\tag{eq:rt}
+$$
+
+With the definitions above, we consider the number of new cases on a day $I_t$, to be the number of cases observed in previous time points convolved by the infectivity profile, and scaled by the reproduction number. From this we define the quantity $\Lambda_t$ as the number of primary cases that resulted in a secondary case at time $t$, and which is the denominator in $\eqref{eq:rt}$. This definition disregards the possible role of co-infection,l of an individual infectee by multiple infectors and assumes secondary cases result from one, and only one, primary infection. 
+
+<!-- 
+N.B. thinking about weighing of the observations or adjusting for weekly periodicity. 
+Don't think it can be done that easily but Lambda would be the place to incorporate it 
+I think. It would be nice Lambda is possible to infer in the face of missing data?
+-->
+
+$$
+\begin{aligned}
+\Lambda_t &= \sum_{s=1}^t I_{t-s}\omega_s \\
+E[I_t| I_0,\dots,I_{t-1},\omega,R_t] &= R_t\Lambda_t 
+\end{aligned}
+\tag{eq:lambdaS}
+$$
+We also assume that as a count of infections, the case incidence can be modelled as a Poisson distributed quantity, $I_t \sim Pois(\lambda_t)$ and therefore $\lambda_t = \overline{I_t}$. Given the infectivity profile distribution $\omega$, the number of cases we expect to see on a given day, is given by the Poisson distribution probability density function:
+
+$$
+\begin{aligned} 
+P(I_t) &= \frac{\lambda_t^{I_t} e^{-\lambda_t}}{I_t!} \\
+\lambda_t &\approx E[I_t| I_0,\dots,I_{t-1},\omega,R_t]\\
+P(I_t | I_0,\dots,I_{t-1},\omega,R_t) &= \frac{(R_t\Lambda_t)^{I_t}e^{-R_t\Lambda_t}}{I_t!} 
+\end{aligned} \tag{eq:probIt}
+$$
+ 
+We are interested in producing estimates of the reproduction number that are conditioned on the data we have available. To do this we assume $R_t$ is constant over a short time period of $\tau$ days prior to and including the date of the estimate $[t-\tau+1;t]$ (and defined as $R_{t,\tau}$). 
+
+As an aside, we use the following relationship:
+
+$$
+\begin{aligned}
+ P(A_3 | A_2,A_1)  \times P(A_2 | A_1)  &= \\
+ &= \frac{P(A_3,A_2,A_1)}{P(A_2,A_1)}  \times  \frac{P(A_2 , A_1)}{P(A_1)}\\
+ &= \frac{P(A_3,A_2,A_1)}{P(A_1)}\\
+ &= P(A_3,A_2|A_1)
+\end{aligned}
+$$
+Consider the combined probability of observing $I_{t-\tau+1} \dots I_t$, given the other information available to us, we can express this as the product:
+
+$$
+\begin{aligned}
+P(I_t | I_0,\dots,I_{t-1},\omega,R_{t,\tau}) &\times \\
+P(I_{t-1} | I_0,\dots,I_{t-2},\omega,R_{t,\tau})  &\times  \\
+P(I_{t-2} | I_0,\dots,I_{t-3},\omega,R_{t,\tau})  &\times  \\
+\dots &\\
+P(I_{t-\tau+1} | I_0,\dots,I_{t-\tau-1},\omega,R_{t,\tau})& \\
+&= P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega,R_{t,\tau})
+\end{aligned}
+$$
+Furthermore substituting $\eqref{eq:probIt}$ for the left hand side we derive the following expression for the combined probability of observing $I_{t-\tau+1} \dots I_t$:
+
+$$
+\begin{aligned}
+P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega,R_{t,\tau}) &= \prod_{s=t-\tau+1}^t\frac{(R_{t,\tau}\Lambda_s)^{I_s}e^{-R_{t,\tau}\Lambda_s}}{I_s!}
+\\
+&=
+R_{t,\tau}^{\sum_{s=t-\tau+1}^t I_s}
+e^{
+  -R_{t,\tau}
+  \big(
+    \sum_{s=t-\tau+1}^t \Lambda_s
+  \big)
+}
+\prod_{s=t-\tau+1}^t\frac{\Lambda_s^{I_s}}{I_s!}
+\end{aligned} \tag{eq:likelihood}
+$$
+To make use of the mathematical property of the conjugate prior of the Poisson distribution, we further assume a prior belief that $R_{t,\tau}$ is Gamma distributed with shape parameter $\alpha$ and rate parameter $\beta$ and hence by definition:
+
+$$
+\begin{aligned}
+P(R_{t,\tau}) = \frac{\beta^\alpha}{\Gamma(\alpha)} R_{t,\tau}^{\alpha-1}e^{-\beta R_{t,\tau}}
+\end{aligned}  \tag{eq:prior}
+$$
+
+We wish to determine the posterior probability of $R_t$ given the evidence ${I_0,\dots,I_{t},\omega}$, i.e. we wish to identify $P(R_{t,\tau} | I_0,\dots,I_{t},\omega)$. We have a prior probability $P(R_{t,\tau}$, and an expression for the likelihood of $I_t-\tau+1, \dots, I_t$ given $I_0,\dots,I_{t-1}$, the infectivity profile $\omega$ and $R_{t,\tau}$. To do this we uses Bayes theorem to restate the posterior probability of the relationship $P(A \cup B) = P(A|B)P(B)$ in two stages, firstly:
+
+$$
+\begin{aligned}
+P(R_{t,\tau} | I_0,\dots,I_{t},\omega)  &= 
+\frac{P(R_{t,\tau}, I_0,\dots,I_{t},\omega)}
+{P(I_0,\dots,I_{t},\omega)}\\
+\end{aligned}
+$$
+
+And secondly:
+
+$$
+\begin{aligned}
+P(R_{t,\tau}, I_0,\dots,I_{t},\omega) &=
+P(R_{t,\tau}, I_{t-\tau+1}, \dots,I_{t}|I_0, \dots,I_{t-\tau},\omega)P(I_0, \dots,I_{t-\tau},\omega)
+\\
+\end{aligned}
+$$
+
+Substituting and re-organising:
+
+$$
+\begin{aligned}
+P(R_{t,\tau} | I_0,\dots,I_{t},\omega)
+\frac{P(I_0,\dots,I_{t},\omega)}
+{P(I_0, \dots,I_{t-\tau},\omega)}
+&= P(R_{t,\tau}, I_{t-\tau+1}, \dots,I_{t}|I_0, \dots,I_{t-\tau},\omega)
+\\
+\end{aligned}
+$$
+
+We have expressions for both the evidence $P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega,R_{t,\tau})$ and prior belief $P(R_{t,\tau})$, and we can relate these to the right hand side of the previous expression:
+
+$$
+\begin{aligned}
+P(R_{t,\tau}, I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega) &= 
+\frac{
+P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega,R_{t,\tau})
+P(R_{t,\tau})
+}{
+  P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega)
+} \\
+\end{aligned}
+$$
+And combining these last two expressions gives us:
+
+$$
+\begin{aligned}
+P(R_{t,\tau} | I_0,\dots,I_{t},\omega)
+\frac{P(I_0,\dots,I_{t},\omega)}
+{P(I_0, \dots,I_{t-\tau},\omega)}
+&=\frac{
+P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega,R_{t,\tau})
+P(R_{t,\tau})
+}{
+  P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega)
+} \\
+\end{aligned}
+$$
+
+This includes components which are not conditional in any way on $R_t$. Given $I_0,\dots,I_{t},\omega$ these components are constant:
+
+$$
+\frac{P(I_0, \dots,I_{t-\tau},\omega)}
+{P(I_0,\dots,I_{t},\omega)P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega)} = K\\
+$$
+
+Which gives us the following expression for the posterior of $R_t$ given our prior belief and the evidence:
+
+$$
+\begin{aligned}
+P(R_{t,\tau} | I_0,\dots,I_{t},\omega)  &= K 
+P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega,R_{t,\tau})
+P(R_{t,\tau})
+\end{aligned}
+$$
+Using the expressions for the likelihood $\eqref{eq:likelihood}$, and the prior probability $\eqref{eq:prior}$ derived above we can express the :
+
+$$
+\begin{aligned}
+P(R_{t,\tau} | I_0,\dots,I_{t},\omega,\alpha,\beta)  &= K
+\Bigg(
+  \prod_{s=t-\tau+1}^t\frac{(R_{t,\tau}\Lambda_t)^{I_s}e^{-R_{t,\tau}\Lambda_s}}{I_s!}
+\Bigg)
+\Bigg(
+  \frac{\beta^\alpha}{\Gamma(\alpha)} R_{t,\tau}^{\alpha-1}e^{-\beta R_{t,\tau}}
+\Bigg)
+\\
+&=
+KR_{t,\tau}^{\alpha+\sum_{s=t-\tau+1}^t I_s-1}e^{-R_{t,\tau}\big(\beta+\sum_{s=t-\tau+1}^t \Lambda_s\big)}
+\Bigg(
+  \prod_{s=t-\tau+1}^t\frac{\Lambda_s^{I_s}}{I_s!}
+\Bigg)
+\Bigg(
+  \frac{\beta^\alpha}{\Gamma(\alpha)}
+\Bigg)
+\end{aligned}
+$$
+
+Which we noting has a form similar to a Gamma distribution with shape $\alpha'$ and scale $\beta'$:
+
+$$
+\begin{aligned}
+\alpha' &= \alpha+\sum_{s=t-\tau+1}^t I_s \\
+\beta' &= \beta+\sum_{s=t-\tau+1}^t \Lambda_s\\
+\end{aligned}  \tag{eq:posterior}
+$$
+
+This leads us to the conclusion that the posterior distribution of $R_t$ is also Gamma distributed, with shape ($\alpha'$) and rate  ($\beta'$) with a constant normalising factor which can be ignored:
+
+$$
+\begin{aligned}
+P(R_{t,\tau} | I_0,\dots,I_{t},\omega) &=  
+\frac{
+  {\beta'}^{\alpha'}
+}{
+ \Gamma({\alpha'})
+}
+R_{t,\tau}^{{\alpha'}-1}e^{-R_{t,\tau}{\beta'}}
+\Bigg[K\Bigg(
+  \prod_{s=t-\tau+1}^t\frac{\Lambda_s^{I_s}}{I_s!}
+\Bigg)
+\Bigg(
+  \frac{
+    \Gamma(\alpha')\beta^\alpha
+  }{
+    \Gamma(\alpha){\beta'}^{\alpha'}
+  }
+\Bigg)
+\Bigg]\\
+R_{t,\tau} | I_0,\dots,I_{t},\omega &\sim Gamma\Big(\alpha+\sum_{s=t-\tau+1}^t I_s, \beta+\sum_{s=t-\tau+1}^t \Lambda_s\Big)
+\end{aligned}
+$$
+
+This final expression for the reproduction number explicitly integrates information from the last $t \dots t-\tau+1$ time points. However within the $\Lambda_s$ term from $\eqref{eq:lambdaS}$ there is also information stretching back further into the past, depending on the nature of $\omega$. In reality the duration from an infector and an infectee in practice is limited, and for SARS-CoV-2 we think secondary infections are rare after 10 days. In this case if we consider $\omega$ to have a finite $N_\omega$ terms, then knowledge of the time series between $I_{t-\tau-N_\omega} \dots I_t$ is sufficient to make an estimate of $R_{t,\tau}$. 
+
+# Limitations
+
+Considering again the difference between the case based and the instantaneous reproduction number, it is a property of the instantaneous reproduction number that, in the face of a step change in the case based reproduction number, the instantaneous reproduction number will only fully account for that change when $N_\omega$ days have elapsed. With the method presented here the additional delay introduced by the windowing must be accounted for when relating the estimates of $R_t$ to exact points in time, and relating them to the case based reproduction number. It is also of note that it is difficult to incorporate anomalous or missing data into the method presented here as a single missing value invalidates the estimates over the next $N_\omega+\tau$ time points.
+
+As a final observation, the coefficient of variation ($\kappa$) of a gamma distribution is the reciprocal of the square root of the shape parameter, which for the $R_t$ estimate is give by $\eqref{eq:posterior}$:
+
+$$
+\begin{aligned}
+\kappa &= \frac{\text{sd}}{\text{mean}}\\
+\kappa &= \frac{\sqrt{\frac{\alpha}{\beta^2}}}{\frac{\alpha}{\beta}}\\
+\kappa &= \frac{1}{\sqrt{\alpha}}\\
+\kappa_{R_t} &= \frac{1}{\sqrt{\alpha+\sum_{s=t-\tau+1}^t I_s}}\\
+\end{aligned}
+$$
+The form of $\kappa_{R_t}$ is highly influenced by the count of infections. When infection numbers are in the thousands per day, the coefficient of variation becomes small regardless of the prior parameterisation. This is independent of the infectivity profile and leads to very certain estimates of $R_t$ particularly when infection numbers are large for a sustained period of time. It is not clear whether this certainty is always appropriate. An inherent assumption that the observed infections ($I_t$) are a true representation of the expected value of the infections ($\overline{I_t}$), and that these are Poisson distributed is core to this method, and over-dispersion of the observed case counts is not adjusted for. 
+
+The method presented here represents an estimate over a time window where $R_t$ is assumed to be constant. When this is in fact not the case, and $R_t$ is changing rapidly, the violation of this assumption leads to a certain but rapidly changing estimate that does not reflect reality. Shortening the time window over which the estimate is made in this situation may help, but this may in turn lead to excessive variation in central estimates particularly in the case where there is a weekly cycle to observations.
+
+# Implementation considerations
+
+The reference implementation of this method is provided by the R package EpiEstim. This has a range of features and configuration. The main element of this are various ways to configure the infectivity profile, either as a parameterised probability distribution, which is then discretised, or directly as an empirical set of weights ($\omega$). There is also the option to provide uncertainty around the infectivity profile either as uncertainty bounds on the distribution parameters, which are then sampled to produce a set of parameterised distributions, which are then in turn discretised, or to provide that infectivity profile uncertainty directly as a sequence of empirical distributions ($\omega_a, \omega_b, \omega_c, \dots$). In either event the algorithm progresses using such a sequence of empirical distributions, each one of which representing one possible infectivity profile. The estimate of $R_t$ for all profiles ($R^{profiles}$) is then calculated as a combination of all the possible estimates of $R_t$ given each of the infectivity profiles, and a size of window $\tau$.
+
+$$
+R^{profiles}(t,\tau) = \{R_{t,\tau,\omega} : \omega \in \omega_a, \omega_b, \omega_c, \dots\}
+$$
+
+
+## Prior selection
+
+The default implementation uses the same fixed prior gamma distribution for $R_t$ for all points in the time series. This is configurable but recommended to be set to a value (e.g. 5). Reversion to the prior $R_t$ when case incidence is low, for example at the start of the time series, means R at very low incidence may become biased towards the set prior value. 
+
+An alternative to this fixed prior, is to use an "informed" prior that assumes that estimates of $R_t$ are likely to be continuous in time, and uses previous posterior $R_t$ estimates to calculate priors for the next time point. The porevious time point posteriors are combined with a scale factor $k$ that increases the standard deviation of the prior distribution compared to the posterior of the previous time step, whilst keeping the mean constant. This essentially allows the prior at time $t$ to be the posterior at time $t-1$ plus a random walk, the variation of which is controlled by $k$. By enforcing the continuity in time the aim is to stabilise noisy estimates of $R_t$ when incidence is low, however this strategy may worsen the over-precise estimates seen when case numbers are high. 
+
+$$
+\begin{aligned}
+E(R_{t,prior}) &= E(R_{t-1,posterior}) \\
+V(R_{t,prior}) &= k^2V(R_{t-1,posterior}) \\
+\alpha_{t,prior} &= \frac{E(R_{t-1,posterior})^2}{k^2V(R_{t-1,posterior})} \\
+\alpha_{t,prior} &= \frac{\alpha_{t-1,posterior}^2}{\beta_{t-1,posterior}^2}\frac{\beta_{t-1,posterior}^2}{k^2\alpha_{t-1,posterior})}\\
+\alpha_{t,prior} &= \frac{\alpha_{t-1,posterior}}{k^2} \\
+\beta_{t,prior} &= \frac{E(R_{t-1,posterior})}{k^2V(R_{t-1,posterior})} \\
+\beta_{t,prior} &= \frac{\alpha_{t-1,posterior}}{\beta_{t-1,posterior}}\frac{\beta_{t-1,posterior}^2}{k^2\alpha_{t-1,posterior})}\\
+\beta_{t,prior} &= \frac{\beta_{t-1,posterior}}{k^2}\\
+R_{t,prior} &\sim Gamma\big(\frac{\alpha_{t-1,posterior}}{k^2}, \frac{\beta_{t-1,posterior}}{k^2}\big)
+\end{aligned}
+$$
+
+## Windowing strategy and posterior estimate selection
+
+In appendix A we observed the selection of a windowing parameter may have a significant effect on the bias variance trade-off, and selecting a single window may produces estimates that may either be too precise or too noisy. Picking the right value is also constrained by the observation that in the face of weekly periodicity of case incidence, $R_t$ estimates may over-fit the data when windows are too short. 
+
+It is computationally efficient to calculate arrange of windows at the same time, and with all windows available we open up some options to select the best posterior in a different way. The first possibility is to adopt an adaptive strategy allows window selection to be determined by the case incidence within the window ($\sum I_t$). By selecting longer windows where case numbers are small we both improve the certainty of the estimate, and reduce its noise, and when case numbers are high we reduce the window size to allow more rapid adaption to changing $R_t$, with less risk of over-fitting. This strategy is summarised as follows where $R^{adaptive}$ is the set of estimates where the window size $\tau$ is the smallest possible value that encompasses enough data. 
+
+$$
+R^{adaptive}(t, \tau_{min}, \tau_{max}, I_{min}) = \{R^{profiles}(t, \tau) : \tau =min\Big(\tau_{max}\Big|\tau_{min} \leq \tau; I_{min} \leq \sum_{s=t-\tau+1}^t I_s\Big)\}
+$$
+
+In the validation study we observed that the EpiEstim reference implementation with 14 day window produces a lagged, over-precise estimate. The degree of lag determines the overall accuracy of the method when $R_t$ is rapidly changing. This happens because the assumption that $R_t$ is constant over a window period $\tau$ is violated. The precision of the $R_t$ estimate is unwarranted in this situation. Once we have a range of windows calculated we may address this problem. Firstly, with a range of different time windows for any given time point, there are a set of estimates of $R_t$ that are equally valid, and which capture different assumptions about the length of time over which $R_t$ is constant. Secondly, if the time point in consideration is $s$ days in the past, there are also estimates from later time points, where $s \leq t+\tau$ that are also relevant to time $t$. In this case the $R_s,\tau$ estimate assumes the reproduction number is constant over the time period $s-\tau-1 \dots s$. If we consider allowing $\tau$ to vary between two limits ($\tau_{min} \leq \tau \leq \tau_{max}$) then we can describe the set of all estimates of effective $R_t$ that are relevant to a single time point as $R_{t,all}$:
+
+$$
+R^{all}(t,\tau_{min}, \tau_{max}) = \{R^{profiles}(s,\tau) : \tau_{min} \leq \tau \leq \tau_{max} ; t \leq s \leq t+\tau\}
+$$
+
+This is better explained visually and figure B1 demonstrates at time $s=10$ that estimates where $10 \leq s+\tau \leq 16$ are all of relevance to the time point $s$. All possible combinations of window and future time point $R_t$ estimates that are relevant to a specific point in time are shown. Each red point represents an $R_t$ estimate that is based on some assumption about the reproduction number on day 10, and all of these estimates may be combined to produce a final $R_t$ estimate for day 10. This set of estimates provides a broader set of assumptions than a single window can provide and therefore may reduce the unwanted over-precision of estimates when $R_t$ is changing rapidly.
+
+```{r}
+windows = tibble(t = 1:20+0.5) %>% tidyr::crossing(tibble(tau = 1:7)) %>% mutate(s = t - tau, delay=t-10, omega=s-10, relevant = s<10 & t>=10, label = paste0("\u03C4 = ",tau) %>% ordered(paste0("\u03C4 = ",1:7)) )
+
+p = ggplot(windows%>% filter(relevant))+
+  geom_rect(xmin = 10, xmax=11,ymin=0,ymax=Inf,fill="grey90",colour=NA)+
+  geom_rect(aes(xmin=s,xmax=t,ymin=tau+delay/10+0.15,ymax=tau+delay/10+0.15),colour="red")+
+  geom_rect(aes(xmin=s-5,xmax=s,ymin=tau+delay/10+0.15,ymax=tau+delay/10+0.15),colour="grey60")+
+  geom_point(aes(x=t,y=tau+delay/10+0.15),colour="red")+
+  #geom_point(aes(x=s,y=tau+delay/10+0.15),colour="red",shape="diamond")+
+  scale_x_continuous(breaks=0:30+0.5,labels=0:30,minor_breaks = 0:31)+
+  scale_y_continuous(breaks=1:7+0.5,labels=paste0("\u03C4 = ",1:7),minor_breaks = 0:8)+
+  theme(panel.grid.major.y = element_blank(), panel.grid.minor.y = element_line(),panel.grid.minor.x = element_line(),panel.grid.major.x = element_blank())+
+  coord_fixed(xlim=c(0.5,NA))+
+  guides(colour=guide_none())+
+  ylab(NULL)
+
+p %>% saveThirdPageFigure(output("estimation-windows"))
+
+```
+
+*Figure B1: A graphical representation of the information involved in estimates of $R_t$ using the Cori method with different length windows (y-axis). The highlighted estimates (red dots) all use estimation windows that span the 10th day and during each of these windows there is an assumption of constant $R_t$. In situations where the true $R_t$ is dynamic, combining these estimates may reflect the overall uncertainty.*
+
+## Combining posterior estimates
+
+In all the estimates thus far ($R^{profiles}$,$R^{adaptive}$, and $R^{all}$) the estimate of $R_t$ take the form of a set of posterior gamma distributions for each time point. This is a result of the fact that there are multiple infection profiles, expressing uncertainty, or there are multiple windows over which the estimate is calculated, or there are multiple days over which the estimates are collected. These estimates must be combined, and there are different possible strategies for doing this. 
+
+In the reference implementation, multiple estimates resulting from multiple infection profiles, are combined by constructing an empirical distribution from Monte-Carlo random sampling of the posterior Gamma distributions of all estimates. Quantiles are estimated from this empirical distribution. This is not deterministic, and for a reasonable degree of accuracy is computationally expensive.
+
+When we consider that the only information we need to get from the mixture of posterior distributions is a set of quantiles, an alternative strategy therefore is to construct a mixture distribution from the set of posteriors and solve it numerically for the quantiles. Given random sampling does the same process in an un-targeted way this is actually less overall effort and provides a deterministic result.
+
+The posterior estimates should be similar to one another. A reasonable approximation therefore is to consider the mixture distribution as another Gamma distribution with first and second moments matching those of the mixture distribution. This is quick to calculate and allows us to rapidly combine the potentially large number of estimates that arise from the multiplicative combinations of infection profiles, variable window length and variable day of estimate. The quality of this estimate will depend on how different the distributions are from each other, but this again produces a deterministic result. The parameterisation of the estimated gamma distribution is expressed below in terms of shape ($\alpha$) and rate ($\beta$) parameters, composed of a mixture of gamma distributions ($\sim Gamma(\alpha_i,\beta_i)$) from the posterior estimates.
+
+$$ 
+\begin{aligned}
+E[X] = \mu = \frac{\alpha}{\beta} &= \frac{1}{n} \sum_1^n  \mu_i = \frac{1}{n} \sum_1^n  \frac{\alpha_i}{\beta_i} \\
+E[(X-\mu)^2] = \sigma^2 = \frac{\alpha}{\beta^2} &= E[X^2]-\mu^2 \\
+&= \frac{1}{n} \Big(\sum_1^n E[X_i^2]\Big) - \mu^2 \\
+&= \frac{1}{n} \Big(\sum_1^n \sigma_i^2+\mu_i^2\Big) - \mu^2 \\
+&= \frac{1}{n} \Big(\sum_1^n \frac{\alpha_i}{\beta_i^2}+\big(\frac{\alpha_i}{\beta_i}\big)^2 \Big) - \big(\frac{1}{n} \sum_1^n\frac{\alpha_i}{\beta_i}\Big)^2 \\
+&= \frac{1}{n} \Big(\sum_1^n \frac{\alpha_i}{\beta_i^2}+\frac{\alpha_i^2}{\beta_i^2} - \frac{1}{n} \frac{\alpha_i^2}{\beta_i^2}\Big) \\
+&= \frac{1}{n} \Big(\sum_1^n \frac{\alpha_i+\frac{n-1}{n}\alpha_i^2}{\beta_i^2}\Big) \\
+\alpha = \frac{\mu^2}{\sigma^2} &= \frac{1}{n} \frac{\Big(\sum_1^n\frac{\alpha_i}{\beta_i}\Big)^2}{\Big(\sum_1^n \frac{\alpha_i+\frac{n-1}{n}\alpha_i^2}{\beta_i^2}\Big)} \\
+\beta = \frac{\mu}{\sigma^2} &= \frac{\Big(\sum_1^n\frac{\alpha_i}{\beta_i}\Big)}{\Big(\sum_1^n \frac{\alpha_i+\frac{n-1}{n}\alpha_i^2}{\beta_i^2}\Big)}
+\end{aligned}
+$$
+
+In all the strategies described above there is the potential to weight specific estimates more than others. As each infectivity profile is taken to be equally likely this only make sense when combining estimates made over many time windows, and such a weighing may be based on a function of the size of the window, or potentially a function of the number of cases observed within the window. This is beyond the scope of this description.
+
+# Validation and comparison
+
+The implementation of the renewal equation method has options for informed prior selection, broader posterior selection, and different methods for combining the posteriors. To evaluate the impact of these different implementation strategies we compare them using the methods described in appendix A in the next section. In all comparisons we use the validation data set described in appendix A with a fixed infectivity profile distribution based on a discretised Gamma distribution with mean of 5 and standard deviation of 4.
+
+## Informed prior selection
+
+In this comparison we are looking at the performance change resulting from changing the prior selection strategy from a fixed prior to that of an informed prior. Our baseline reference methodology is the default EpiEstim configuration including a fixed prior R_t with mean of 1.2 and standard deviation of 4, and with $R_t$ estimates calculated over a 7 days period. We vary the configuration by adopting an informed prior strategy with a step size factor $\kappa=1.25$ and the same 7 day window, and secondly with $\kappa=1.125$ and a smaller 4 day window. 
+
+The qualitative result of these changes is shown in figure B1, which demonstrates a modest reduction in high frequency noise, particularly in time periods where the incidence is low, for the same time period, and that this is retained when we shorten the time window from 7 to 4 days, if we also reduce the step size factor.
+
+```{r}
+
+# reference implementation
+reference = function(ts, infectivityProfile)  {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectSpecificWindow(7)
+  estim1$collectResampledQuantiles(sampleSize = 100)
+  estim1$estimateRt(ts,dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+adaptive = function(ts, infectivityProfile) {
+  estim3 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim3$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim3$inMiddleOfTimeseries()
+  estim3$withAdaptivePrior(factor = 1.25)
+  estim3$selectSpecificWindow(7)
+  estim3$collectResampledQuantiles(sampleSize = 100)
+  estim3$estimateRt(ts,dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+adaptive2 = function(ts, infectivityProfile) {
+  estim3 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim3$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim3$inMiddleOfTimeseries()
+  estim3$withAdaptivePrior(factor = 1.125)
+  estim3$selectSpecificWindow(4)
+  estim3$collectResampledQuantiles(sampleSize = 100)
+  estim3$estimateRt(ts,dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+estimators = tibble(
+  model = forcats::as_factor(c(
+    "EpiEstim: Fixed / 7 day",
+    "Informed: 1.25 / 7 day",
+    "Informed: 1.125 / 4 day"
+  )), 
+  estimFn = c(
+    reference,
+    adaptive,
+    adaptive2
+  )
+)
+
+lagAnalysisResult1 = lagAnalysis(estimators)
+qualityAnalysisResult1 = qualityAnalysis(estimators, lagAnalysisResult1$modelLag)
+
+p3 = qualityAnalysisResult1 %>% estimationExamplePlot()
+p3 %>% saveHalfPageFigure(output("qualitative-prior-selection"))
+
+```
+
+*Figure B1: qualitative estimates of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their prior selection process*
+
+As the use of an informed prior constrains the rate of change of the $R_t$ estimate in the face of sudden changes in the true value, it is expected that smaller values of $k$, the random walk step factor, result in estimates with more stiffness in time, and hence an increase in the delay. This is borne out by Figure B2 in which smaller step size values result in more estimate delay. This partly defeats the purpose of introducing the informed prior as a way to shorten the window needed and hence improve responsiveness to step changes in $R_t$.
+
+```{r}
+lagAnalysisResult1 %>% lagPlot() %>% saveThirdPageFigure(output("lag-prior-selection"))
+```
+
+*Figure B2: time delay analysis of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their prior selection process*
+
+A quantitative comparison of the 3 methods in Figure B3 and Table B1 reveals that the informed prior does improve the estimate against the validation set when assessed by the continuous rank probability score (CRPS), but as predicted the informed prior also worsens the over-precision of the estimator, with I shaped violin plots, and increasing quantile deviation scores. Although not demonstrated here we expect the improvement in CRPS to be most noticeable for the smoothly varying validation scenarios rather than step changes which we think it will perform less well on.
+
+```{r}
+
+p = estimateSummaryPlot(qualityAnalysisResult1)
+p %>% saveHalfPageFigure(output("error-summary-prior-selection"))
+
+```
+
+*Figure B3: quantitative analysis of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their prior selection process*
+
+*Table B1: summary of quantitative analysis of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their prior selection process*
+
+```{r}
+summaryAnalysis(qualityAnalysisResult1,lagAnalysisResult1) %>% standardPrintOutput::saveTable(output("error-summary-prior-selection-table"),defaultFontSize = 7)
+```
+
+## Posterior selection.
+
+In this comparison we are looking at the performance change resulting from changing the posterior selection strategy.Our baseline reference methodology is the default EpiEstim configuration including a fixed prior R_t with mean of 1.2 and standard deviation of 4. We select posterior $R_t$ estimates that are calculated over a 7 days period. We vary the configuration by firstly allowing the posterior to be automatically selected to ensure a minimum number of cases (in this instance 100) in the estimation window (down to a minimum of 4 days). This is the adaptive window described above. 
+
+The second comparison is against the combined posterior estimate of all windows that span a given time point, and described above. The multiple estimates of $R_t$ for the different window sizes, and start and end dates, obtained this way are combined by empirical re-sampling as in the original EpiEstim implementation.
+
+The qualitative result of these changes is shown in figure B4, which demonstrates the adaptive window results in excess high frequency noise in the scenario with weekend variation shown, compared to the reference implementation. This is an indication of over-fitting as a result of the selection of short (<7 day) windows. The "All windows" strategy on the other hand produces a stable estimate with broader confidence intervals which aligns closely to the true value.
+
+```{r}
+
+# reference implementation
+reference = function(ts, infectivityProfile)  {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectSpecificWindow(7)
+  estim1$collectResampledQuantiles(sampleSize = 100)
+  estim1$estimateRt(ts,dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+adaptiveWindow = function(ts, infectivityProfile)  {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectAdaptiveWindow(incidenceSum = 100,minWindow = 4)
+  estim1$collectResampledQuantiles(sampleSize = 100)
+  estim1$estimateRt(ts,dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+allWindows = function(ts, infectivityProfile) {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectMixtureCombination()
+  estim1$collectResampledQuantiles(sampleSize = 100)
+  estim1$estimateRt(ts, dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+estimators = tibble(
+  model = forcats::as_factor(c(
+    "EpiEstim: 7 day",
+    "Adaptive window: 100 cases",
+    "All windows"
+  )), 
+  estimFn = c(
+    reference,
+    adaptiveWindow,
+    allWindows
+  )
+)
+
+lagAnalysisResult2 = lagAnalysis(estimators)
+qualityAnalysisResult2 = qualityAnalysis(estimators, lagAnalysisResult2$modelLag)
+
+p3 = qualityAnalysisResult2 %>% estimationExamplePlot()
+p3 %>% saveHalfPageFigure(output("qualitative-posterior-selection"))
+
+```
+
+*Figure B4: qualitative estimates of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their posterior selection process*
+
+The different posterior selection strategies involve integrating information from different sized windows, this in turn affects the degree of time delay within the estimate as shown in Figure B5, with the reference implementation having the most delay, whereas the "all windows" strategy includes estimates from short and long windows and therefore responds relatively quickly to change. It must be pointed out that the true value of the reproduction number is calculated using the methods of Wallinga et al (2007) [CITE] which produces a different type of reproduction number to the instantaneous reproduction number produced by the renewal equation methods presented here.
+
+```{r}
+lagAnalysisResult2 %>% lagPlot() %>% saveThirdPageFigure(output("lag-posterior-selection"))
+```
+
+*Figure B5: time delay analysis of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their posterior selection process*
+
+The purpose of investigating the posterior selection was to reduce the over-precision, and improve calibration of the estimates without compromising the overall performance. In Figure B6 and Table B2 we can see that the "All windows" strategy is well calibrated, successful in reducing over precision, with a tendency towards excessive uncertainty, seen in the O shaped quantile density plot, and negative quantive deviation score, and that overall it performs equally well as the reference implementation in terms of CPRS.
+
+```{r}
+
+p = estimateSummaryPlot(qualityAnalysisResult2)
+p %>% saveHalfPageFigure(output("error-summary-posterior-selection"))
+
+```
+
+*Figure B6: quantitative analysis of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their posterior selection process*
+
+*Table B2: summary of quantitative analysis of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their posterior selection process*
+
+```{r}
+summaryAnalysis(qualityAnalysisResult2,lagAnalysisResult2) %>% standardPrintOutput::saveTable(output("error-summary-posterior-selection-table"),defaultFontSize = 7)
+```
+
+## Combining posteriors
+
+For this comparison we further examine the "All windows" strategy from above, which combines a number of different $R_t$ posterior estimates, by varying the method in which these are combined. The original EpiEstim implementation uses random sampling to combine posteriors, and we compare this to both a formal estimation of the quantiles of a mixture of posterior estimates, and an approximation of the mixture using the method of matching moments described above. The qualitative analysis in figure B7 suggests this change has very limited effect on the estimate quality, and in table B3 this is confirmed with the quantitative metrics. As the mixture approximation is far less computationally expensive than the other methods it seems this is best approach.
+
+```{r}
+
+#newInfectivityProfile = uncertainGammaInfectivityProfiles(meanOfMean = 5,sdOfMean = 1,meanOfSd = 4, sdOfSd = 0.5, n=10)
+
+# reference implementation
+reference = function(ts, infectivityProfile) {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectMixtureCombination()
+  estim1$collectResampledQuantiles(sampleSize = 100)
+  estim1$estimateRt(ts, dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+mixQuant = function(ts, infectivityProfile) {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectMixtureCombination()
+  estim1$collectMixtureQuantiles()
+  estim1$estimateRt(ts, dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+mixApprox = function(ts, infectivityProfile) {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectMixtureCombination()
+  estim1$collectMixtureApproximation()
+  estim1$estimateRt(ts, dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+estimators = tibble(
+  model = forcats::as_factor(c(
+    "Random resampling",
+    "Mixture quantiles",
+    "Mixture approximation"
+  )), 
+  estimFn = c(
+    reference,
+    mixQuant,
+    mixApprox
+  )
+)
+
+lagAnalysisResult3 = lagAnalysis(estimators)
+qualityAnalysisResult3 = qualityAnalysis(estimators, lagAnalysisResult3$modelLag)
+
+p3 = qualityAnalysisResult3 %>% estimationExamplePlot()
+p3 %>% saveHalfPageFigure(output("qualitative-posterior-combination"))
+
+```
+
+*Figure B7: qualitative estimates of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their posterior combination process*
+
+*Table B3: summary of quantitative analysis of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their posterior combination process*
+
+```{r}
+summaryAnalysis(qualityAnalysisResult3,lagAnalysisResult3) %>% standardPrintOutput::saveTable(output("error-summary-posterior-combination-table"),defaultFontSize = 7)
+```
+
+# Overall combination
+
+With the step-by-step analysis above we can make informed decision about how to best go about estimating $R_t$ using the renewal equation method to address some of its limitations. Estimating $R_t$ by combining all the estimation windows available, into a single Gamma distribution approximating the mixture of posteriors, when combined with an informed prior based on a posterior estimates from previous time-steps, with a moderate choice for the step size factor, has potential to perform well as an estimator. This is tested below, with the step size factor of 1.25. The qualitative results of this comparison are in figure B8, which shows the improved method producing stable, and seemingly accurate estimates of $R_t$.
+
+```{r}
+reference = function(ts, infectivityProfile)  {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withDefaultPrior()
+  estim1$selectSpecificWindow(7)
+  estim1$collectResampledQuantiles(sampleSize = 100)
+  estim1$estimateRt(ts,dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+improved = function(ts, infectivityProfile) {
+  estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+  estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+  estim1$inMiddleOfTimeseries()
+  estim1$withAdaptivePrior(factor = 1.25)
+  estim1$selectMixtureCombination()
+  estim1$collectMixtureApproximation()
+  estim1$estimateRt(ts, dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+}
+
+# improved2 = function(ts, infectivityProfile) {
+#   estim1 = J$CoriEstimator$new(r0Mean = 1.2,r0SD = 4,maxWindow = 14)
+#   estim1$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
+#   estim1$inMiddleOfTimeseries()
+#   estim1$withAdaptivePrior(factor = 1.125)
+#   estim1$selectMixtureCombination()
+#   estim1$collectMixtureApproximation()
+#   estim1$estimateRt(ts, dateColName = "date",incidenceColName = "value") %>% mutate(date = Rt.EndDate)
+# }
+
+estimators = tibble(
+  model = forcats::as_factor(c(
+    "EpiEstim: 7 day",
+    "Improved: 1.25" #,
+    # "Improved: 1.125"
+  )), 
+  estimFn = c(
+    reference,
+    improved #,
+    # improved2
+  )
+)
+
+lagAnalysisResult4 = lagAnalysis(estimators)
+qualityAnalysisResult4 = qualityAnalysis(estimators, lagAnalysisResult4$modelLag)
+
+p3 = qualityAnalysisResult4 %>% estimationExamplePlot()
+p3 %>% saveHalfPageFigure(output("qualitative-reference-versus-improved"))
+
+```
+
+*Figure B8: qualitative estimates of $R_t$ (black) against simulated (red) comparing the reference implementation to a proposed improved method*
+
+As before the introduction of a informed prior introduces hysteresis and delay into the estimates compared with the fixed prior (shown in figure B5), but this delay is still less than the reference implementation. 
+
+```{r}
+lagAnalysisResult4 %>% lagPlot() %>% saveThirdPageFigure(output("lag-reference-versus-improved"))
+```
+
+*Figure B10: time delay analysis of $R_t$ (black) against simulated (red) comparing the reference implementation to a proposed improved method*
+
+A qualitative analysis in Figure B11 and Table B4 demonstrates the improved estimators are indeed better calibrated than the reference implementation, and perform better on the CPRS score. They have a more uniform quantile density plot and a quantile deviation score very close to 0. This suggests we have been successful in improving the estimate quality.  
+
+```{r}
+
+p = estimateSummaryPlot(qualityAnalysisResult4)
+p %>% saveHalfPageFigure(output("error-summary-reference-versus-improved"))
+
+```
+
+*Figure B11: quantitative analysis of $R_t$ (black) against simulated (red) comparing the reference implementation to a proposed improved method*
+
+*Table B4: summary of quantitative analysis of $R_t$ (black) against simulated (red) comparing the reference implementation to a proposed improved method*
+
+```{r}
+summaryAnalysis(qualityAnalysisResult4,lagAnalysisResult4) %>% standardPrintOutput::saveTable(output("error-summary-reference-versus-improved-table"),defaultFontSize = 7)
+```
+
+For completeness we examine what drives the improved estimator's performance, and in figure B11 we see notable improvements in calibration occur particularly in the high incidence scenarios (panel G) and the reduction in over-precision is again most marked in the high incidence scenarios (panel K).
+
+```{r}
+p = estimateBreakdownPlot(qualityAnalysisResult4, errorLimits = c(-0.15,0.15))
+p %>% saveTwoThirdPageFigure(output("error-breakdown-reference-versus-improved"))
+
+```
+
+*Figure B11: detailed breakdown of quantitative analysis of $R_t$ (black) against simulated (red) comparing the reference implementation to a proposed improved method*
+
+# Summary
+
+In this appendix we have described the detail of the renewal equation method for estimating $R_t$. We find a few limitations of the method, and particularly the over-precise estimates that can occur when case incidence is high, and the limitations resulting from the assumption that $R_t$ is constant over a window of time. We undertook a re-implementation of the algorithm in Java and used this to explore the possibilities of combining estimates with different window size assumptions and with different start and end dates, which provides us with a broader set of estimates that better reflects uncertainty. Our implementation also allows for the imposition of a constraint of continuity on the time-series of the estimates, which allows for more precise estimates when case numbers are small. Combined together these alterations produce a novel method for estimating the reproduction number that is better calibrated, and performs well under detailed validation.

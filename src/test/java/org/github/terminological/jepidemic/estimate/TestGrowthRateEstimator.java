@@ -78,7 +78,7 @@ public class TestGrowthRateEstimator {
 	public void testGrowthRateEstimator() throws IOException, IncompleteTimeseriesException {
 		GrowthRateEstimator est = basicEst();
 		
-		for (int i=1;i<=4;i++) {
+		for (int i=1;i<=6;i++) {
 			String iLab = null;
 			switch (i) {
 			case 1: 
@@ -96,6 +96,14 @@ public class TestGrowthRateEstimator {
 			case 4: 
 				est.priorIncidenceFromPosteriorAndGrowthRate(1.5);
 				iLab = "fixed scaled mechanistic";
+				break;
+			case 5: 
+				est.priorIncidenceFromPosteriorMean();
+				iLab = "poisson style";
+				break;
+			case 6: 
+				est.priorIncidenceFromPosteriorMeanAndGrowthRate();
+				iLab = "poisson style mechanistic";
 				break;
 			}
 		
@@ -130,7 +138,7 @@ public class TestGrowthRateEstimator {
 				
 					RDataframe tmp = getFlu2009();
 					RDataframe out = est.estimateGrowthRateSingle(tmp, "dates", "I");
-					RNumericVector res = out.pull("Growth.Quantile.0.5.value",RNumericVector.class);
+					RNumericVector res = out.pull("Growth.Quantile.0.5",RNumericVector.class);
 					System.out.println(iLab+" "+jLab+" "+kLab+" "+res.rCode());
 				}
 			}

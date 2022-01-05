@@ -23,12 +23,11 @@
 }
 
 \description{
-Some work in progress R functions related to the
-							covid 19 epidemic
+Some work in progress R functions related to the covid 19 epidemic
 
 Version: 0.03
 
-Generated: 2021-12-28T11:33:45.818291
+Generated: 2022-01-03T21:00:49.674949
 }
 
 \author{\email{rc538@exeter.ac.uk}}
@@ -78,15 +77,15 @@ J$GrowthRateEstimator$new(minWindow, maxWindow)
 			\if{html}{\out{<div class="arguments">}}
 			\describe{
 				\itemize{
-					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount .}{ - (java expects a int)}
-					\item{maxWindow}{ - (java expects a int)}
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate, 4 is a sensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+					\item{maxWindow - the largest amount of data considered in estimating the growth rate, 14 is a sensible amount.}{ - (java expects a int)}
 				}
 			}
 			\if{html}{\out{</div>}}
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a default growth rate estimator
+			R6 GrowthRateEstimator object: 
 		}
 	}
 
@@ -110,8 +109,8 @@ J$GrowthRateEstimator$strictGrowthRateAndRtEstimator(minWindow, maxWindow, infec
 			\if{html}{\out{<div class="arguments">}}
 			\describe{
 				\itemize{
-					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
-					\item{maxWindow}{ - (java expects a int)}
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+					\item{maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
 					\item{infectivityProfiles - a numeric matrix with each column containing a discrete probability distribution of the serial interval with \(P_{(t=0)} = 0\)}{ - (java expects a RNumericArray)}
 				}
 			}
@@ -119,7 +118,7 @@ J$GrowthRateEstimator$strictGrowthRateAndRtEstimator(minWindow, maxWindow, infec
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a strict growth rate and $R_t$ estimator that accounts for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a strict growth rate and \(R_t\) estimator that accounts for uncertainty in the infectivity profile.
 		}
 	}
 
@@ -143,16 +142,16 @@ J$GrowthRateEstimator$defaultGrowthRateAndRtEstimator(minWindow, maxWindow, init
 			\if{html}{\out{<div class="arguments">}}
 			\describe{
 				\itemize{
-					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
-					\item{maxWindow}{ - (java expects a int)}
-					\item{initialIncidence}{ - (java expects a double)}
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+					\item{maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
+					\item{initialIncidence - a guess at the initial incidence of the time series}{ - (java expects a double)}
 				}
 			}
 			\if{html}{\out{</div>}}
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.
 		}
 	}
 
@@ -175,15 +174,15 @@ J$GrowthRateEstimator$defaultGrowthRateEstimator(minWindow, maxWindow)
 			\if{html}{\out{<div class="arguments">}}
 			\describe{
 				\itemize{
-					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.minWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
-					\item{maxWindow}{ - (java expects a int)}
+					\item{minWindow - the smallest amount of data considered in estimating the growth rate - 4 is a ssensible default unless you want bang up to date estimate.}{ - (java expects a int)}
+					\item{maxWindow - the largest amount of data considered in estimating the growth rate - 14 is a sensible amount.}{ - (java expects a int)}
 				}
 			}
 			\if{html}{\out{</div>}}
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.
 		}
 	}
 
@@ -213,7 +212,7 @@ J$GrowthRateEstimator$basicGrowthRateEstimator()
 		}
 
 		\subsection{Returns}{
-			R6 GrowthRateEstimator object: a growth rate and $R_t$ estimator that does not account for uncertainty in the infectivity profile.
+			R6 GrowthRateEstimator object: a growth rate and \(R_t\) estimator that does not account for uncertainty in the infectivity profile.
 		}
 	}
 
