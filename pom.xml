@@ -87,7 +87,7 @@
 						<title>Java Epidemic</title>
 						<version>0.03</version>
 						<debug>false</debug>
-						<!-- <usePkgdown>true</usePkgdown> -->
+						<usePkgdown>true</usePkgdown>
 						<useJavadoc>true</useJavadoc>
 						<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
 						<rjavaOpts>

@@ -2,47 +2,59 @@
 title: "Appendix D - Bayesian growth rate and reproduction number estimation"
 author: "Rob Challen"
 date: '`r format(Sys.Date(), "%d-%m-%Y")`'
+# output: 
+#   pdf_document :
+#     fig_caption: yes
+#     keep_tex: TRUE
+# header-includes:
+#  \usepackage{float}
+#  \usepackage{mathtools}
+#  \usepackage{amsmath}
+#  \DeclareRobustCommand{\[}{\begin{equation*}}
+#  \DeclareRobustCommand{\]}{\end{equation*}}
+#  \newcounter{tagno}
+#  \setcounter{tagno}{0}
+#  \let\amsmathtag\tag
+#  \renewcommand{\tag}[1]{\amsmathtag{\thetagno} \label{#1} \stepcounter{tagno}}
+#  \floatplacement{figure}{H}    
+# knit: (function(inputFile, encoding,...) {
+#   rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-D-bayesian-growth-rate-',Sys.Date(),'.pdf')) })
+# fig_width: 7
+# fig_height: 5
+# out.width: "100%"
+# bibliography: jepidemic.bib
+# csl: jepidemic.csl
+# vignette: >
+#   %\VignetteIndexEntry{Bayesian growth rate and reproduction number estimation}
+#   %\VignetteEngine{knitr::rmarkdown}
+#   %\VignetteEncoding{UTF-8}
 output: 
-  pdf_document :
-    fig_caption: yes
-    keep_tex: TRUE
-header-includes:
- \usepackage{float}
- \usepackage{mathtools}
- \usepackage{amsmath}
- \DeclareRobustCommand{\[}{\begin{equation*}}
- \DeclareRobustCommand{\]}{\end{equation*}}
- \newcounter{tagno}
- \setcounter{tagno}{0}
- \let\amsmathtag\tag
- \renewcommand{\tag}[1]{\amsmathtag{\thetagno} \label{#1} \stepcounter{tagno}}
- \floatplacement{figure}{H}    
+  latex_fragment
 knit: (function(inputFile, encoding,...) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-D-bayesian-growth-rate-',Sys.Date(),'.pdf')) })
-fig_width: 7
-fig_height: 5
-out.width: "100%"
-bibliography: jepidemic.bib
-csl: jepidemic.csl
-vignette: >
-  %\VignetteIndexEntry{Cori method}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-D-bayesian-growth-rate-',Sys.Date(),'.tex')) })
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  error = TRUE
+)
+
 library(tidyverse)
 
 
-here::i_am("vignettes/bayesian-growth-rate.Rmd")
+here::i_am("vignettes/in-development/appendix-D-bayesian-estimators.Rmd")
 source(here::here("vignettes/common-setup.R"))
 
 ```
 
 # Introduction
 
-In previous appendices we demonstrated approaches to estimating the growth rate using a maximum likelihood estimator, and the effective reproduction number ($R_t$) using a Bayesian framework with specific assumptions about the exponential growth resulting from the reproduction number. In this section we derive another simpler method for deriving both quantities within a single Bayesian framework, using minimal assumptions about the underlying processes as a counterpoint for comparison. This method is implemented in a Java library with bindings to the R language called "jepidemic", which is open source and available on GitHub [CITE]. 
+In previous appendices we demonstrated approaches to estimating the growth rate using a maximum likelihood estimator, and the effective reproduction number ($R_t$) using a Bayesian framework with specific assumptions about the exponential growth resulting from the reproduction number. In this section we derive another simpler method for deriving both quantities within a single Bayesian framework, using minimal assumptions about the underlying processes as a counterpoint for comparison. This method is implemented in a Java library with bindings to the R language called "jepidemic", which is open source and available on GitHub [@rob_challen_2022_5820292]. 
 
 # Estimation of the incidence of infection
 
@@ -55,8 +67,7 @@ E[I_t] &= \lambda_t \\
 \end{aligned}
 $$
 
-If we assuming $\lambda_t$ is constant over a short time period $[t-\tau;t+\tau]$ then by the definition of the Poisson distribution:
-
+If we assume $\lambda_t$ is constant over a short time period $[t-\tau;t+\tau]$ then by the definition of the Poisson distribution:
 
 $$
 \begin{aligned}
@@ -103,6 +114,7 @@ r_t &\approx \frac{1}{2m}(log(E(I_{t+m}))-log(E(I_{t-m}))) \\
 r_t &= \frac{1}{2m}log\frac{\lambda_{t+m}}{\lambda_{t-m}}
 \end{aligned}
 $$
+
 Given that $I$ is assumed to be Poisson distributed the expected value is $\lambda_t$. If we further define $y = g(r)$ such that:
 
 $$
@@ -129,7 +141,7 @@ Gamma(\alpha'_{\tau-}, \beta')
 \end{aligned}
 $$
 
-The ratio of 2 gammas with same rate parameter is a Beta Prime distributed quantity [CITE], which describes $g(r)$: 
+The ratio of 2 gammas with same rate parameter is a Beta Prime distributed quantity [@pham-giaDistributionsRatiosRandom2011; @leemisUnivariateDistributionRelationships2008], which describes $g(r)$: 
 
 $$
 \begin{aligned}
@@ -142,10 +154,7 @@ F(x) &= I_{
 \end{aligned}
 \tag{eq:rtBetaP}
 $$
-Where $I$ is the regularised beta function and $B$ is the complete beta function. The support for $g(r_t)$ is $[0 \dots \infty]$ and hence the support for $r_t$ is $[-\infty \dots \infty]$. Given that $g(r_t)$ can be differentiated and is a strictly increasing function we can apply the following transformation:
-
-https://www.statlect.com/fundamentals-of-probability/functions-of-random-variables-and-their-distribution
-https://www.probabilitycourse.com/chapter4/4_1_3_functions_continuous_var.php
+Where $I$ is the regularised beta function and $B$ is the complete beta function. The support for $g(r_t)$ is $[0 \dots \infty]$ and hence the support for $r_t$ is $[-\infty \dots \infty]$. Given that $g(r_t)$ can be differentiated and is a strictly increasing function we can apply the following transformation [@pishro-nikIntroductionProbabilityStatistics2014; @tabogaFunctionsRandomVariables; @tabogaLecturesProbabilityTheory2017]:
 
 $$
 \begin{aligned}
@@ -159,6 +168,7 @@ f_Y(y) &= f_X(g^{-1}(y)) \frac{dg^{-1}(y)}{dy}
 $$
 
 Which gives us a probability density function for an estimate of $r_t$ based on the Bayesian posterior of $\lambda_t$:
+
 $$
 \begin{aligned}
 f_Y(r_t) &= f_X(g^{-1}(r_t))\frac{dg^{-1}(r_t)}{dr_t}\\
@@ -187,11 +197,7 @@ F_X(r_t) &= I_{
 \end{aligned}
 $$
 
-where $I_x(a,b)$ is the regularised Beta function.
-
-https://mathworld.wolfram.com/RegularizedBetaFunction.html
-https://commons.apache.org/proper/commons-math/javadocs/api-3.3/org/apache/commons/math3/special/Beta.html
-https://en.wikipedia.org/wiki/Beta_prime_distribution#Properties
+where $I_x(a,b)$ is the regularised Beta function [@weissteinRegularizedBetaFunction].
 
 The quantile function for $g(r_t)$ is similarly transformed backwards to give a quantile estimate for $r_t$, and we can sample from $Y$ and transform using $g^{-1}(y)$ to get unbiased samples of $r_t$.
 
@@ -204,6 +210,7 @@ As before we define the backward-looking effective reproduction number $R_t$ as 
 $$
 R_t = \frac{\overline{I_t}}{\sum_{s=1}^t \overline{I_{t-s}}\omega_s}
 $$
+
 The posterior distribution of $\lambda_t$ is an estimate of the $\overline{I_t}$ distribution and therefore . 
 
 $$
@@ -216,7 +223,7 @@ $$
 \lambda_{t-s}\omega_s \sim Gamma\big(\alpha'_{t-s}, \frac{\beta'_{t-s}}{\omega_s}\big)\\ 
 $$
 
-A commonly used approximation for a sum of gamma distributed variables is as another gamma distribution with the same first and second moments as described by in Cove et al [CITE]. In the case of a set of gamma distributions, with parameters $\alpha_i$ and $\beta_i$, an approximation of the sum is another gamma distribution with parameters $\alpha_{sum}$ and $\beta_{sum}$:
+A commonly used approximation for a sum of gamma distributed variables is as another gamma distribution with the same first and second moments as described by in Covo et al. (2014) [@covoNovelSinglegammaApproximation2014]. In the case of a set of gamma distributions, with parameters $\alpha_i$ and $\beta_i$, an approximation of the sum is another gamma distribution with parameters $\alpha_{sum}$ and $\beta_{sum}$:
 
 $$
 \begin{aligned}
@@ -228,8 +235,6 @@ V(X_{sum}) &= \sum_iV(X_i)= \sum_i\frac{\alpha_i}{\beta_i^2}\\
 \beta_{sum} &= \frac{E(X_{sum})}{V(X_{sum})} = \frac{\sum_i\frac{\alpha_i}{\beta_i}}{\sum_i\frac{\alpha_i}{\beta_i^2}}\\
 \end{aligned}
 $$
-
-1. Covo S, Elalouf A. A novel single-gamma approximation to the sum of independent gamma variables, and a generalization to infinitely divisible distributions. Electronic Journal of Statistics [Internet]. 2014 Jan [cited 2021 Nov 25];8(1):894–926. Available from: https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-8/issue-1/A-novel-single-gamma-approximation-to-the-sum-of-independent/10.1214/14-EJS914.full
 
 The moment matching approximation for the sum of gamma distributions can be empirically tested. Here we demonstrate its use on a random set of five gamma distributions show in panel A and the sum of a million random draws from each of these probability distributions in panel B. In panel B the red line is the predicted Gamma distribution based on the estimator. Further validation of the estimator is warranted but in simple cases the estimator is observed to perform well.
 
@@ -272,7 +277,8 @@ estim = tibble(alpha =alphaSum, beta = betaSum) %>% group_by_all() %>% summarise
 p2 = ggplot(hist,aes(x=sum_y))+geom_histogram(aes(y = 10*stat(count / sum(count))),binwidth = 0.1,fill=NA,colour="grey50")+
   geom_line(data=estim, mapping = aes(x=x,y=p),colour="red")+xlab(latex2exp::TeX("$\\sum x$"))+ylab(latex2exp::TeX("$P(\\sum x)$"))
 
-p1+p2+patchwork::plot_annotation(tag_levels = "A")
+p3 = p1+p2+patchwork::plot_annotation(tag_levels = "A")
+p3 %>% saveHalfPageFigure(output("gamma-sum-approximation-example"))
 ```
 
 Using this approximation we estimate $R_t$ to be distributed as the ratio of 2 Gamma distributions: the numerator with shape and rate parameters $\alpha'$ and $\beta'$, and the denominator with shape and rate parameters $\alpha''$ and $\beta''$ as described:
@@ -301,7 +307,8 @@ R_t &\sim BetaPrime(\alpha_t',\alpha_t'',1,\frac{\beta_t''}{\beta_t'})\\
 \end{aligned}
 \tag{eq:RtGenBetaP}
 $$
-This distributional form of $R_t$ as a generalised Beta Prime distribution with three shape parameters ($\alpha_1,\alpha_2,\alpha_3$) and one scale parameter ($\beta$) and with the probability density and cumulative probability functions as given below:
+
+This distributional form of $R_t$ as a generalised Beta Prime distribution [@BetaPrimeDistribution; @kotzContinuousUnivariateDistributions1995] with three shape parameters ($\alpha_1,\alpha_2,\alpha_3$) and one scale parameter ($\beta$) and with the probability density and cumulative probability functions as given below:
 
 $$
 \begin{aligned}
@@ -324,16 +331,22 @@ F(x) &= I_{
 }\big(\alpha_1,\alpha_2\big)
 \end{aligned}
 $$
+
 and where $I_x$ is the regularised Beta function. This form for the $R_t$ estimate assumes only the Gamma posterior estimate for the Poisson rate, and so can be readily calculated directly from the analytic form of the posteriors identified in the first part of this method. This could be a biased if the denominator of the ratio is not a good estimate for the weighted sum in reality, however the moment matching estimate works well when the distributions are not completely different. In our case the fact that the $\lambda_t$ estimates are part of the same time series and scaled by the infectivity profile, does make it quite likely the distributions will have similar characteristics. 
 
 This constitutes a method for estimating the expected incidence, the growth rate, and the instantaneous reproduction number from a time series of observed case incidence making only a minimal set of assumptions.
 
 # Implementation considerations
 
-In $\eqref{eq:bayesPois}$ we derived the standard posterior Gamma distribution of a Poisson rate parameter based on observed cases and a prior belief about that rate ($\lambda_t$). The prior belief about the rate at time $t$ can be informed by the value of the rate at earlier times, and optionally by the growth rate such that $I_{t+1} = I_te^{r_t}$. The full distributional forms of the posteriors at previous time steps could be used to generate a prior, but this was found to result in a prior that is far too strong and reflects the the assumption that the Poisson rate is constant over a small time period. Instead of this a better option is a prior that has a very low coefficient of variation, and we found a value of 1 to be appropriate, resulting in the distributional form for the prior, $\lambda_{t+1}$ in terms of the posterior of incidence ($\lambda'_t$) and growth rate ($r'_t$). 
+In $\eqref{eq:bayesPois}$ we derived the standard posterior Gamma distribution of a Poisson rate parameter based on observed cases and a prior belief about that rate ($\lambda_t$). The prior belief about the rate at time $t$ can be informed by the value of the rate at earlier times, and optionally by the growth rate such that $I_{t+1} = I_te^{r_t}$. The full distributional forms of the posteriors at previous time steps could be used to generate a prior, but this was found to result in a prior that is far too strong and reflects the the assumption that the Poisson rate is constant over a small time period. Instead of this a better option is a prior that has a very low coefficient of variation, and we found a value of 1 to be appropriate, resulting in the distributional form for the prior, $\lambda_{t+1,prior}$ in terms of the posterior of incidence ($\lambda_{t,posterior}$) and growth rate ($r_{t,posterior}$). 
 
 $$
-\lambda_{t+1} \sim Gamma(1,\frac{1}{\overline{\lambda'_{t}} e^\overline{r'_t}}})
+\lambda_{t+1,prior} \sim Gamma(1,\frac{
+  1
+}{
+  \overline{\lambda_{t,posterior}} 
+  e^{\overline{r_{t,posterior}}}
+})
 $$
 
 This prior will influence the posterior estimates of incidence most strongly when incidence is low, and this may indeed have a desirable stabilising effect on the estimates in this situation. Increasing the coefficient of variation from 1 to a higher number may provide additional stability and is a topic for future exploration.
@@ -344,7 +357,7 @@ As described in appendix A the case counts may have weekly periodicity, or have 
 
 # Growth rate validation
 
-The growth rate estimates using this method can be compared to those from the maximum likelihood local polynomial approach described in Appendix C, with a polynomial degree of 2 and window of 14 days. This uses the same synthetic data and methodology as described in Appendix A. .
+The growth rate estimates using this method can be compared to those from the maximum likelihood local polynomial approach described in Appendix C, with a polynomial degree of 2 and window of 14 days. This uses the same synthetic data and methodology as described in Appendix A.
 
 ```{r}
 
@@ -357,7 +370,7 @@ locfitEstimator = function(deg,win) {
 bayesian = function(ts, infectivityProfile) {
   grEstim = J$GrowthRateEstimator$new(minWindow = 4,maxWindow = 14)
   grEstim$withSaneDefaults()
-  grEstim$withInfectivityProfileMatrix(infProf$yMatrix)
+  grEstim$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
   out = grEstim$estimateGrowthRateSingle(ts, dateColName = "date",incidenceColName = "value")
 }
 
@@ -374,9 +387,7 @@ estimators = tibble(
     bayesian
   )
 )
-```
 
-```{r}
 lagAnalysisResult = lagAnalysis(estimators, estimation="Growth")
 
 qualityEstimates = syntheticEstimates(estimators)
@@ -449,7 +460,7 @@ improved = function(ts, infectivityProfile) {
 bayesian = function(ts, infectivityProfile) {
   grEstim = J$GrowthRateEstimator$new(minWindow = 4,maxWindow = 14)
   grEstim$withSaneDefaults()
-  grEstim$withInfectivityProfileMatrix(infProf$yMatrix)
+  grEstim$withInfectivityProfileMatrix(infectivityProfile$yMatrix)
   out = grEstim$estimateGrowthRateSingle(ts, dateColName = "date",incidenceColName = "value")
 }
 
@@ -459,7 +470,7 @@ bayesian = function(ts, infectivityProfile) {
 estimators = tibble(
   model = forcats::as_factor(c(
     "Locfit",
-    "Improved Cori",
+    "Improved renewal eqn",
     "Bayesian"
   )), 
   estimFn = c(
@@ -522,3 +533,6 @@ Detailed breakdowns did not provide any further insight into the differences bet
 
 We introduced an alternative bayesian framework for estimating case incidence, growth rate and reproduction number as the same time. This is robust to a range of different synthetic scenarios and performs in a very similar manner to the locally fitted polynomial for growth rate and to the best performing renewal equation method. The estimates are slightly reduced in valueby the fact they cannot estimate right up to the end of the time series, unlike the other methods, but provide welcome validation by which to benchmark the other methods. 
 
+# References
+
+<div id="refs"></div>

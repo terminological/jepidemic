@@ -2,32 +2,36 @@
 title: "Appendix C - Incidence and growth rate estimation"
 author: "Rob Challen"
 date: '`r format(Sys.Date(), "%d-%m-%Y")`'
+# output: 
+#   pdf_document :
+#     fig_caption: yes
+#     keep_tex: TRUE
+# header-includes:
+#  \usepackage{float}
+#  \usepackage{mathtools}
+#  \usepackage{amsmath}
+#  \DeclareRobustCommand{\[}{\begin{equation*}}
+#  \DeclareRobustCommand{\]}{\end{equation*}}
+#  \newcounter{tagno}
+#  \setcounter{tagno}{0}
+#  \let\amsmathtag\tag
+#  \renewcommand{\tag}[1]{\amsmathtag{\thetagno} \label{#1} \stepcounter{tagno}}
+#  \floatplacement{figure}{H}    
+# knit: (function(inputFile, encoding,...) {
+#   rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-C-incidence-and-growth-rate-',Sys.Date(),'.pdf')) })
+# fig_width: 7
+# fig_height: 5
+# out.width: "100%"
+# bibliography: jepidemic.bib
+# csl: jepidemic.csl
+# vignette: >
+#   %\VignetteIndexEntry{Incidence and growth rate estimation}
+#   %\VignetteEngine{knitr::rmarkdown}
+#   %\VignetteEncoding{UTF-8}
 output: 
-  pdf_document :
-    fig_caption: yes
-    keep_tex: TRUE
-header-includes:
- \usepackage{float}
- \usepackage{mathtools}
- \usepackage{amsmath}
- \DeclareRobustCommand{\[}{\begin{equation*}}
- \DeclareRobustCommand{\]}{\end{equation*}}
- \newcounter{tagno}
- \setcounter{tagno}{0}
- \let\amsmathtag\tag
- \renewcommand{\tag}[1]{\amsmathtag{\thetagno} \label{#1} \stepcounter{tagno}}
- \floatplacement{figure}{H}    
+  latex_fragment
 knit: (function(inputFile, encoding,...) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('incidence-and-growth-rate-',Sys.Date(),'.pdf')) })
-fig_width: 7
-fig_height: 5
-out.width: "100%"
-bibliography: jepidemic.bib
-csl: jepidemic.csl
-vignette: >
-  %\VignetteIndexEntry{Cori method}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-C-incidence-and-growth-rate-',Sys.Date(),'.tex')) })
 ---
 
 ```{r setup, include=FALSE}
@@ -40,13 +44,13 @@ knitr::opts_chunk$set(
   error = TRUE
 )
 
-here::i_am("vignettes/appendix-C-incidence-and-growth-rate-estimation.Rmd")
+here::i_am("vignettes/in-development/appendix-C-incidence-and-growth-rate-estimation.Rmd")
 source(here::here("vignettes/common-setup.R"))
 ```
 
 # Introduction
 
-The effective reproduction number ($R_t$) is a useful measure of the state of the epidemic but by itself does not inform us of the likely impact that the epidemic will have. To do that we need an unbiased estimator of case counts. As the reproduction number is conditioned on the infectivity profile $\omega$ the timing of the impact of rapidly growing case counts is also not described by the reproduction number. For this a more useful measure is the real-time exponential growth rate ($r_t$), which it has been argued is more informative for decision making [CITE PELLIS], as combined with case counts it can inform how quickly cases will reach a particular threshold when intervention is required. The reproduction number implicitly describes a closed population, which when describing sub-populations may be unhelpful. The growth rate does not make such assumptions, can be inferred directly from data and this does not require sophisticated models.
+The effective reproduction number ($R_t$) is a useful measure of the state of the epidemic but by itself does not inform us of the likely impact that the epidemic will have. To do that we need an unbiased estimator of case counts. As the reproduction number is conditioned on the infectivity profile $\omega$ the timing of the impact of rapidly growing case counts is also not described by the reproduction number. For this a more useful measure is the real-time exponential growth rate ($r_t$), which it has been argued is more informative for decision making [@pellisChallengesControlCOVID192021], as combined with case counts it can inform how quickly cases will reach a particular threshold when intervention is required. The reproduction number implicitly describes a closed population, which when describing sub-populations may be unhelpful. The growth rate does not make such assumptions, can be inferred directly from data and this does not require sophisticated models.
 
 In this appendix we describe the approach to estimation the real-time growth rate adopted throughout the majority of this thesis, and we validate that against synthetic epidemics using the validation methodology described in Appendix A.
 
@@ -71,7 +75,8 @@ I_t &\sim Poisson(\lambda_t) \\
 r_t &= \frac{dlog(\lambda_t)}{dt}
 \end{aligned}
 $$
-Due to the probability density function underlying the Poisson distribution estimating both $\overline{I_t}$ and $r_t$ from data is straightforward, in a range of frameworks. Following the methods of Loader et al. [CITE] we represent $\lambda_t$ as a polynomial function of time, and adopt a local maximum likelihood estimator with a logarithmic link function such that:
+
+Due to the probability density function underlying the Poisson distribution estimating both $\overline{I_t}$ and $r_t$ from data is straightforward, in a range of frameworks. Following the methods of Loader et al. [@loaderLocalRegressionLikelihood1999] we represent $\lambda_t$ as a polynomial function of time, and adopt a local maximum likelihood estimator with a logarithmic link function such that:
 
 $$
 \begin{aligned}
@@ -108,11 +113,11 @@ $$
 
 Using this method, the incidence and growth rate estimation therefore depend on the bandwidth and the polynomial degree. Given that the most interesting part of the data is the right hand boundary, the choice of bandwidth selection method also is important, as this influences behaviour at this boundary.
 
-The confidence of the estimates of $a$, given the logarithmic transformation are described in detail in Loader et al. {CITE] and less straightforward. The confidence estimates of predictions rely on a variance stabilizing link function, and a local regression weight diagram, and an assumption of normality in the transformed space, however the derivation of the confidence intervals on the parameters themselves is not fully detailed. As such an emiprical assessment of calibration and precision of growth rate estimates is warranted.
+The confidence of the estimates of $a$, given the logarithmic transformation are described in detail in Loader et al. [@loaderLocalRegressionLikelihood1999] and less straightforward. The confidence estimates of predictions rely on a variance stabilizing link function, and a local regression weight diagram, and an assumption of normality in the transformed space, however the derivation of the confidence intervals on the parameters themselves is not fully detailed. As such an emiprical assessment of calibration and precision of growth rate estimates is warranted.
 
 # Estimating $R_t$ from the growth rate.
 
-With an estimate of the growth rate available we would like to be able to make an estimate of the reproduction number, derived from this growth rate. We adopt the method of Wallinga et al. (2007) [CITE]. This describes the generation interval distribution $g(a)$ as a continuous function which describes the probability of a secondary infection related to the "age" $a$ of a primary infection, i.e. the time from primary to secondary infection. This is combined with the Lotka-Euler equation [CITE] to generate the following relationship between $R$ and $r$
+With an estimate of the growth rate available we would like to be able to make an estimate of the reproduction number, derived from this growth rate. We adopt the method of Wallinga et al. (2007) [@wallingaHowGenerationIntervals2007]. This describes the generation interval distribution $g(a)$ as a continuous function which describes the probability of a secondary infection related to the "age" $a$ of a primary infection, i.e. the time from primary to secondary infection. This is combined with the Lotka-Euler equation [@andersonInfectiousDiseasesHumans1992; @coaleGrowthStructureHuman1972; @dublinTrueRateNatural1925; @fellerIntegralEquationRenewal1941] to generate the following relationship between $R$ and $r$
 
 $$
 \frac{1}{R} = \int_{a=0}^{\infty}e^{-ra}g(a)da
@@ -125,9 +130,9 @@ R = \frac{1}{M(-r)}
 \tag{eq:momgen}
 $$
 
-This relationship can be used to connect $R$ with $r$ for any given generation interval distribution assuming a moment generating function exists. In practice, as infection duration is measured in whole days, and in the implementation of the Cori method for estimating $R_t$ [CITE] the discrete version of the generation interval distribution is used and referred to as the infectivity profile ($\omega_1, \omega_2, \dots, \omega_a$). 
+This relationship can be used to connect $R$ with $r$ for any given generation interval distribution assuming a moment generating function exists. In practice, as infection duration is measured in whole days, and in the implementation of the renewal equation method for estimating $R_t$ [@coriEpiEstimEstimateTime2021; @thompsonImprovedInferenceTimevarying2019] the discrete version of the generation interval distribution is used and referred to as the infectivity profile ($\omega_1, \omega_2, \dots, \omega_a$). 
 
-The discrete version of the relationship in $\eqref{eq:momgen}$ is derived in Wallinga et al. [CITE] and given as:
+The discrete version of the relationship in $\eqref{eq:momgen}$ is derived in Wallinga et al. (2007) [@wallingaHowGenerationIntervals2007] and given as:
 
 $$
 R = \frac{r}{
@@ -145,7 +150,8 @@ Where $a_i$ is the upper boundary of the discretisation and $a_{i-1}$ is the low
 $$
 \omega_i = \int_{a_{i-1}}^{a_i}g(a)da
 $$
-This allows for arbitrary discretisation intervals. In the Cori method, however, the discretisation of $\omega$ is enforced to be on whole day boundaries such that $a_0 = 0, a_1 = 1, \dots$. This simplifies $\eqref{eq:disc}$ to:
+
+This allows for arbitrary discretisation intervals. In the renewal equation method, however, the discretisation of $\omega$ is enforced to be on whole day boundaries such that $a_0 = 0, a_1 = 1, \dots$. This simplifies $\eqref{eq:disc}$ to:
 
 $$
 R = \frac{r}{
@@ -153,13 +159,14 @@ R = \frac{r}{
   \omega_i (e^{-r(i-1)}-e^{-ri})
 }
 $$
+
 With our estimates of the growth rate from the first section, and their associated quantiles, we can combine this method with a sampling approach to generate an alternative estimate for the quantiles of the reproduction number.
 
 # Implementation
 
-The growth rate algorithm described is simply implemented using the R library locfit [CITE] which provides built in local likelihood estimators for Poisson distributed count variables, using a logarithmic link function, and can directly estimate incidence and the derivatives of the log-transformed incidence data, which provides us with a direct estimate of the growth rate. This can also be used to calculate a first derivative of growth. By fitting a Quasi-Poisson model rather than a direct Poisson model we can account for over-dispersion of the real life incidence data, and as an aside we can obtain a time varying estimate of the degree of dispersion.
+The growth rate algorithm described is simply implemented using the R library locfit [@loaderLocfitLocalRegression2020] which provides built in local likelihood estimators for Poisson distributed count variables, using a logarithmic link function, and can directly estimate incidence and the derivatives of the log-transformed incidence data, which provides us with a direct estimate of the growth rate. This can also be used to calculate a first derivative of growth. By fitting a Quasi-Poisson model rather than a direct Poisson model we can account for over-dispersion of the real life incidence data, and as an aside we can obtain a time varying estimate of the degree of dispersion.
 
-The key parameterisation of the local likelihood estimate depend on a polynomial degree, and the kernel bandwidth. As we are applying to a time-series we express the band-width in terms of a time window size, in the unit of days. The algorithm is implemented in a R package called "jepidemic", which is open source and available on GitHub [CITE].
+The key parameterisation of the local likelihood estimate depend on a polynomial degree, and the kernel bandwidth. As we are applying to a time-series we express the band-width in terms of a time window size, in the unit of days. The algorithm is implemented in a R package called "jepidemic", which is open source and available on GitHub [@rob_challen_2022_5820292].
 
 # Growth rate validation 
 
@@ -250,7 +257,7 @@ p %>% saveTwoThirdPageFigure(output("error-breakdown-locfit-growth"))
 
 Overall all the estimators perform well. There is weak evidence that the estimators with polynomial degree 2 are better than the others, and particularly if the window is longer, however the longer windows do tend to reduce the calibration and result in over-precise estimates. As a balanced default we therefore generally select a polynomial degree of 2 with a 14 day window. 
 
-# R_t validation 
+# $R_t$ validation 
 
 The method for conversion of growth rate to $R_t$ described above can be combined with these growth rate estimates. Uncertainty is propagated by samping values from the growth rate estimate distribution and as a result is somewhat slow and non-deterministic. It however forms a useful comparison to the $R_t$ estimation methods presented in Appendix B.
 
@@ -279,7 +286,7 @@ estimators = tibble(
   model = forcats::as_factor(c(
     "Degree 2; Window 14",
     "Degree 2; Window 21",
-    "Improved Cori"
+    "Improved renewal eqn"
   )), 
   estimFn = c(
     locfitRtEstimator(2,14),
@@ -308,15 +315,15 @@ p3 %>% saveHalfPageFigure(output("qualitative-locfit-rt"))
 
 ```
 
-*Figure C5: qualitative estimates of $R_t$ (black) against simulated (red) comparing 2 configurations of the growth rate based $R_t$ estimators using methods presented here and varying by time window (14 or 21 days) with the best performing renewal equation method from Appendix B (labelled Improved Cori).*
+*Figure C5: qualitative estimates of $R_t$ (black) against simulated (red) comparing 2 configurations of the growth rate based $R_t$ estimators using methods presented here and varying by time window (14 or 21 days) with the best performing renewal equation method from Appendix B (labelled "Improved renewal eqn").*
 
-As the Wallinga et al (2007) method is also used to generate the simulated values of $R_t$ from simulated growth rates, it is unsurprising that the growth rate based methods produce estimates with minimal lag, compared to those based on the renewal equation method, as Figure C6 shows, because the true value of the reproduction number is a different type of reproduction number to the instantaneous reproduction number produced by the renewal equation methods presented here.
+As the Wallinga et al (2007) [@wallingaHowGenerationIntervals2007] method is also used to generate the simulated values of $R_t$ from simulated growth rates, it is unsurprising that the growth rate based methods produce estimates with minimal lag, compared to those based on the renewal equation method, as Figure C6 shows, because the true value of the reproduction number is a different type of reproduction number to the instantaneous reproduction number produced by the renewal equation methods presented here.
 
 ```{r}
 lagAnalysisResult2 %>% lagPlot() %>% saveThirdPageFigure(output("lag-locfit-rt"))
 ```
 
-*Figure C6: time delay analysis of $R_t$ (black) against simulated (red) comparing 2 configurations of the growth rate based $R_t$ estimators using methods presented here and varying by time window (14 or 21 days) with the best performing renewal equation method from Appendix B (labelled Improved Cori).*
+*Figure C6: time delay analysis of $R_t$ (black) against simulated (red) comparing 2 configurations of the growth rate based $R_t$ estimators using methods presented here and varying by time window (14 or 21 days) with the best performing renewal equation method from Appendix B (labelled "Improved renewal eqn").*
 
 As previously the quantitative comparison shown in Figure C7 and Table C2 the growth rate based methods. This shows that the growth rate based methods are accurate but somewhat over precise. The overall CPRS metric shows the best performing estimate is the growth rate based estimator however this is offset by their generally lower calibration, and over-precision.
 
@@ -334,6 +341,11 @@ p %>% saveHalfPageFigure(output("error-summary-locfit-rt"))
 ```{r}
 summaryAnalysis(qualityAnalysisResult2,lagAnalysisResult2) %>% standardPrintOutput::saveTable(output("error-summary-locfit-rt-table"),defaultFontSize = 7)
 ```
+
 # Summary
 
 In this appendix we present our chosen method for estimating the real-time growth rate of an exponentially growing epidemic, by local likelihood estimation of a Poisson model with a time varying polynomial as the rate parameter. This is shown to be robust to a range of different synthetic scenarios with known growth rate. Configured to use a quadratic and a local window of 14 days produces a estimate that balances general performance with calibration. Translating this growth rate estimate into a reproduction number produces an accurate estimate of the reproduction number, although the same methodology is used for calculating the true value of the reproduction number as the estimate. The resulting estimate of the reproduction number is also over precise and comparatively slow to calculate so is not felt to be a significant improvement over the best performing renewal equation method described in Appendix B. One advantage to note though is that due to the fact that the growth rate estimate can be made right up to the end of the time series without any delay being introduced, the derived estimates of the reproduction number are potentially more up to date than those derived from the renewal equation method.
+
+# References
+
+<div id="refs"></div>

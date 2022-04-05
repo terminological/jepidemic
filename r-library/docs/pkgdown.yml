@@ -1,0 +1,19 @@
+pandoc: 1.16.0.2
+pkgdown: 1.6.1
+pkgdown_sha: ~
+articles:
+  generating-synthetic-datasets: generating-synthetic-datasets.html
+  getting-started: getting-started.html
+  in-development/appendix-A-validation-methods: appendix-A-validation-methods.html
+  in-development/appendix-B-cori-method-jepidemic: appendix-B-cori-method-jepidemic.html
+  in-development/appendix-C-incidence-and-growth-rate-estimation: appendix-C-incidence-and-growth-rate-estimation.html
+  in-development/appendix-D-bayesian-estimators: appendix-D-bayesian-estimators.html
+  in-development/bayesian-growth-rate-2: bayesian-growth-rate-2.html
+  in-development/proportion-and-growth-rate-estimation: proportion-and-growth-rate-estimation.html
+  in-development/two-strain-dynamics: two-strain-dynamics.html
+  old/cori-method: cori-method.html
+  old/epiestim-testing: epiestim-testing.html
+  old/growth-rate-estimation: growth-rate-estimation.html
+  old/growth-rates: growth-rates.html
+last_built: 2022-01-28T16:04Z
+

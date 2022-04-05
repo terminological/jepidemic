@@ -2,32 +2,36 @@
 title: "Appendix B - Renewal equation reproduction number estimation and Jepidemic implementation validation"
 author: "Rob Challen"
 date: '`r format(Sys.Date(), "%d-%m-%Y")`'
+# output: 
+#   pdf_document :
+#     fig_caption: yes
+#     keep_tex: TRUE
+# header-includes:
+#  \usepackage{float}
+#  \usepackage{mathtools}
+#  \usepackage{amsmath}
+#  \floatplacement{figure}{H}    
+#  \DeclareRobustCommand{\[}{\begin{equation*}}
+#  \DeclareRobustCommand{\]}{\end{equation*}}
+#  \newcounter{tagno}
+#  \setcounter{tagno}{0}
+#  \let\amsmathtag\tag
+#  \renewcommand{\tag}[1]{\amsmathtag{\thetagno} \label{#1} \stepcounter{tagno}}
+# knit: (function(inputFile, encoding,...) {
+#   rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-B-cori-method-jepidemic-',Sys.Date(),'.pdf')) })
+# fig_width: 7
+# fig_height: 5
+# out.width: "100%"
+# bibliography: jepidemic.bib
+# csl: jepidemic.csl
+# vignette: >
+#   %\VignetteIndexEntry{Renewal equation reproduction number estimation and Jepidemic implementation validation}
+#   %\VignetteEngine{knitr::rmarkdown}
+#   %\VignetteEncoding{UTF-8}
 output: 
-  pdf_document :
-    fig_caption: yes
-    keep_tex: TRUE
-header-includes:
- \usepackage{float}
- \usepackage{mathtools}
- \usepackage{amsmath}
- \floatplacement{figure}{H}    
- \DeclareRobustCommand{\[}{\begin{equation*}}
- \DeclareRobustCommand{\]}{\end{equation*}}
- \newcounter{tagno}
- \setcounter{tagno}{0}
- \let\amsmathtag\tag
- \renewcommand{\tag}[1]{\amsmathtag{\thetagno} \label{#1} \stepcounter{tagno}}
+  latex_fragment
 knit: (function(inputFile, encoding,...) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-B-cori-method-jepidemic-',Sys.Date(),'.pdf')) })
-fig_width: 7
-fig_height: 5
-out.width: "100%"
-bibliography: jepidemic.bib
-csl: jepidemic.csl
-vignette: >
-  %\VignetteIndexEntry{Cori method}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "~/Dropbox/sarscov2/r-estimation-methodology", output_file=paste0('appendix-B-cori-method-jepidemic-',Sys.Date(),'.tex')) })
 ---
 
 
@@ -42,12 +46,12 @@ knitr::opts_chunk$set(
   error = TRUE
 )
 
-here::i_am("vignettes/appendix-B-cori-method-jepidemic.Rmd")
+here::i_am("vignettes/in-development/appendix-B-cori-method-jepidemic.Rmd")
 source(here::here("vignettes/common-setup.R"))
 
 ```
 
-This appendix provides a detailed review of the renewal equation methodology for estimating the effective reproduction number as presented by Cori et al. [CITE]. This supported much of the analysis contained in this thesis, and was applied to data from the SARS-CoV-2 outbreak in the UK to support the work of the Scientific Pandemic Influenza - Modelling subgroup (SPI-M) and track the progress of the epidemic in the UK. The implementation of this method changed over the course of the pandemic to address specific issue that arose. These changes have been implemented in a Java library with bindings to the R language called "jepidemic", which is open source and available on GitHub [CITE]. The implementation of this library diverges from the reference implementation, EpiEstim, and this appendix summarises those changes and quantifies the benefits expected in terms of estimation accuracy, using the validation methodology described in appendix A.
+This appendix provides a detailed review of the renewal equation methodology for estimating the effective reproduction number as presented by Cori et al. [@coriEpiEstimEstimateTime2021; @coriNewFrameworkSoftware2013; @thompsonImprovedInferenceTimevarying2019]. This supported much of the analysis contained in this thesis, and was applied to data from the SARS-CoV-2 outbreak in the UK to support the work of the Scientific Pandemic Influenza - Modelling subgroup (SPI-M) and track the progress of the epidemic in the UK. The implementation of this method changed over the course of the pandemic to address specific issue that arose. These changes have been implemented in a Java library with bindings to the R language called "jepidemic", which is open source and available on GitHub [@rob_challen_2022_5820292]. The implementation of this library diverges from the reference implementation, EpiEstim, and this appendix summarises those changes and quantifies the benefits expected in terms of estimation accuracy, using the validation methodology described in appendix A.
 
 # Review of the renewal equation method for estimating the effective reproduction number.
 
@@ -99,6 +103,7 @@ $$
  &= P(A_3,A_2|A_1)
 \end{aligned}
 $$
+
 Consider the combined probability of observing $I_{t-\tau+1} \dots I_t$, given the other information available to us, we can express this as the product:
 
 $$
@@ -111,6 +116,7 @@ P(I_{t-\tau+1} | I_0,\dots,I_{t-\tau-1},\omega,R_{t,\tau})& \\
 &= P(I_{t-\tau+1}, \dots,I_t | I_0,\dots,I_{t-\tau},\omega,R_{t,\tau})
 \end{aligned}
 $$
+
 Furthermore substituting $\eqref{eq:probIt}$ for the left hand side we derive the following expression for the combined probability of observing $I_{t-\tau+1} \dots I_t$:
 
 $$
@@ -128,6 +134,7 @@ e^{
 \prod_{s=t-\tau+1}^t\frac{\Lambda_s^{I_s}}{I_s!}
 \end{aligned} \tag{eq:likelihood}
 $$
+
 To make use of the mathematical property of the conjugate prior of the Poisson distribution, we further assume a prior belief that $R_{t,\tau}$ is Gamma distributed with shape parameter $\alpha$ and rate parameter $\beta$ and hence by definition:
 
 $$
@@ -287,6 +294,7 @@ $$
 \kappa_{R_t} &= \frac{1}{\sqrt{\alpha+\sum_{s=t-\tau+1}^t I_s}}\\
 \end{aligned}
 $$
+
 The form of $\kappa_{R_t}$ is highly influenced by the count of infections. When infection numbers are in the thousands per day, the coefficient of variation becomes small regardless of the prior parameterisation. This is independent of the infectivity profile and leads to very certain estimates of $R_t$ particularly when infection numbers are large for a sustained period of time. It is not clear whether this certainty is always appropriate. An inherent assumption that the observed infections ($I_t$) are a true representation of the expected value of the infections ($\overline{I_t}$), and that these are Poisson distributed is core to this method, and over-dispersion of the observed case counts is not adjusted for. 
 
 The method presented here represents an estimate over a time window where $R_t$ is assumed to be constant. When this is in fact not the case, and $R_t$ is changing rapidly, the violation of this assumption leads to a certain but rapidly changing estimate that does not reflect reality. Shortening the time window over which the estimate is made in this situation may help, but this may in turn lead to excessive variation in central estimates particularly in the case where there is a weekly cycle to observations.
@@ -358,7 +366,7 @@ p %>% saveThirdPageFigure(output("estimation-windows"))
 
 ```
 
-*Figure B1: A graphical representation of the information involved in estimates of $R_t$ using the Cori method with different length windows (y-axis). The highlighted estimates (red dots) all use estimation windows that span the 10th day and during each of these windows there is an assumption of constant $R_t$. In situations where the true $R_t$ is dynamic, combining these estimates may reflect the overall uncertainty.*
+*Figure B1: A graphical representation of the information involved in estimates of $R_t$ using the renewal equation method with different length windows (y-axis). The highlighted estimates (red dots) all use estimation windows that span the 10th day and during each of these windows there is an assumption of constant $R_t$. In situations where the true $R_t$ is dynamic, combining these estimates may reflect the overall uncertainty.*
 
 ## Combining posterior estimates
 
@@ -541,7 +549,7 @@ p3 %>% saveHalfPageFigure(output("qualitative-posterior-selection"))
 
 *Figure B4: qualitative estimates of $R_t$ (black) against simulated (red) comparing 3 methods that vary in their posterior selection process*
 
-The different posterior selection strategies involve integrating information from different sized windows, this in turn affects the degree of time delay within the estimate as shown in Figure B5, with the reference implementation having the most delay, whereas the "all windows" strategy includes estimates from short and long windows and therefore responds relatively quickly to change. It must be pointed out that the true value of the reproduction number is calculated using the methods of Wallinga et al (2007) [CITE] which produces a different type of reproduction number to the instantaneous reproduction number produced by the renewal equation methods presented here.
+The different posterior selection strategies involve integrating information from different sized windows, this in turn affects the degree of time delay within the estimate as shown in Figure B5, with the reference implementation having the most delay, whereas the "all windows" strategy includes estimates from short and long windows and therefore responds relatively quickly to change. It must be pointed out that the true value of the reproduction number is calculated using the methods of Wallinga et al (2007) [@wallingaHowGenerationIntervals2007]  which produces a different type of reproduction number to the instantaneous reproduction number produced by the renewal equation methods presented here.
 
 ```{r}
 lagAnalysisResult2 %>% lagPlot() %>% saveThirdPageFigure(output("lag-posterior-selection"))
@@ -730,3 +738,7 @@ p %>% saveTwoThirdPageFigure(output("error-breakdown-reference-versus-improved")
 # Summary
 
 In this appendix we have described the detail of the renewal equation method for estimating $R_t$. We find a few limitations of the method, and particularly the over-precise estimates that can occur when case incidence is high, and the limitations resulting from the assumption that $R_t$ is constant over a window of time. We undertook a re-implementation of the algorithm in Java and used this to explore the possibilities of combining estimates with different window size assumptions and with different start and end dates, which provides us with a broader set of estimates that better reflects uncertainty. Our implementation also allows for the imposition of a constraint of continuity on the time-series of the estimates, which allows for more precise estimates when case numbers are small. Combined together these alterations produce a novel method for estimating the reproduction number that is better calibrated, and performs well under detailed validation.
+
+# References
+
+<div id="refs"></div>

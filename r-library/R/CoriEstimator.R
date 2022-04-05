@@ -10,7 +10,7 @@
 #' 
 #' Version: 0.03
 #' 
-#' Generated: 2022-01-03T21:00:49.726633
+#' Generated: 2022-01-28T16:04:19.701942
 #'
 #' @details
 	#' #' The renewal equation method depends on a time series of infections, and on the infectivity profile - 

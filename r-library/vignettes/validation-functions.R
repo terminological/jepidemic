@@ -3,7 +3,7 @@
 
 ## Lag analysis ----
 
-#' Title
+#' This does a lag analysis on the sawtooth timeseries with a fixed infectivity profile.
 #'
 #' @param estimators - a tibble of estimator methods to compare. This should have 2 columns - "model" the model name, and estimFn: the estimation function as a list column.
 #' This function should take 2 parameters, "ts" which will be a simple time series and "infectivityProfile" which will be the passed the infectivity profile yMatrix  
@@ -231,6 +231,33 @@ validationMetrics = function(syntheticEstimates,modelLag, estimation = "Rt", cri
     ) %>%
     select(-quantileEstimate)
 } 
+
+## Divergence and comparison metrics ----
+# KL divergence for 
+# 
+# klGammaVsGamma = function(mean1, sd1, mean2, sd2) {
+#   if (sd1>mean1 | sd2>mean2) stop("sd must be smaller than mean")
+#   range = seq(0,10,length=200)
+#   g1 = dgamma(range, shape=mean1^2/sd1^2,rate = mean1/sd1^2)
+#   g2 = dgamma(range, shape=mean2^2/sd2^2,rate = mean2/sd2^2)
+#   kl = flexmix::KLdiv(cbind(g1=g1,g2=g2))[1,2]
+#   # A matrix of KL divergences where the rows correspond to using the respective distribution as  in the formula above.
+#   return(kl)
+# }
+# 
+# klGammaVsUnif = function(value1, precision1, mean2, sd2) {
+#   if (sd2>mean2) stop("sd must be smaller than mean")
+#   range = seq(0,10,length=200)
+#   g1 = dunif(range, min = value1-precision1,max = value1+precision1)
+#   g2 = dgamma(range, shape=mean2^2/sd2^2,rate = mean2/sd2^2)
+#   kl = flexmix::KLdiv(cbind(g1=g1,g2=g2))[1,2]
+#   # A matrix of KL divergences where the rows correspond to using the respective distribution as  in the formula above.
+#   return(kl)
+# }
+# 
+# 
+# klGammaVsGamma(mean1=2,sd1=1.5,mean2=2.3,sd2=2.1)
+# klGammaVsUnif(value1=2,precision1=0.0001,mean2=2,sd2=0.002)
 
 ## Validation plots ----
 
@@ -531,4 +558,101 @@ summaryAnalysis = function(qualityAnalysisResult,lagAnalysisResult) {
   )
   lag = lagAnalysisResult$modelLag %>% select(model,`estimate delay` = label)
   summ %>% inner_join(lag, by="model") %>% pivot_longer(cols = -model, values_to = "value",names_to="metric") %>% pivot_wider(values_from = "value", names_from="model")
+}
+
+
+plotRollingQuantiles = function(data, quantileVar, orderVar = "date", colours=c("red","blue"), window=14) {
+  quantileVar = ensym(quantileVar)
+  orderVar = ensym(orderVar)
+  grps = data %>% groups()
+  
+  overallLag = data %>% summarise(median = quantile(!!quantileVar,0.5,na.rm = TRUE))
+  
+  summaryLag = data %>% arrange(!!orderVar) %>% 
+    mutate(rollingQuant = slider::slide_index(!!quantileVar, !!orderVar, .before=window,.after=window,.f = ~ enframe(quantile(.x, c(0.025,0.25,0.5,0.75,0.975), na.rm=TRUE)))
+    ) %>%
+    select(!!!grps, !!orderVar,rollingQuant) %>%
+    unnest(rollingQuant) %>%
+    distinct()
+  
+  list(
+    geom_line(data = summaryLag %>% filter(name %in% c("2.5%","97.5%")), mapping=aes(x=!!orderVar,y=value, group=name), linetype="dotted", colour=colours[1] ),
+    geom_line(data = summaryLag %>% filter(name %in% c("25%","75%")), mapping=aes(x=!!orderVar,y=value, group=name), linetype="dashed", colour=colours[1] ),
+    geom_line(data = summaryLag %>% filter(name %in% c("50%")), mapping=aes(x=!!orderVar,y=value, group=name), linetype="solid", colour=colours[1] ),
+    geom_hline(data = overallLag, mapping = aes(yintercept = median), colour=colours[2])
+  )
+}
+
+plotRollingDeciles = function(data, decileVar, orderVar = "date", colours="grey50", window=14) {
+  decileVar = ensym(decileVar)
+  orderVar = ensym(orderVar)
+  grps = data %>% groups()
+  
+  summaryLag = data %>% arrange(!!orderVar) %>% 
+    mutate(rollingQuant = slider::slide_index(!!decileVar, !!orderVar, .before=window,.after=window,.f = ~ enframe(quantile(.x, seq(0.1,0.9,length.out = 5), na.rm=TRUE)))
+    ) %>%
+    select(!!!grps, !!orderVar,rollingQuant) %>%
+    unnest(rollingQuant) %>%
+    distinct()
+  
+  list(
+    geom_line(data = summaryLag, mapping=aes(x=!!orderVar,y=value, group=name), colour=colours, alpha=0.5)
+  )
+}
+
+plotRollingProportion = function(data, binomialExpr, orderVar = "date", colours=c("red","blue"), window=14) {
+  binomialExpr = enexpr(binomialExpr)
+  orderVar = ensym(orderVar)
+  grps = data %>% groups()
+  
+  overallLag = data %>% summarise(p = sum(!!binomialExpr,na.rm = TRUE)/length(na.omit(!!binomialExpr)))
+  
+  summaryLag = data %>% arrange(!!orderVar) %>% 
+    mutate(
+      x = slider::slide_index_dbl(!!binomialExpr, !!orderVar, .before=window,.after=window,.f = ~ sum(.x,na.rm = TRUE)),
+      n = slider::slide_index_dbl(!!binomialExpr, !!orderVar, .before=window,.after=window,.f = ~ length(na.omit(.x))),
+    ) %>%
+    select(!!!grps, !!orderVar, x, n) %>%
+    distinct() 
+  
+  # browser()
+  
+  summaryLag = summaryLag %>%
+    filter(!is.na(x) & !is.na(n)) %>%
+    mutate(binom::binom.confint(x,n,methods="wilson")) %>%
+    rename(lower.0.025 = lower,upper.0.975 = upper) %>% select(-mean) %>%
+    mutate(binom::binom.confint(x,n,methods="wilson",conf.level=0.5)) %>%
+    rename(lower.0.25 = lower,upper.0.75 = upper)
+  
+  list(
+    geom_line(data = summaryLag, mapping=aes(x=!!orderVar,y=lower.0.025), linetype="dotted", colour=colours[1] ),
+    geom_line(data = summaryLag, mapping=aes(x=!!orderVar,y=upper.0.975), linetype="dotted", colour=colours[1] ),
+    geom_line(data = summaryLag, mapping=aes(x=!!orderVar,y=lower.0.25), linetype="dashed", colour=colours[1] ),
+    geom_line(data = summaryLag, mapping=aes(x=!!orderVar,y=upper.0.75), linetype="dashed", colour=colours[1] ),
+    geom_line(data = summaryLag, mapping=aes(x=!!orderVar,y=mean), linetype="solid", colour=colours[1] ),
+    geom_hline(data = overallLag, mapping = aes(yintercept = p), colour=colours[2])
+  )
+}
+
+
+plotRollingDensity = function(data, observationVar, n=50, orderVar = "date", colours=c("red","blue"), window=14) {
+  observationVar = ensym(observationVar)
+  orderVar = ensym(orderVar)
+  grps = data %>% groups()
+  obs = data %>% pull(!!observationVar)
+  breaks = seq(min(obs,na.rm = TRUE),max(obs,na.rm = TRUE),length.out = n+1)
+  miBreak = na.omit(breaks+lag(breaks))/2
+  summaryLag = data %>% select(!!!grps,!!orderVar,!!observationVar) %>% nest(observations = !!observationVar) %>% arrange(!!orderVar) 
+  summaryLag = summaryLag %>% mutate(bins = slider::slide(observations, .before=14, .after=14, .f = ~bind_rows(.x) %>% 
+                                                            mutate(bin = cut(!!observationVar,breaks = breaks,labels = miBreak)) %>% 
+                                                            group_by(bin) %>% 
+                                                            summarise(count=n()) %>% 
+                                                            mutate(prop = count/sum(count)) %>% 
+                                                            ungroup() %>% 
+                                                            tidyr::complete(bin, fill=list(count=0,prop=0)) ))
+  summaryLag = summaryLag %>% select(!!!grps,!!orderVar,bins) %>% unnest(bins)
+  
+  list(
+    geom_tile(data = summaryLag,  mapping=aes(x=!!orderVar, y=as.numeric(as.character(bin)), fill=prop))
+  )
 }

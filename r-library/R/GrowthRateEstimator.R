@@ -10,7 +10,7 @@
 #' 
 #' Version: 0.03
 #' 
-#' Generated: 2022-01-03T21:00:49.716100
+#' Generated: 2022-01-28T16:04:19.681362
 #'
 #' @details
 	#' #' The renewal equation method depends on a time series of infections, and on the infectivity profile - 
@@ -79,7 +79,7 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	#' @description 
 	#' withSaneDefaults: 
 	#' Provides a sensible baseline configuration for the estimator that involves estimating the poisson rate using the 
-	#' previous timestep's posterior with standard deviation scaled by a factor determined by the t-2 value. Multiple posterior
+	#' previous timestep's posterior and growth rate estimates. Multiple posterior
 	#' estimates are combined using a weighted average based on a discretised normal distributed weight with mean of 7 and SD of 4.
 	#' @return R6 GrowthRateEstimator object: 
 	#' a fluent method
@@ -366,6 +366,62 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		# execute method call
 		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndGrowthRate" ); 
+		# is this a fluent method?
+		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
+		if(self$.jobj$equals(tmp_out)) {
+			# return fluent method
+			self$.api$printMessages()
+			invisible(self)
+		} else {
+			# wrap return java object in R6 class  
+			out = GrowthRateEstimator$new(
+				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
+				self$.api
+			);
+			self$.api$printMessages()
+			return(out);
+		}
+	},
+	#' @description 
+	#' priorIncidenceFromPosteriorMeanAndCoefVariation: 
+	#' Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+	#' mean and sd both equal to the mean of the previous posterior.
+	#' @param kappa - (java expects a double)
+	#' @return R6 GrowthRateEstimator object: 
+	#' a fluent method
+	priorIncidenceFromPosteriorMeanAndCoefVariation = function(kappa) {
+		# copy parameters
+		tmp_kappa = self$.api$.toJava$double(kappa);
+		# execute method call
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndCoefVariation" , tmp_kappa); 
+		# is this a fluent method?
+		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
+		if(self$.jobj$equals(tmp_out)) {
+			# return fluent method
+			self$.api$printMessages()
+			invisible(self)
+		} else {
+			# wrap return java object in R6 class  
+			out = GrowthRateEstimator$new(
+				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
+				self$.api
+			);
+			self$.api$printMessages()
+			return(out);
+		}
+	},
+	#' @description 
+	#' priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation: 
+	#' Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+	#' mean and sd both equal to the mean of the previous posterior plus the growth rate.
+	#' @param kappa - (java expects a double)
+	#' @return R6 GrowthRateEstimator object: 
+	#' a fluent method
+	priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation = function(kappa) {
+		# copy parameters
+		tmp_kappa = self$.api$.toJava$double(kappa);
+		# execute method call
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation" , tmp_kappa); 
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {

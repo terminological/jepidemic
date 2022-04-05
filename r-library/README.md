@@ -11,3 +11,4 @@ data(Flu2009)
 estim$withInfectivityProfile(vector = Flu2009$si_distr)
 
 ```
+

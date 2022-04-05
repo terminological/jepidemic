@@ -1,0 +1,125 @@
+---
+title: "Two strain dynamics"
+author: "Rob Challen"
+date: "14/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+here::i_am("vignettes/in-development/two-strain-dynamics.Rmd")
+source(here::here("vignettes/common-setup.R"))
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+## Omicron scenario ----
+
+xmas = as.numeric(as.Date(c("2021-12-14","2021-12-25","2022-01-01","2022-01-07"))-as.Date("2021-10-15"))
+
+omBreaks = c(xmas)
+omVsDe = 0.275
+
+omRates = c(omVsDe,omVsDe/2,0,-0.05)
+
+sNegOmicronScenario = generateGrowthRate(
+  name="omicron", length = 100, breaks = omBreaks,
+  rates = omRates,sawtooth = TRUE,
+  smooth = FALSE,dateAtTime0 = as.Date("2021-10-15")
+)
+
+sPosOmicronScenario = generateGrowthRate(
+  name="delta", length = 100, breaks = omBreaks,
+  rates = omRates-omVsDe,sawtooth = TRUE,
+  smooth = FALSE,dateAtTime0 = as.Date("2021-10-15")
+)
+
+om = sNegOmicronScenario %>%
+    addImportations(
+      tibble(ageCat = ordered(c("0-17","18-30","31-50","50-70","70+")),time=30,import=c(0.5,16,4,2,1))
+    ) %>% 
+    addPoissonRate()
+
+de = sPosOmicronScenario %>%
+    addImportations(
+      tibble(ageCat = ordered(c("0-17","18-30","31-50","50-70","70+")),time=1,import=c(20000,2500,12500,10000,5000))
+    ) %>% 
+    addPoissonRate()
+
+ts = bind_rows(om$ts,de$ts)
+```
+
+```{r}
+
+ggplot()+
+  geom_line(data = ts, mapping = aes(x=date, y=Growth.actual, colour=source))+ylab("growth rate")
+
+```
+```{r}
+ggplot() +
+  geom_line(data=ts, mapping=aes(x=date,y=Est.actual, colour=ageCat))+
+  scale_y_continuous(trans="log1p", breaks = c(0,10,100,1000,10000,100000,1000000))+
+  ylab("cases")+xlab("date")+facet_wrap(vars(source))
+
+ggplot() +
+  geom_line(data=ts %>% group_by(date) %>% summarise(Est.actual=sum(Est.actual)), mapping=aes(x=date,y=Est.actual))+
+  scale_y_continuous(trans="log1p", breaks = c(0,10,100,1000,10000,100000,1000000))+
+  ylab("cases")+xlab("date")
+
+ggplot() +
+  geom_line(data=ts %>% group_by(ageCat,date) %>% summarise(Est.actual=sum(Est.actual)), mapping=aes(x=date,y=Est.actual,colour=ageCat))+
+  scale_y_continuous(trans="log1p", breaks = c(0,10,100,1000,10000,100000,1000000))+
+  ylab("cases")+xlab("date")
+
+```
+```{r}
+
+IHR_delay = discreteGammaInfectivityProfile(5,2,range = 28)$yMatrix[,1]
+
+ageIHR = tibble(
+  ageCat = ordered(c("0-17","18-30","31-50","50-70","70+")),
+  pAge = c(0.001,0.0025,0.01,0.05,0.15)
+)
+
+variantSeverity = tibble(
+  source = c("omicron","delta"),
+  pVariant = c(0.3,1)
+)
+
+ageImmunity = tibble(
+  ageCat = ordered(c("0-17","18-30","31-50","50-70","70+")),
+  pImmune = c(0.25,0.7,0.8,0.9,0.9)
+)
+
+
+
+variantAgeIHR = variantSeverity %>% inner_join(ageIHR, by=character()) %>% inner_join(ageImmunity, by="ageCat") %>% mutate(p = pAge*pVariant) #*pImmune+pAge*(1-pImmune))
+
+hospTs = ts %>% inner_join(variantAgeIHR, by=c("ageCat","source")) %>% group_by(ageCat,source) %>% arrange(time) %>% mutate(Hosp.actual = stats::filter(IHR_delay, x=Est.actual,sides = 1)*p)
+```
+
+
+```{r}
+ggplot() +
+  geom_line(data=hospTs, mapping=aes(x=date,y=Hosp.actual, colour=ageCat))+
+  scale_y_continuous(trans="log1p", breaks = c(0,10,100,1000,10000,100000,1000000))+
+  ylab("admit")+xlab("date")+facet_wrap(vars(source))
+
+ggplot() +
+  geom_line(data=hospTs %>% group_by(date) %>% summarise(Hosp.actual=sum(Hosp.actual)), mapping=aes(x=date,y=Hosp.actual))+
+  scale_y_continuous(trans="log1p", breaks = c(0,10,100,1000,10000,100000,1000000))+
+  ylab("admit")+xlab("date")
+
+ggplot() +
+  geom_line(data=hospTs %>% group_by(ageCat,date) %>% summarise(Hosp.actual=sum(Hosp.actual)), mapping=aes(x=date,y=Hosp.actual,colour=ageCat))+
+  scale_y_continuous(trans="log1p", breaks = c(0,10,100,1000,10000,100000,1000000))+
+  ylab("admit")+xlab("date")
+
+```
+

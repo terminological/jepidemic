@@ -1,3 +1,20 @@
+# TODO:
+# 1) Write lag analysis for estimators.
+# Simple one for growth rate
+# N.B. for Rt this will need wallinga et al Rt calculation of Rt using infectivity profile.
+# 2) default estimator functions combining best practice.
+# classes for estimates e.g. growthratetimeseries, rttimeseries, poissonratetimeserris, proportions
+# simple timeseries as S3 class
+# Multiple time series as S3
+# 3) plotting functions
+# consider a new library to hold class definitions and plotting functions
+# or a new library to hold basic data manipulation and validation functions and a new library for plotting
+# 4) restructure appendix vignettes to use latex versions from PhD and save figures somewhere. 
+# rename outputs to remove dates
+# check time-series plots still working / fix timeseries plots
+# 5) re-architect validation functions
+# into new package?
+
 # a set of estimators for the simple single time series situations
 # the estimates target a range of outputs such as poisson rate, proportion model, growth rate, etc.
 # these are aimed to be tidy but assume (and enforce) column naming conventions are adhered to 
@@ -79,22 +96,22 @@ weekendEffect = function(simpleTimeseries, valueVar="value", ...) {
   simpleTimeseries %>% inner_join(weight, by="weekday") %>% return()
 }
 
-#' 
-#' #' @description Calculates a weighting to apply to each day of week
-#' #' @param simpleTimeseries a covid timeseries data frame
-#' #' @param window the window over which we are to normalise the sample size
-#' #' @param sampleSizeVar the variable with the sample size in it
-#' #' @return the dataframe with a sample.wt column which says how much that sample is relevant to the data
-#' sampleSizeEffect = function(simpleTimeseries, window, sampleSizeVar="total") {
-#'   if (simpleTimeseries %>% is.grouped_df()) stop("this does not work on grouped data. use a group_modify.")
-#'   sampleSizeVar = ensym(sampleSizeVar)
-#'   simpleTimeseries = simpleTimeseries %>% arrange(date) %>% mutate(
-#'     #sample.wt = ifelse(!!sampleSizeVar==0,0,!!sampleSizeVar / slider::slide_dbl(!!sampleSizeVar, .before = floor(window/2), .after = floor(window/2), mean, na.rm=TRUE,.complete = FALSE))
-#'     sample.wt = ifelse(!!sampleSizeVar==0,0,!!sampleSizeVar/mean(!!sampleSizeVar,na.rm = TRUE))
-#'   )
-#'   return(simpleTimeseries)
-#' }
-#' 
+# 
+# #' @description Calculates a weighting to apply to each day of week
+# #' @param simpleTimeseries a covid timeseries data frame
+# #' @param window the window over which we are to normalise the sample size
+# #' @param sampleSizeVar the variable with the sample size in it
+# #' @return the dataframe with a sample.wt column which says how much that sample is relevant to the data
+# sampleSizeEffect = function(simpleTimeseries, window, sampleSizeVar="total") {
+#   if (simpleTimeseries %>% is.grouped_df()) stop("this does not work on grouped data. use a group_modify.")
+#   sampleSizeVar = ensym(sampleSizeVar)
+#   simpleTimeseries = simpleTimeseries %>% arrange(date) %>% mutate(
+#     #sample.wt = ifelse(!!sampleSizeVar==0,0,!!sampleSizeVar / slider::slide_dbl(!!sampleSizeVar, .before = floor(window/2), .after = floor(window/2), mean, na.rm=TRUE,.complete = FALSE))
+#     sample.wt = ifelse(!!sampleSizeVar==0,0,!!sampleSizeVar/mean(!!sampleSizeVar,na.rm = TRUE))
+#   )
+#   return(simpleTimeseries)
+# }
+# 
 
 
 ## Locfit estimate outputs ----
@@ -102,7 +119,7 @@ weekendEffect = function(simpleTimeseries, valueVar="value", ...) {
 
 # This is just to format locfit results given a locfit model.
 # extract the locfit result from the locfit model and format it
-calculateResult = function(df, model, estimate, modelName, link = "value") {
+locfitExtractResult = function(df, model, estimate, modelName, link = "value") {
   
   tryCatch({
   
@@ -225,7 +242,6 @@ locfitProportionEstimate = function(simpleTimeseries, degree = 2, window = 14, e
   #   )
   # }
   
-  capture.output({
   tryCatch({
     model = locfit::locfit(
       locfitFormula(.prop, nrowDf = nrow(simpleTimeseries), window, degree, ...),
@@ -235,7 +251,7 @@ locfitProportionEstimate = function(simpleTimeseries, degree = 2, window = 14, e
       link="logit",
       ev=simpleTimeseries$time 
     )}, error=function(e) browser()
-  )})
+  )
   
   # weightLbl = case_when(
   #   weightBySampleSize & weightByWeekday ~ "both",
@@ -247,7 +263,7 @@ locfitProportionEstimate = function(simpleTimeseries, degree = 2, window = 14, e
   weightLbl = "none"
   
   simpleTimeseries = simpleTimeseries %>% 
-    calculateResult(model, estimate = "Proportion", modelName = glue::glue("binomial:{degree}:{window}:{weightLbl}"), link = "logit") %>% 
+    locfitExtractResult(model, estimate = "Proportion", modelName = glue::glue("binomial:{degree}:{window}:{weightLbl}"), link = "logit") %>% 
     select(-.prop)
   
   if (estimateMean) {
@@ -275,13 +291,16 @@ locfitProportionalGrowthEstimate = function(simpleTimeseries, degree = 2, window
   simpleTimeseries %>% checkValid(c("date","value"))
   simpleTimeseries = simpleTimeseries %>% 
     arrange(date) %>%
-    ensureExists("total", orElse = function(ts,...) ts %>% mutate(total=1)) %>%
+    ensureExists("total", orElse = function(ts,...) {
+      message("No total column in proportional timeseries - assuming value is a fraction, and total is 1.")
+      ts %>% mutate(total=1)
+    }) %>%
     # ensureExists("weekday.wt", orElse = function(ts,...) ts %>% weekendEffect(valueVar=total)) %>%
     # ensureExists("sample.wt", orElse = function(ts,...) ts %>% sampleSizeEffect(window=window, sampleSizeVar=total)) %>%
     ensureExists("time", orElse = function(ts,...) ts %>% mutate(time = as.integer(date-max(date)))) %>%
     mutate(.prop = ifelse(total==0,NA,value/total))
   
-  if(any(simpleTimeseries$.prop > 1,na.rm = TRUE)) stop("Proportions model has values greater than 1. Did you specify total column correctly?")
+  if(any(simpleTimeseries$.prop > 1,na.rm = TRUE)) stop("Proportions model contains fractions greater than 1. Did you specify total column correctly?")
   
   if(sum(na.omit(simpleTimeseries$.prop) != 0) < degree) {
     return(simpleTimeseries %>% nullResult(estimate = "Growth", modelName = glue::glue("binomial:{degree}:{window}"), link = "value",error = "not enough non zero values", centralValue = 0))
@@ -316,7 +335,7 @@ locfitProportionalGrowthEstimate = function(simpleTimeseries, degree = 2, window
   
   # no link function in growth rate as the derivative
   simpleTimeseries %>% 
-    calculateResult(model = model, estimate = "Growth", modelName = glue::glue("binomial:{degree}:{window}:{weightLbl}"), link = "value") %>% 
+    locfitExtractResult(model = model, estimate = "Growth", modelName = glue::glue("binomial:{degree}:{window}:{weightLbl}"), link = "value") %>% 
     select(-.prop)
 }
 
@@ -362,7 +381,7 @@ locfitPoissonRateEstimate = function(simpleTimeseries, degree = 2, window = 14, 
   
   # no link function in growth rate as the derivative
   simpleTimeseries %>% 
-    calculateResult(model, estimate = "Est", modelName = glue::glue("poisson:{degree}:{window}:{weightLbl}"), link="log") %>% 
+    locfitExtractResult(model, estimate = "Est", modelName = glue::glue("poisson:{degree}:{window}:{weightLbl}"), link="log") %>% 
     select(-.prop)
 }
 
@@ -409,7 +428,7 @@ locfitGrowthEstimate = function(simpleTimeseries, degree = 2, window = 14, weigh
   
   # no link function in growth rate as the derivative
   simpleTimeseries %>% 
-    calculateResult(model = model, estimate = "Growth", modelName = glue::glue("poisson:{degree}:{window}:{weightLbl}"), link = "value") %>% 
+    locfitExtractResult(model = model, estimate = "Growth", modelName = glue::glue("poisson:{degree}:{window}:{weightLbl}"), link = "value") %>% 
     #TODO: more statistics here?
     select(-.prop)
 }

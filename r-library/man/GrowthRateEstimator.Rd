@@ -19,7 +19,7 @@ An estimator of the reproduction number (\(R_t\)) using a renewal equation metho
 
 Version: 0.03
 
-Generated: 2022-01-03T21:00:49.709425
+Generated: 2022-01-28T16:04:19.669021
 }
 
 \details{
@@ -107,6 +107,14 @@ instance = J$GrowthRateEstimator$new(minWindow, maxWindow)
 ## -----------------------------------
 
 ## -----------------------------------
+## Method `GrowthRateEstimator$priorIncidenceFromPosteriorMeanAndCoefVariation`
+## -----------------------------------
+
+## -----------------------------------
+## Method `GrowthRateEstimator$priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation`
+## -----------------------------------
+
+## -----------------------------------
 ## Method `GrowthRateEstimator$useAllPosteriorEstimates`
 ## -----------------------------------
 
@@ -166,6 +174,8 @@ instance = J$GrowthRateEstimator$new(minWindow, maxWindow)
 			\item \href{#method-priorIncidenceFromScaledPosteriorAndGrowthRate}{\code{instance$priorIncidenceFromScaledPosteriorAndGrowthRate()}}
 			\item \href{#method-priorIncidenceFromPosteriorMean}{\code{instance$priorIncidenceFromPosteriorMean()}}
 			\item \href{#method-priorIncidenceFromPosteriorMeanAndGrowthRate}{\code{instance$priorIncidenceFromPosteriorMeanAndGrowthRate()}}
+			\item \href{#method-priorIncidenceFromPosteriorMeanAndCoefVariation}{\code{instance$priorIncidenceFromPosteriorMeanAndCoefVariation(kappa)}}
+			\item \href{#method-priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation}{\code{instance$priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation(kappa)}}
 			\item \href{#method-useAllPosteriorEstimates}{\code{instance$useAllPosteriorEstimates()}}
 			\item \href{#method-usePosteriorEstimatesFromOneWindow}{\code{instance$usePosteriorEstimatesFromOneWindow(tau)}}
 			\item \href{#method-usePosteriorEstimatesWithEnoughData}{\code{instance$usePosteriorEstimatesWithEnoughData(sumIncidence)}}
@@ -410,7 +420,7 @@ not available
 	
 	\subsection{Method \code{withSaneDefaults()}}{
 		Provides a sensible baseline configuration for the estimator that involves estimating the poisson rate using the 
-previous timestep's posterior with standard deviation scaled by a factor determined by the t-2 value. Multiple posterior
+previous timestep's posterior and growth rate estimates. Multiple posterior
 estimates are combined using a weighted average based on a discretised normal distributed weight with mean of 7 and SD of 4.
 	
 
@@ -816,6 +826,82 @@ instance$priorIncidenceFromPosteriorMeanAndGrowthRate()
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
 				\item{none}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a fluent method
+		}
+
+		\subsection{Examples}{
+			\if{html}{\out{<div class="r example copy">}}
+			\preformatted{
+not available
+			}
+			\if{html}{\out{</div>}}
+		}
+	}
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-priorIncidenceFromPosteriorMeanAndCoefVariation"></a>}}
+	
+	\subsection{Method \code{priorIncidenceFromPosteriorMeanAndCoefVariation()}}{
+		Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+mean and sd both equal to the mean of the previous posterior.
+	
+
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+instance = J$GrowthRateEstimator$new(...);
+instance$priorIncidenceFromPosteriorMeanAndCoefVariation(kappa)
+  			}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\itemize{
+				\item{kappa}{ - (java expects a double)}
+			}
+			\if{html}{\out{</div>}}
+		}
+
+		\subsection{Returns}{
+			R6 GrowthRateEstimator object: a fluent method
+		}
+
+		\subsection{Examples}{
+			\if{html}{\out{<div class="r example copy">}}
+			\preformatted{
+not available
+			}
+			\if{html}{\out{</div>}}
+		}
+	}
+	\if{html}{\out{<hr>}}
+	\if{html}{\out{<a id="method-priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation"></a>}}
+	
+	\subsection{Method \code{priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation()}}{
+		Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
+mean and sd both equal to the mean of the previous posterior plus the growth rate.
+	
+
+		\subsection{Usage}{
+			\if{html}{\out{<div class="r">}}
+			\preformatted{
+J = jepidemic::JavaApi$get()
+instance = J$GrowthRateEstimator$new(...);
+instance$priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation(kappa)
+  			}
+			\if{html}{\out{</div>}}
+		}
+	
+		\subsection{Arguments}{
+			\if{html}{\out{<div class="arguments">}}
+			\itemize{
+				\item{kappa}{ - (java expects a double)}
 			}
 			\if{html}{\out{</div>}}
 		}

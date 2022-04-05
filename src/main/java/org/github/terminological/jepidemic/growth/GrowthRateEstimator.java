@@ -364,6 +364,7 @@ public class GrowthRateEstimator {
 	/**
 	 * Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
 	 * mean and sd both equal to the mean of the previous posterior.
+	 * @param kappa - the coefficient of variation of the prior.
 	 * @return a fluent method
 	 */
 	@RMethod public GrowthRateEstimator priorIncidenceFromPosteriorMeanAndCoefVariation(double kappa) {
@@ -374,6 +375,7 @@ public class GrowthRateEstimator {
 	/**
 	 * Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
 	 * mean and sd both equal to the mean of the previous posterior plus the growth rate.
+	 * @param kappa - the coefficient of variation of the prior.
 	 * @return a fluent method
 	 */
 	@RMethod public GrowthRateEstimator priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation(double kappa) {

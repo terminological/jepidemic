@@ -237,7 +237,9 @@ generateRt = function(name, dateAtTime0 = "2020-01-01", length=365, breaks = sor
 #' @return a growth_simulation with an additional import column
 #' @export
 addImportations = function(growthSimulation, importDf = tibble(time = 0, import = rate), rate=100) {
-  growthSimulation$ts = growthSimulation$ts %>% left_join(importDf, by="time") %>% mutate(import = ifelse(is.na(import),0,import))
+  grps = importDf %>% group_by(across(c(-time,-import))) %>% groups()
+  importDf = importDf %>% group_by(across(c(-time,-import))) %>% complete(time = unique(growthSimulation$ts$time), fill = list(import=0))
+  growthSimulation$ts = growthSimulation$ts %>% left_join(importDf, by="time") %>% mutate(import = ifelse(is.na(import),0,import)) %>% group_by(!!!grps)
   return(growthSimulation)
 }
 
@@ -249,12 +251,14 @@ addImportations = function(growthSimulation, importDf = tibble(time = 0, import 
 #' @export
 addPoissonRate = function(growthSimulation) {
   if(!("import" %in% colnames(growthSimulation$ts))) growthSimulation = growthSimulation %>% addImportations()
-  x = growthSimulation$ts$import[[1]]
-  for(i in 2:nrow(growthSimulation$ts)) {
-    last = x[length(x)]
-    x = c(x, last*exp(growthSimulation$ts$Growth.actual[[i-1]])+growthSimulation$ts$import[[i]])
-  }
-  growthSimulation$ts = growthSimulation$ts %>% mutate(Est.actual = x)
+  growthSimulation$ts = growthSimulation$ts %>% group_modify(function(d,g,...) {
+    x = d$import[[1]]
+    for(i in 2:nrow(d)) {
+      last = x[length(x)]
+      x = c(x, last*exp(d$Growth.actual[[i-1]])+d$import[[i]])
+    }
+    d %>% mutate(Est.actual = x) %>% return()
+  })
   return(growthSimulation)
 }
 
@@ -300,7 +304,6 @@ addObservedRate = function(growthSimulation, observedFractionExpr = 1, weekendEf
     TRUE ~ 0
   )*weekendEffect+1
   growthSimulation$ts = growthSimulation$ts %>% 
-    ungroup() %>%
     mutate(
       Fraction.observed = !!observedFractionExpr,
       weekday = format(date,"%A"),

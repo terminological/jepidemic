@@ -14,3 +14,5 @@ Imports:
 	rJava,
 	R6,
 	xptr
+Depends: 
+    R (>= 2.10)
