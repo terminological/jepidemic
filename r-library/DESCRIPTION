@@ -8,11 +8,14 @@ Description: Some work in progress R functions related to the covid 19 epidemic
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+VignetteBuilder: knitr
 Suggests: 
-	tibble
+	knitr,
+	rmarkdown,
+	testthat
 Imports:
 	rJava,
-	R6,
-	xptr
+	R6
 Depends: 
     R (>= 2.10)
+RoxygenNote: 7.1.2

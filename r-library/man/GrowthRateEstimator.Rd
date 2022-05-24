@@ -19,7 +19,7 @@ An estimator of the reproduction number (\(R_t\)) using a renewal equation metho
 
 Version: 0.03
 
-Generated: 2022-01-28T16:04:19.669021
+Generated: 2022-05-24T22:12:30.960709
 }
 
 \details{
@@ -863,7 +863,7 @@ instance$priorIncidenceFromPosteriorMeanAndCoefVariation(kappa)
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{kappa}{ - (java expects a double)}
+				\item{kappa - the coefficient of variation of the prior.}{ - (java expects a double)}
 			}
 			\if{html}{\out{</div>}}
 		}
@@ -901,7 +901,7 @@ instance$priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation(kappa)
 		\subsection{Arguments}{
 			\if{html}{\out{<div class="arguments">}}
 			\itemize{
-				\item{kappa}{ - (java expects a double)}
+				\item{kappa - the coefficient of variation of the prior.}{ - (java expects a double)}
 			}
 			\if{html}{\out{</div>}}
 		}

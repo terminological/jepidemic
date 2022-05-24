@@ -59,39 +59,6 @@
     <li>
       <a href="../articles/getting-started.html">Getting started</a>
     </li>
-    <li>
-      <a href="../articles/in-development/appendix-A-validation-methods.html">Appendix A - Reproduction number validation methodology</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-B-cori-method-jepidemic.html">Appendix B - Renewal equation reproduction number estimation and Jepidemic implementation validation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-C-incidence-and-growth-rate-estimation.html">Appendix C - Incidence and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-D-bayesian-estimators.html">Appendix D - Bayesian growth rate and reproduction number estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/bayesian-growth-rate-2.html">Bayesian growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/proportion-and-growth-rate-estimation.html">Appendix C - Proportions and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/two-strain-dynamics.html">Two strain dynamics</a>
-    </li>
-    <li>
-      <a href="../articles/old/cori-method.html">Cori method</a>
-    </li>
-    <li>
-      <a href="../articles/old/epiestim-testing.html">Testing epiestim</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rate-estimation.html">Growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rates.html">Cori method</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -105,7 +72,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="getting-started_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Getting started</h1>
@@ -123,7 +90,7 @@
 <div id="growth-rate-estimate-rt-from-growth-rate" class="section level2">
 <h2 class="hasAnchor">
 <a href="#growth-rate-estimate-rt-from-growth-rate" class="anchor"></a>growth rate estimate + rt from growth rate</h2>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb1"><pre class="downlit">
 <span class="va">test</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="va">vignetteDataset</span><span class="op">$</span><span class="va">ts</span>  <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">bootstrap</span><span class="op">==</span><span class="fl">2</span>, <span class="va">observationDate</span><span class="op">==</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">observationDate</span><span class="op">)</span><span class="op">)</span>
 <span class="va">infProf</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="va">vignetteDataset</span><span class="op">$</span><span class="va">infectivityProfile</span>
 
@@ -132,8 +99,8 @@
   <span class="fu">geom_line</span><span class="op">(</span>mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Est.actual</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">value</span><span class="op">)</span>, size<span class="op">=</span><span class="fl">0.1</span>, colour<span class="op">=</span><span class="st">"black"</span><span class="op">)</span></pre></div>
 <p><img src="getting-started_files/figure-html/unnamed-chunk-1-1.png" width="700"></p>
-<div class="sourceCode"><pre class="downlit">
-<span class="va">gr</span> <span class="op">=</span> <span class="va">test</span> <span class="op">%&gt;%</span> <span class="fu">locfitGrowthEstimate</span><span class="op">(</span><span class="op">)</span>
+<div class="sourceCode" id="cb2"><pre class="downlit">
+<span class="va">gr</span> <span class="op">=</span> <span class="va">test</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/locfitGrowthEstimate.html">locfitGrowthEstimate</a></span><span class="op">(</span><span class="op">)</span>
 <span class="co">## Registered S3 method overwritten by 'quantmod':</span>
 <span class="co">##   method            from</span>
 <span class="co">##   as.zoo.data.frame zoo</span>
@@ -146,8 +113,8 @@
   <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Growth.actual</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">coord_cartesian</span><span class="op">(</span>ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.15</span>,<span class="fl">0.15</span><span class="op">)</span><span class="op">)</span></pre></div>
 <p><img src="getting-started_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
-<div class="sourceCode"><pre class="downlit">
-<span class="va">rt</span> <span class="op">=</span> <span class="va">gr</span> <span class="op">%&gt;%</span> <span class="fu">rtFromGrowthRate</span><span class="op">(</span><span class="va">infProf</span><span class="op">)</span>
+<div class="sourceCode" id="cb3"><pre class="downlit">
+<span class="va">rt</span> <span class="op">=</span> <span class="va">gr</span> <span class="op">%&gt;%</span> <span class="fu"><a href="../reference/rtFromGrowthRate.html">rtFromGrowthRate</a></span><span class="op">(</span><span class="va">infProf</span><span class="op">)</span>
 
 <span class="fu">ggplot</span><span class="op">(</span><span class="va">rt</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_rect</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>xmin<span class="op">=</span><span class="va">date</span>,xmax<span class="op">=</span><span class="va">date</span><span class="op">+</span><span class="fl">1</span>,alpha<span class="op">=</span><span class="va">import</span><span class="op">)</span>,ymin<span class="op">=</span><span class="op">-</span><span class="cn">Inf</span>,ymax<span class="op">=</span><span class="cn">Inf</span>,fill<span class="op">=</span><span class="st">"blue"</span><span class="op">)</span><span class="op">+</span>
@@ -157,7 +124,7 @@
   <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Rt.actual</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">coord_cartesian</span><span class="op">(</span>ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.75</span>,<span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></pre></div>
 <p><img src="getting-started_files/figure-html/unnamed-chunk-3-1.png" width="700"> # Rt via cori method:</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb4"><pre class="downlit">
 
 <span class="va">estim1</span> <span class="op">=</span> <span class="va">J</span><span class="op">$</span><span class="va">CoriEstimator</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>r0Mean <span class="op">=</span> <span class="fl">1.2</span>,r0SD <span class="op">=</span> <span class="fl">4</span>,maxWindow <span class="op">=</span> <span class="fl">14</span><span class="op">)</span>
 <span class="va">estim1</span><span class="op">$</span><span class="fu">withInfectivityProfileMatrix</span><span class="op">(</span><span class="va">infProf</span><span class="op">$</span><span class="va">yMatrix</span><span class="op">)</span>
@@ -176,7 +143,7 @@
   <span class="fu">geom_line</span><span class="op">(</span>data<span class="op">=</span><span class="va">test</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Rt.actual</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">coord_cartesian</span><span class="op">(</span>ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.75</span>,<span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></pre></div>
 <p><img src="getting-started_files/figure-html/unnamed-chunk-4-1.png" width="700"> # Bayesian estimators</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb5"><pre class="downlit">
 <span class="va">grEstim</span> <span class="op">=</span> <span class="va">J</span><span class="op">$</span><span class="va">GrowthRateEstimator</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>minWindow <span class="op">=</span> <span class="fl">4</span>,maxWindow <span class="op">=</span> <span class="fl">21</span><span class="op">)</span>
 <span class="co"># grEstim$priorIncidenceFromPosteriorMean()</span>
 <span class="co"># grEstim$combineEstimatesWithWeightedMixture()</span>
@@ -194,7 +161,7 @@
   <span class="fu">geom_point</span><span class="op">(</span>data<span class="op">=</span><span class="va">test</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Est.observed</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span>,size<span class="op">=</span><span class="fl">0.2</span><span class="op">)</span>
 <span class="co">## Warning: Removed 10 row(s) containing missing values (geom_path).</span></pre></div>
 <p><img src="getting-started_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb6"><pre class="downlit">
 
 <span class="fu">ggplot</span><span class="op">(</span><span class="va">out</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_rect</span><span class="op">(</span>data<span class="op">=</span><span class="va">test</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>xmin<span class="op">=</span><span class="va">date</span>,xmax<span class="op">=</span><span class="va">date</span><span class="op">+</span><span class="fl">1</span>,alpha<span class="op">=</span><span class="va">import</span><span class="op">)</span>,ymin<span class="op">=</span><span class="op">-</span><span class="cn">Inf</span>,ymax<span class="op">=</span><span class="cn">Inf</span>,fill<span class="op">=</span><span class="st">"blue"</span><span class="op">)</span><span class="op">+</span>
@@ -205,7 +172,7 @@
   <span class="fu">coord_cartesian</span><span class="op">(</span>ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.75</span>,<span class="fl">1.5</span><span class="op">)</span><span class="op">)</span>
 <span class="co">## Warning: Removed 30 row(s) containing missing values (geom_path).</span></pre></div>
 <p><img src="getting-started_files/figure-html/unnamed-chunk-5-2.png" width="700"></p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb7"><pre class="downlit">
 
 <span class="fu">ggplot</span><span class="op">(</span><span class="va">out</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_rect</span><span class="op">(</span>data<span class="op">=</span><span class="va">test</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>xmin<span class="op">=</span><span class="va">date</span>,xmax<span class="op">=</span><span class="va">date</span><span class="op">+</span><span class="fl">1</span>,alpha<span class="op">=</span><span class="va">import</span><span class="op">)</span>,ymin<span class="op">=</span><span class="op">-</span><span class="cn">Inf</span>,ymax<span class="op">=</span><span class="cn">Inf</span>,fill<span class="op">=</span><span class="st">"blue"</span><span class="op">)</span><span class="op">+</span>

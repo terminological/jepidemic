@@ -10,10 +10,10 @@
 #' 
 #' Version: 0.03
 #' 
-#' Generated: 2022-01-28T16:04:19.701942
+#' Generated: 2022-05-24T22:12:30.978674
 #'
 #' @details
-	#' #' The renewal equation method depends on a time series of infections, and on the infectivity profile - 
+	#' The renewal equation method depends on a time series of infections, and on the infectivity profile - 
 	#' a measure of the probability that a secondary infection occurred on a specific day after the primary case, 
 	#' given a secondary infection occurred. A Bayesian framework is then used to update a prior probabilistic 
 	#' estimate of \(R_t\) on any given day with both information gained from the time series of infections in the 
@@ -59,12 +59,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		# copy parameters
 		tmp_on = self$.api$.toJava$boolean(on);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="legacySupport" , tmp_on); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="legacySupport" , tmp_on, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -72,7 +74,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -89,12 +90,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		# copy parameters
 		tmp_window = self$.api$.toJava$int(window);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectSpecificWindow" , tmp_window); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectSpecificWindow" , tmp_window, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -102,7 +105,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -120,12 +122,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_incidenceSum = self$.api$.toJava$double(incidenceSum);
 		tmp_minWindow = self$.api$.toJava$int(minWindow);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectAdaptiveWindow" , tmp_incidenceSum, tmp_minWindow); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectAdaptiveWindow" , tmp_incidenceSum, tmp_minWindow, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -133,7 +137,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -152,12 +155,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_timeVsRt = self$.api$.toJava$double(timeVsRt);
 		tmp_minWindow = self$.api$.toJava$int(minWindow);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectMinimumUncertainty" , tmp_timeVsRt, tmp_minWindow); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectMinimumUncertainty" , tmp_timeVsRt, tmp_minWindow, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -165,25 +170,26 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
 	#' @description 
 	#' selectMixtureCombination: 
-	#' The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+	#' The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that span the estimate date (this may involve longer windowed estimate from
 	#' dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows.
 	#' @return R6 CoriEstimator object: 
 	#' The estimator itself (a fluent method)
 	selectMixtureCombination = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectMixtureCombination" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectMixtureCombination" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -191,27 +197,28 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
 	#' @description 
 	#' selectWeightedMixtureCombination: 
-	#' The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+	#' The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that span the estimate date (this may involve longer windowed estimate from
 	#' dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows.
-	#' @param weights - the weighting of the different windows as a vector which much be the same length as the longest window, maxTau. - (java expects a RNumericVector)
+	#' @param weights - the weighting of the different windows according to their length as a vector which much be the same length as the longest window, maxTau. - (java expects a RNumericVector)
 	#' @return R6 CoriEstimator object: 
 	#' The estimator itself (a fluent method)
 	selectWeightedMixtureCombination = function(weights) {
 		# copy parameters
 		tmp_weights = self$.api$.toJava$RNumericVector(weights);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectWeightedMixtureCombination" , tmp_weights); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="selectWeightedMixtureCombination" , tmp_weights, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -219,7 +226,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -232,12 +238,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	withDefaultPrior = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withDefaultPrior" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withDefaultPrior" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -245,7 +253,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -262,12 +269,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_mean = self$.api$.toJava$double(mean);
 		tmp_sd = self$.api$.toJava$double(sd);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withFixedPrior" , tmp_mean, tmp_sd); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withFixedPrior" , tmp_mean, tmp_sd, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -275,7 +284,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -290,12 +298,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		# copy parameters
 		tmp_factor = self$.api$.toJava$double(factor);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withAdaptivePrior" , tmp_factor); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withAdaptivePrior" , tmp_factor, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -303,7 +313,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -319,12 +328,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		# copy parameters
 		tmp_sampleSize = self$.api$.toJava$int(sampleSize);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="collectResampledQuantiles" , tmp_sampleSize); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="collectResampledQuantiles" , tmp_sampleSize, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -332,7 +343,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -345,12 +355,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	collectMixtureQuantiles = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="collectMixtureQuantiles" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="collectMixtureQuantiles" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -358,7 +370,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -373,12 +384,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	collectMixtureApproximation = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="collectMixtureApproximation" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="collectMixtureApproximation" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -386,7 +399,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -398,12 +410,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	detailedOutput = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="detailedOutput" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="detailedOutput" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -411,7 +425,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -428,12 +441,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_infectivityProfile = self$.api$.toJava$RNumericVector(infectivityProfile);
 		tmp_replace = self$.api$.toJava$boolean(replace);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withInfectivityProfile" , tmp_infectivityProfile, tmp_replace); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withInfectivityProfile" , tmp_infectivityProfile, tmp_replace, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -441,7 +456,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -456,12 +470,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		# copy parameters
 		tmp_infectivityProfiles = self$.api$.toJava$RNumericArray(infectivityProfiles);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withInfectivityProfileMatrix" , tmp_infectivityProfiles); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="withInfectivityProfileMatrix" , tmp_infectivityProfiles, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -469,7 +485,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -482,12 +497,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	atStartOfTimeseries = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="atStartOfTimeseries" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="atStartOfTimeseries" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -495,7 +512,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -510,12 +526,14 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 	inMiddleOfTimeseries = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="inMiddleOfTimeseries" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="inMiddleOfTimeseries" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -523,7 +541,6 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 				self$.api$.fromJava$CoriEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -541,10 +558,12 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_dateColName = self$.api$.toJava$String(dateColName);
 		tmp_incidenceColName = self$.api$.toJava$String(incidenceColName);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRt" , tmp_incidence, tmp_dateColName, tmp_incidenceColName); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRt" , tmp_incidence, tmp_dateColName, tmp_incidenceColName, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# convert java object back to R
 		out = self$.api$.fromJava$RDataframe(tmp_out);
-		self$.api$printMessages()
 		if(is.null(out)) return(invisible(out))
 		return(out);
 	},
@@ -562,10 +581,12 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_dateColName = self$.api$.toJava$String(dateColName);
 		tmp_incidenceColName = self$.api$.toJava$String(incidenceColName);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRtSingle" , tmp_incidence, tmp_dateColName, tmp_incidenceColName); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRtSingle" , tmp_incidence, tmp_dateColName, tmp_incidenceColName, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# convert java object back to R
 		out = self$.api$.fromJava$RDataframe(tmp_out);
-		self$.api$printMessages()
 		if(is.null(out)) return(invisible(out))
 		return(out);
 	},
@@ -585,10 +606,12 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_rateColName = self$.api$.toJava$String(rateColName);
 		tmp_samplesPerProfile = self$.api$.toJava$int(samplesPerProfile);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRtFromRates" , tmp_rates, tmp_dateColName, tmp_rateColName, tmp_samplesPerProfile); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRtFromRates" , tmp_rates, tmp_dateColName, tmp_rateColName, tmp_samplesPerProfile, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# convert java object back to R
 		out = self$.api$.fromJava$RDataframe(tmp_out);
-		self$.api$printMessages()
 		if(is.null(out)) return(invisible(out))
 		return(out);
 	},
@@ -608,10 +631,12 @@ CoriEstimator = R6::R6Class("CoriEstimator", public=list(
 		tmp_rateColName = self$.api$.toJava$String(rateColName);
 		tmp_samplesPerProfile = self$.api$.toJava$int(samplesPerProfile);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRtFromSingleRate" , tmp_rate, tmp_dateColName, tmp_rateColName, tmp_samplesPerProfile); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateRtFromSingleRate" , tmp_rate, tmp_dateColName, tmp_rateColName, tmp_samplesPerProfile, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# convert java object back to R
 		out = self$.api$.fromJava$RDataframe(tmp_out);
-		self$.api$printMessages()
 		if(is.null(out)) return(invisible(out))
 		return(out);
 	},

@@ -4,7 +4,7 @@ R and Java based tools for epidemic modelling
 
 ```R
 
-J = jepidemic::JavaApi$new()
+J = jepidemic::JavaApi$get()
 estim = J$CoriEstimator$new(r0Mean = 5,r0SD = 5,maxWindow = 14)
 library(EpiEstim)
 data(Flu2009)

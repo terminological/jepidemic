@@ -10,7 +10,7 @@
 #' 
 #' Version: 0.03
 #' 
-#' Generated: 2022-01-28T16:04:19.693466
+#' Generated: 2022-05-24T22:12:30.975359
 #'
 #' @details
 	#' A holder of a discrete probability distribution of the infectivity profile

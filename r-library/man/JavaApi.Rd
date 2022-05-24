@@ -27,7 +27,7 @@ Some work in progress R functions related to the covid 19 epidemic
 
 Version: 0.03
 
-Generated: 2022-01-28T16:04:19.610015
+Generated: 2022-05-24T22:12:30.918083
 }
 
 \author{\email{rc538@exeter.ac.uk}}

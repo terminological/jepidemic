@@ -99,39 +99,6 @@
     <li>
       <a href="../articles/getting-started.html">Getting started</a>
     </li>
-    <li>
-      <a href="../articles/in-development/appendix-A-validation-methods.html">Appendix A - Reproduction number validation methodology</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-B-cori-method-jepidemic.html">Appendix B - Renewal equation reproduction number estimation and Jepidemic implementation validation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-C-incidence-and-growth-rate-estimation.html">Appendix C - Incidence and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-D-bayesian-estimators.html">Appendix D - Bayesian growth rate and reproduction number estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/bayesian-growth-rate-2.html">Bayesian growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/proportion-and-growth-rate-estimation.html">Appendix C - Proportions and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/two-strain-dynamics.html">Two strain dynamics</a>
-    </li>
-    <li>
-      <a href="../articles/old/cori-method.html">Cori method</a>
-    </li>
-    <li>
-      <a href="../articles/old/epiestim-testing.html">Testing epiestim</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rate-estimation.html">Growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rates.html">Cori method</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -206,9 +173,147 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="addBinomialRate.html">addBinomialRate()</a></code> </p>
+        </td>
+        <td><p>Calculate a simulated set of expected proportions based on imports, growth rates and a baseline total</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="addBootstrappedObservations.html">addBootstrappedObservations()</a></code> </p>
+        </td>
+        <td><p>Generate a random set of observations from a poisson rate</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="addImportations.html">addImportations()</a></code> </p>
+        </td>
+        <td><p>Add importations to the simulation. Without importations there will be no growth so some cases must be imported.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="addObservedRate.html">addObservedRate()</a></code> </p>
+        </td>
+        <td><p>Add in a simulated rate of observed cases based on the underlying growth rate and imports with a weekly variation</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="addPoissonRate.html">addPoissonRate()</a></code> </p>
+        </td>
+        <td><p>Calculate a simulated set of expected incidences based on imports and growth rate</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="discreteGammaInfectivityProfile.html">discreteGammaInfectivityProfile()</a></code> </p>
+        </td>
+        <td><p>Generates one or more discrete infectivity profiles based on discretised gamma distributions.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="doublingTimeFromGrowthRate.html">doublingTimeFromGrowthRate()</a></code> </p>
+        </td>
+        <td><p>Calucualte a doubling time with quantiles for any timeseries with Growth rate estimates</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="epiestimRtEstimate.html">epiestimRtEstimate()</a></code> </p>
+        </td>
+        <td><p>Minimal epiestim wrapper to execute a time series R_t using a discrete infectivity profile matrix, and format the result to be consistent with the rest of this..</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="generateGrowthRate.html">generateGrowthRate()</a></code> </p>
+        </td>
+        <td><p>Generate a growth timeseries simulation based on a small set of fixed time points.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="generateRt.html">generateRt()</a></code> </p>
+        </td>
+        <td><p>Generate an R_t timeseries simulation based on a small set of fixed time points.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getGrowthRateBasedDataset.html">getGrowthRateBasedDataset()</a></code> </p>
+        </td>
+        <td><p>Convenience method to generate a random growth rate simulation</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getTwoAlternativesDataset.html">getTwoAlternativesDataset()</a></code> </p>
+        </td>
+        <td><p>Convenience wrapper to generate a 2 strain type comparison. strain 1 will have suffix .s1 and strain 2 will have .s2</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="jepidemic-package.html">jepidemic-package</a></code> </p>
         </td>
         <td><p>jepidemic: Java Epidemic</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="locfitGrowthEstimate.html">locfitGrowthEstimate()</a></code> </p>
+        </td>
+        <td><p>Generate a smoothed estimate of the absolute growth rate of cases using a poisson model.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="locfitPoissonRateEstimate.html">locfitPoissonRateEstimate()</a></code> </p>
+        </td>
+        <td><p>Generate a smoothed estimate of the absolute growth rate of cases using a poisson model.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="locfitProportionEstimate.html">locfitProportionEstimate()</a></code> </p>
+        </td>
+        <td><p>Generate a smoothed estimate of the proportion of cases compared to some total.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="locfitProportionalGrowthEstimate.html">locfitProportionalGrowthEstimate()</a></code> </p>
+        </td>
+        <td><p>Generate a smoothed estimate of the relative growth rate of cases compared to some baseline using proportions.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="periodicGrowthRate.html">periodicGrowthRate()</a></code> </p>
+        </td>
+        <td><p>Generate a periodic growth timeseries simulation</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="pointPoissonEstimate.html">pointPoissonEstimate()</a></code> </p>
+        </td>
+        <td><p>Calculate a slightly more robust estimate of growth rate and  poisson rate based on a single model</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="pointProportionEstimate.html">pointProportionEstimate()</a></code> </p>
+        </td>
+        <td><p>Calculate a slightly more robust estimate of growth rate and proportion based on a single model at a range of</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="renameResult.html">renameResult()</a></code> </p>
+        </td>
+        <td><p>Rename a growth rate estimate by placing a prefix in front o</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="rtFromGrowthRate.html">rtFromGrowthRate()</a></code> </p>
+        </td>
+        <td><p>Calculate a reproduction number estimate using the Wallinga 2007 estimation using empirical generation time distribution. This uses resampling to transmit uncertainty in growth rate estimates</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="uncertainGammaInfectivityProfiles.html">uncertainGammaInfectivityProfiles()</a></code> </p>
+        </td>
+        <td><p>Generate a set of infectivity profiles based on uncertain</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="weekendEffect.html">weekendEffect()</a></code> </p>
+        </td>
+        <td><p>Calculates a weighting to apply to each day of week</p></td>
       </tr>
     </tbody>
     </table>

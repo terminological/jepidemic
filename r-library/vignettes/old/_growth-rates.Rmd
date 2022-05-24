@@ -105,7 +105,7 @@ rtPlot(epiest)
 
 ```{r}
 # Ensure equivalence
-J = jepidemic::JavaApi$new()
+J = jepidemic::JavaApi$get()
 estim = J$CoriEstimator$new(r0Mean = 5,r0SD = 5,maxWindow = 14)
 estim$withInfectivityProfile(infectivityProfile = Flu2009$si_distr)
 estim$detailedOutput()
@@ -212,7 +212,7 @@ rtPlot(out4a,ylim=c(0.5,2))+geom_line(data=Rt,aes(x=date,y=R),colour="black",alp
 
 
 ```{r}
-J = jepidemic::JavaApi$new()
+J = jepidemic::JavaApi$get()
 estim2 = J$CoriEstimator$new(r0Mean = 1,r0SD = 5,maxWindow = 14)
 estim2$withInfectivityProfile(infectivityProfile = Flu2009$si_distr)
 estim2$inMiddleOfTimeseries()

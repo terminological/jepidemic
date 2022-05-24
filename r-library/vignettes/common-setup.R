@@ -18,7 +18,7 @@ output = outputter("~/Dropbox/sarscov2/r-estimation-methodology")
 devtools::load_all("~/Git/standard-print-output/")
 standardPrintOutput::setDefaults()
 
-J = jepidemic::JavaApi$new()
+J = jepidemic::JavaApi$get()
 
 ## EpiEstim data ----
 data("Flu2009", package="EpiEstim")

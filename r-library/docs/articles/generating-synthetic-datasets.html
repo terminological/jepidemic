@@ -59,39 +59,6 @@
     <li>
       <a href="../articles/getting-started.html">Getting started</a>
     </li>
-    <li>
-      <a href="../articles/in-development/appendix-A-validation-methods.html">Appendix A - Reproduction number validation methodology</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-B-cori-method-jepidemic.html">Appendix B - Renewal equation reproduction number estimation and Jepidemic implementation validation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-C-incidence-and-growth-rate-estimation.html">Appendix C - Incidence and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-D-bayesian-estimators.html">Appendix D - Bayesian growth rate and reproduction number estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/bayesian-growth-rate-2.html">Bayesian growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/proportion-and-growth-rate-estimation.html">Appendix C - Proportions and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/two-strain-dynamics.html">Two strain dynamics</a>
-    </li>
-    <li>
-      <a href="../articles/old/cori-method.html">Cori method</a>
-    </li>
-    <li>
-      <a href="../articles/old/epiestim-testing.html">Testing epiestim</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rate-estimation.html">Growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rates.html">Cori method</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -105,7 +72,7 @@
 
       
 
-      </header><div class="row">
+      </header><script src="generating-synthetic-datasets_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Generating synthetic datasets</h1>
@@ -122,8 +89,8 @@
 <h2 class="hasAnchor">
 <a href="#generating-a-growth-rate-simulation" class="anchor"></a>Generating a growth rate simulation</h2>
 <p>The synthetic data set is generated from a known set of growth rates. Firstly we define a time series of growth rate values using a cubic spline and a set of given points. This set of rates could also be provided as a full time series.</p>
-<div class="sourceCode"><pre class="downlit">
-<span class="va">growth</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu">generateGrowthRate</span><span class="op">(</span><span class="st">"test 1"</span>,breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">40</span>,<span class="fl">80</span>,<span class="fl">200</span>,<span class="fl">300</span>,<span class="fl">364</span><span class="op">)</span>, rates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0.03</span>,<span class="op">-</span><span class="fl">0.01</span>,<span class="fl">0.01</span>,<span class="op">-</span><span class="fl">0.05</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span>
+<div class="sourceCode" id="cb1"><pre class="downlit">
+<span class="va">growth</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu"><a href="../reference/generateGrowthRate.html">generateGrowthRate</a></span><span class="op">(</span><span class="st">"test 1"</span>,breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">40</span>,<span class="fl">80</span>,<span class="fl">200</span>,<span class="fl">300</span>,<span class="fl">364</span><span class="op">)</span>, rates<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0.03</span>,<span class="op">-</span><span class="fl">0.01</span>,<span class="fl">0.01</span>,<span class="op">-</span><span class="fl">0.05</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span>
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data <span class="op">=</span> <span class="va">growth</span><span class="op">$</span><span class="va">ts</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>, y<span class="op">=</span><span class="va">Growth.actual</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">growth</span><span class="op">$</span><span class="va">events</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">`Start date`</span>, y<span class="op">=</span><span class="va">rates</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></pre></div>
@@ -131,24 +98,24 @@
 <p>No growth will be seen unless some cases are imported, to seed the initial epidemic:</p>
 <p><img src="generating-synthetic-datasets_files/figure-html/pressure-1.png" width="700"></p>
 <p>Given the imports and the growth rate we can calculate a number of cases we expect to see at any given time:</p>
-<div class="sourceCode"><pre class="downlit">
-<span class="va">pois</span> <span class="op">=</span> <span class="va">imported</span> <span class="op">%&gt;%</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu">addPoissonRate</span><span class="op">(</span><span class="op">)</span>
+<div class="sourceCode" id="cb2"><pre class="downlit">
+<span class="va">pois</span> <span class="op">=</span> <span class="va">imported</span> <span class="op">%&gt;%</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu"><a href="../reference/addPoissonRate.html">addPoissonRate</a></span><span class="op">(</span><span class="op">)</span>
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">geom_bar</span><span class="op">(</span>data<span class="op">=</span><span class="va">pois</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">import</span><span class="op">)</span>, stat<span class="op">=</span><span class="st">"identity"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data<span class="op">=</span><span class="va">pois</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Est.actual</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
 <p>With this estimate of the underlying incidence of infection we can adjust for various biases, firstly for drop in observed cases at weekends and subsequent increase on a Monday,and secondly for any long term trends in observed cases as a acquisition bias.</p>
-<div class="sourceCode"><pre class="downlit">
-<span class="va">weekend</span> <span class="op">=</span> <span class="va">pois</span> <span class="op">%&gt;%</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu">addObservedRate</span><span class="op">(</span>observedFractionExpr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/approxfun.html">approx</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">40</span>,<span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span>, y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.1</span>,<span class="fl">0.9</span>,<span class="fl">1</span><span class="op">)</span>, xout <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="op">(</span><span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">y</span>, weekendEffect <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>
+<div class="sourceCode" id="cb3"><pre class="downlit">
+<span class="va">weekend</span> <span class="op">=</span> <span class="va">pois</span> <span class="op">%&gt;%</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu"><a href="../reference/addObservedRate.html">addObservedRate</a></span><span class="op">(</span>observedFractionExpr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/approxfun.html">approx</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">40</span>,<span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span>, y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.1</span>,<span class="fl">0.9</span>,<span class="fl">1</span><span class="op">)</span>, xout <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="op">(</span><span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">y</span>, weekendEffect <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">geom_bar</span><span class="op">(</span>data<span class="op">=</span><span class="va">weekend</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">import</span><span class="op">)</span>, stat<span class="op">=</span><span class="st">"identity"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data<span class="op">=</span><span class="va">weekend</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Est.actual</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data<span class="op">=</span><span class="va">weekend</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Est.observed</span><span class="op">)</span>, colour<span class="op">=</span><span class="st">"blue"</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
 <p>Secondly and with the expected observed poisson rate we can generate a set of bootstrapped time series of cases as they woudl have been observed at various points in time. These are influenced by reporting delay which can cause a drop off in cases at the end of the time series, and lets us investigate how our accuracy would have changed over time.</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb4"><pre class="downlit">
 <span class="co">#devtools::load_all()</span>
-<span class="va">vignetteDataset</span> <span class="op">=</span> <span class="va">weekend</span> <span class="op">%&gt;%</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu">addBootstrappedObservations</span><span class="op">(</span>bootstraps <span class="op">=</span> <span class="fl">3</span>,delayMean <span class="op">=</span> <span class="fl">1.5</span>,delaySd <span class="op">=</span> <span class="fl">2.5</span>,lastObservation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>,<span class="fl">100</span>,<span class="fl">200</span>,<span class="fl">364</span><span class="op">)</span><span class="op">)</span>
+<span class="va">vignetteDataset</span> <span class="op">=</span> <span class="va">weekend</span> <span class="op">%&gt;%</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu"><a href="../reference/addBootstrappedObservations.html">addBootstrappedObservations</a></span><span class="op">(</span>bootstraps <span class="op">=</span> <span class="fl">3</span>,delayMean <span class="op">=</span> <span class="fl">1.5</span>,delaySd <span class="op">=</span> <span class="fl">2.5</span>,lastObservation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>,<span class="fl">100</span>,<span class="fl">200</span>,<span class="fl">364</span><span class="op">)</span><span class="op">)</span>
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
   <span class="co">#geom_bar(data=weekend$ts, mapping=aes(x=date,y=import), stat="identity")+</span>
   <span class="co">#geom_line(data=weekend$ts, mapping=aes(x=date,y=Est.actual), colour="red")+</span>
@@ -156,17 +123,16 @@
   <span class="fu">geom_point</span><span class="op">(</span>data<span class="op">=</span><span class="va">vignetteDataset</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">value</span>, colour<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">as.factor</a></span><span class="op">(</span><span class="va">observationDate</span><span class="op">)</span>, group<span class="op">=</span><span class="va">bootstrap</span><span class="op">)</span>, size<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">facet_wrap</span><span class="op">(</span><span class="fu">vars</span><span class="op">(</span><span class="va">observationDate</span><span class="op">)</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb5"><pre class="downlit">
 <span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_data.html">use_data</a></span><span class="op">(</span><span class="va">vignetteDataset</span>,overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></pre></div>
-<pre><code>## ✔ Setting active project to '/media/data/Git/jepidemic/r-library'</code></pre>
-<pre><code>## ✔ Adding 'R' to Depends field in DESCRIPTION</code></pre>
-<pre><code>## ✔ Saving 'vignetteDataset' to 'data/vignetteDataset.rda'</code></pre>
+<pre><code>## ✓ Setting active project to '/media/data/Git/jepidemic/r-library'</code></pre>
+<pre><code>## ✓ Saving 'vignetteDataset' to 'data/vignetteDataset.rda'</code></pre>
 <pre><code>## • Document your data (see 'https://r-pkgs.org/data.html')</code></pre>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb9"><pre class="downlit">
 <span class="co"># J$Serialiser$serialiseDataframe(lagAnalysisDataset$ts,here::here("../src/main/resources/vignetteDataframe.ser"))</span></pre></div>
 <p>The final synthetic time series have 3 biases, firstly a weekend effect, secondly a potentially time dependent acquisition bias and thirdly a reporting delay distribution. Each simulation will have a number of bootstraps allowing us to investigate the impact on randomness of our estimates, and a number of observation dates allowing reporting delay bias.</p>
 <p>The proportions of these biases for each observation date are shown below:</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb10"><pre class="downlit">
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data<span class="op">=</span><span class="va">vignetteDataset</span><span class="op">$</span><span class="va">ts</span>, <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Fraction.observed</span>,colour<span class="op">=</span><span class="st">"observed"</span><span class="op">)</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data<span class="op">=</span><span class="va">vignetteDataset</span><span class="op">$</span><span class="va">ts</span>, <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">Fraction.weekend</span>,colour<span class="op">=</span><span class="st">"weekend"</span><span class="op">)</span><span class="op">)</span><span class="op">+</span>
@@ -174,14 +140,14 @@
   <span class="fu">facet_wrap</span><span class="op">(</span><span class="fu">vars</span><span class="op">(</span><span class="va">observationDate</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fu">ylab</span><span class="op">(</span><span class="st">"fraction"</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
 </div>
-<div id="validation-scenarios-----" class="section level2">
+<div id="validation-scenarios--" class="section level2">
 <h2 class="hasAnchor">
-<a href="#validation-scenarios-----" class="anchor"></a>Validation scenarios ----</h2>
+<a href="#validation-scenarios--" class="anchor"></a>Validation scenarios —-</h2>
 <p>The synthetic time series generated in this manner can be used to test estimators of growth rate and R_t, against theoretical values. For validation of accuracy of predictions we use 2 synthetic data sets, firstly a period regular function with zero randomness to assess the lag in estimation under ideal estimation conditions:</p>
-<div class="sourceCode"><pre class="downlit">
-<span class="va">lagAnalysisDataset</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu">periodicGrowthRate</span><span class="op">(</span><span class="st">"lag test"</span>,smooth<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu">addImportations</span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu">addPoissonRate</span><span class="op">(</span><span class="op">)</span> 
+<div class="sourceCode" id="cb11"><pre class="downlit">
+<span class="va">lagAnalysisDataset</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu"><a href="../reference/periodicGrowthRate.html">periodicGrowthRate</a></span><span class="op">(</span><span class="st">"lag test"</span>,smooth<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">%&gt;%</span>
+  <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu"><a href="../reference/addImportations.html">addImportations</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span> <span class="op">%&gt;%</span>
+  <span class="fu">jepidemic</span><span class="fu">::</span><span class="fu"><a href="../reference/addPoissonRate.html">addPoissonRate</a></span><span class="op">(</span><span class="op">)</span> 
 
 <span class="va">lagAnalysisDataset</span><span class="op">$</span><span class="va">ts</span> <span class="op">=</span> <span class="va">lagAnalysisDataset</span><span class="op">$</span><span class="va">ts</span> <span class="op">%&gt;%</span>
   <span class="fu">mutate</span><span class="op">(</span>
@@ -189,9 +155,9 @@
   <span class="op">)</span>
 
 <span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_data.html">use_data</a></span><span class="op">(</span><span class="va">lagAnalysisDataset</span>,overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></pre></div>
-<pre><code>## ✔ Saving 'lagAnalysisDataset' to 'data/lagAnalysisDataset.rda'</code></pre>
+<pre><code>## ✓ Saving 'lagAnalysisDataset' to 'data/lagAnalysisDataset.rda'</code></pre>
 <pre><code>## • Document your data (see 'https://r-pkgs.org/data.html')</code></pre>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb14"><pre class="downlit">
 <span class="co"># J$Serialiser$serialiseDataframe(lagAnalysisDataset$ts,here::here("../src/main/resources/lagAnalysisDataframe.ser"))</span>
 
 
@@ -210,7 +176,7 @@
 <span class="va">p1</span><span class="op">+</span><span class="va">p2</span><span class="op">+</span><span class="fu">patchwork</span><span class="fu">::</span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html">plot_layout</a></span><span class="op">(</span>ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
 <p>Secondly a standard set of estimates is generated based on 2 growth rate data sets, one based on a continuous function and one based on a step function:</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb15"><pre class="downlit">
 <span class="co"># control points</span>
 <span class="va">control</span> <span class="op">=</span> <span class="fu">tibble</span><span class="op">(</span>
   smooth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="cn">TRUE</span>,<span class="cn">FALSE</span><span class="op">)</span>,
@@ -249,7 +215,7 @@
 <span class="co"># Combine configuration with generated dataset</span>
 <span class="va">validationDataset</span> <span class="op">=</span> <span class="va">options</span> <span class="op">%&gt;%</span> <span class="fu">group_by_all</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">group_modify</span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">d</span>,<span class="va">g</span>,<span class="va">...</span><span class="op">)</span> <span class="op">{</span>
   <span class="va">config</span> <span class="op">=</span> <span class="va">g</span>
-  <span class="va">tmp</span> <span class="op">=</span> <span class="fu">getGrowthRateBasedDataset</span><span class="op">(</span>weekendEffect <span class="op">=</span> <span class="va">config</span><span class="op">$</span><span class="va">weekendEffect</span>, smooth<span class="op">=</span> <span class="va">config</span><span class="op">$</span><span class="va">smooth</span>, seed <span class="op">=</span> <span class="va">config</span><span class="op">$</span><span class="va">seed</span>, 
+  <span class="va">tmp</span> <span class="op">=</span> <span class="fu"><a href="../reference/getGrowthRateBasedDataset.html">getGrowthRateBasedDataset</a></span><span class="op">(</span>weekendEffect <span class="op">=</span> <span class="va">config</span><span class="op">$</span><span class="va">weekendEffect</span>, smooth<span class="op">=</span> <span class="va">config</span><span class="op">$</span><span class="va">smooth</span>, seed <span class="op">=</span> <span class="va">config</span><span class="op">$</span><span class="va">seed</span>, 
                                   breaks <span class="op">=</span> <span class="va">config</span><span class="op">$</span><span class="va">control</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">breaks</span>, rates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">config</span><span class="op">$</span><span class="va">control</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">rates</span><span class="op">)</span>,
                                   bootstraps<span class="op">=</span><span class="fl">10</span><span class="op">)</span>
   <span class="va">tmp2</span> <span class="op">=</span> <span class="fu">tibble</span><span class="op">(</span>
@@ -276,11 +242,11 @@
 
 ## Warning in regularize.values(x, y, ties, missing(ties)): collapsing to unique
 ## 'x' values</code></pre>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb17"><pre class="downlit">
 <span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_data.html">use_data</a></span><span class="op">(</span><span class="va">validationDataset</span>,overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></pre></div>
-<pre><code>## ✔ Saving 'validationDataset' to 'data/validationDataset.rda'</code></pre>
+<pre><code>## ✓ Saving 'validationDataset' to 'data/validationDataset.rda'</code></pre>
 <pre><code>## • Document your data (see 'https://r-pkgs.org/data.html')</code></pre>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb20"><pre class="downlit">
 <span class="va">tmp</span> <span class="op">=</span> <span class="va">validationDataset</span> <span class="op">%&gt;%</span> <span class="fu">mutate</span><span class="op">(</span>rowLabel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="va">smoothLabel</span>,<span class="st">"; "</span>,<span class="va">seedLabel</span><span class="op">)</span>, colLabel<span class="op">=</span><span class="va">weekendLabel</span><span class="op">)</span>
 <span class="va">tmp2</span> <span class="op">=</span> <span class="va">tmp</span> <span class="op">%&gt;%</span> <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">select</span><span class="op">(</span><span class="va">rowLabel</span>,<span class="va">colLabel</span>,<span class="va">ts</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">distinct</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">unnest</span><span class="op">(</span><span class="va">ts</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">bootstrap</span><span class="op">==</span><span class="fl">1</span><span class="op">)</span>
 <span class="va">tmp3</span> <span class="op">=</span> <span class="va">validationDataset</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">weekendEffect</span><span class="op">==</span><span class="fl">0</span>, <span class="va">seed</span><span class="op">==</span><span class="fl">100</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">unnest</span><span class="op">(</span><span class="va">ts</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">bootstrap</span><span class="op">==</span><span class="fl">1</span><span class="op">)</span>
@@ -289,7 +255,7 @@
   <span class="fu">facet_wrap</span><span class="op">(</span><span class="fu">vars</span><span class="op">(</span><span class="va">smoothLabel</span><span class="op">)</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 <p>and the resulting incidence rates are modified with a range of different combinations of weekend periodicity (between 0, 0.03 and 0.1), and 2 varying levels of initial incidence generating epidemics of different sizes. The combination produces 12 validation data sets, for which we generate 10 bootstrap samples (first one shown here):</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb21"><pre class="downlit">
 <span class="fu">ggplot</span><span class="op">(</span><span class="va">tmp2</span>, <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">value</span><span class="op">)</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>size<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>alpha<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span><span class="op">+</span>
@@ -304,51 +270,51 @@
 <h2 class="hasAnchor">
 <a href="#strain-validation" class="anchor"></a>2 strain validation</h2>
 <p>With the Omicron outbreak, several challenges to accurate estimation of the growth rate appeared. Firstly the degree of growth far exceeded previous estimates, and secondly the identification fo cases using the TaqPath testing system resulted on a potential divergence of processing times between two strains thus introducing potential bias.</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb22"><pre class="downlit">
 <span class="co">## Omicron scenario ----</span>
 
 <span class="va">sNegOmicronScenario</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">topLevel</span>,<span class="va">weekendEffect</span><span class="op">)</span> <span class="op">{</span>
-  <span class="va">gr</span> <span class="op">=</span> <span class="fu">generateGrowthRate</span><span class="op">(</span>
+  <span class="va">gr</span> <span class="op">=</span> <span class="fu"><a href="../reference/generateGrowthRate.html">generateGrowthRate</a></span><span class="op">(</span>
     name<span class="op">=</span><span class="st">"sNeg cases"</span>, length <span class="op">=</span> <span class="fl">100</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">30</span>,<span class="fl">40</span>,<span class="fl">50</span>,<span class="fl">70</span>,<span class="fl">85</span><span class="op">)</span>,
     rates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">topLevel</span>,<span class="va">topLevel</span>,<span class="va">topLevel</span><span class="op">/</span><span class="fl">2</span>,<span class="op">-</span><span class="fl">0.05</span>,<span class="fl">0</span><span class="op">)</span>,sawtooth <span class="op">=</span> <span class="cn">TRUE</span>,
     smooth <span class="op">=</span> <span class="cn">FALSE</span>,dateAtTime0 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2021-10-15"</span><span class="op">)</span>
     <span class="co">#TODO differential GT</span>
     <span class="op">)</span>
   <span class="va">gr</span> <span class="op">=</span> <span class="va">gr</span> <span class="op">%&gt;%</span>
-    <span class="fu">addImportations</span><span class="op">(</span><span class="fu">tibble</span><span class="op">(</span>time<span class="op">=</span><span class="fl">1</span>,import<span class="op">=</span><span class="fl">25</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-    <span class="fu">addPoissonRate</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-    <span class="fu">addObservedRate</span><span class="op">(</span>weekendEffect <span class="op">=</span> <span class="va">weekendEffect</span><span class="op">)</span>
+    <span class="fu"><a href="../reference/addImportations.html">addImportations</a></span><span class="op">(</span><span class="fu">tibble</span><span class="op">(</span>time<span class="op">=</span><span class="fl">1</span>,import<span class="op">=</span><span class="fl">25</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+    <span class="fu"><a href="../reference/addPoissonRate.html">addPoissonRate</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+    <span class="fu"><a href="../reference/addObservedRate.html">addObservedRate</a></span><span class="op">(</span>weekendEffect <span class="op">=</span> <span class="va">weekendEffect</span><span class="op">)</span>
 <span class="op">}</span>
 
 <span class="va">om</span> <span class="op">=</span> <span class="fu">sNegOmicronScenario</span><span class="op">(</span>topLevel <span class="op">=</span> <span class="fl">0.35</span>,weekendEffect <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>
 
 <span class="va">sPosOmicronScenario</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">weekendEffect</span><span class="op">)</span> <span class="op">{</span>
-  <span class="va">gr</span> <span class="op">=</span> <span class="fu">generateGrowthRate</span><span class="op">(</span>
+  <span class="va">gr</span> <span class="op">=</span> <span class="fu"><a href="../reference/generateGrowthRate.html">generateGrowthRate</a></span><span class="op">(</span>
     name<span class="op">=</span><span class="st">"sPos cases"</span>, length <span class="op">=</span> <span class="fl">100</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">30</span>,<span class="fl">40</span><span class="op">)</span>,
     rates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span>,<span class="op">-</span><span class="fl">0.02</span><span class="op">)</span>,sawtooth <span class="op">=</span> <span class="cn">TRUE</span>,
     smooth <span class="op">=</span> <span class="cn">FALSE</span>,dateAtTime0 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2021-10-15"</span><span class="op">)</span>
     <span class="op">)</span>
   <span class="va">gr</span> <span class="op">=</span> <span class="va">gr</span> <span class="op">%&gt;%</span>
-    <span class="fu">addImportations</span><span class="op">(</span><span class="fu">tibble</span><span class="op">(</span>time<span class="op">=</span><span class="fl">1</span>,import<span class="op">=</span><span class="fl">50000</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-    <span class="fu">addPoissonRate</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-    <span class="fu">addObservedRate</span><span class="op">(</span>weekendEffect <span class="op">=</span> <span class="va">weekendEffect</span><span class="op">)</span>
+    <span class="fu"><a href="../reference/addImportations.html">addImportations</a></span><span class="op">(</span><span class="fu">tibble</span><span class="op">(</span>time<span class="op">=</span><span class="fl">1</span>,import<span class="op">=</span><span class="fl">50000</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+    <span class="fu"><a href="../reference/addPoissonRate.html">addPoissonRate</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+    <span class="fu"><a href="../reference/addObservedRate.html">addObservedRate</a></span><span class="op">(</span>weekendEffect <span class="op">=</span> <span class="va">weekendEffect</span><span class="op">)</span>
 <span class="op">}</span>
 
 <span class="va">de</span> <span class="op">=</span> <span class="fu">sPosOmicronScenario</span><span class="op">(</span>weekendEffect <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>
 
-<span class="va">omicronDataset</span> <span class="op">=</span> <span class="fu">getTwoAlternativesDataset</span><span class="op">(</span>scenario1 <span class="op">=</span> <span class="va">om</span>,scenario2 <span class="op">=</span> <span class="va">de</span>, delayMean1 <span class="op">=</span> <span class="fl">0.8</span>, delayMean2 <span class="op">=</span> <span class="fl">1</span>, timepoints <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">35</span>,<span class="fl">45</span>,<span class="fl">55</span>,<span class="fl">65</span>,<span class="fl">100</span><span class="op">)</span><span class="op">)</span>
+<span class="va">omicronDataset</span> <span class="op">=</span> <span class="fu"><a href="../reference/getTwoAlternativesDataset.html">getTwoAlternativesDataset</a></span><span class="op">(</span>scenario1 <span class="op">=</span> <span class="va">om</span>,scenario2 <span class="op">=</span> <span class="va">de</span>, delayMean1 <span class="op">=</span> <span class="fl">0.8</span>, delayMean2 <span class="op">=</span> <span class="fl">1</span>, timepoints <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">35</span>,<span class="fl">45</span>,<span class="fl">55</span>,<span class="fl">65</span>,<span class="fl">100</span><span class="op">)</span><span class="op">)</span>
 <span class="co"># TODO: play with topLevel etc.</span>
 <span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_data.html">use_data</a></span><span class="op">(</span><span class="va">omicronDataset</span>,overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></pre></div>
-<pre><code>## ✔ Saving 'omicronDataset' to 'data/omicronDataset.rda'</code></pre>
+<pre><code>## ✓ Saving 'omicronDataset' to 'data/omicronDataset.rda'</code></pre>
 <pre><code>## • Document your data (see 'https://r-pkgs.org/data.html')</code></pre>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb25"><pre class="downlit">
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data <span class="op">=</span> <span class="va">om</span><span class="op">$</span><span class="va">ts</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>, y<span class="op">=</span><span class="va">Growth.actual</span>, colour<span class="op">=</span><span class="va">source</span><span class="op">)</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data <span class="op">=</span> <span class="va">de</span><span class="op">$</span><span class="va">ts</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>, y<span class="op">=</span><span class="va">Growth.actual</span>, colour<span class="op">=</span><span class="va">source</span><span class="op">)</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">om</span><span class="op">$</span><span class="va">events</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">`Start date`</span>, y<span class="op">=</span><span class="va">rates</span>, colour<span class="op">=</span><span class="va">source</span><span class="op">)</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">de</span><span class="op">$</span><span class="va">events</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">`Start date`</span>, y<span class="op">=</span><span class="va">rates</span>, colour<span class="op">=</span><span class="va">source</span><span class="op">)</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb26"><pre class="downlit">
   <span class="fu">ylab</span><span class="op">(</span><span class="st">"growth rate"</span><span class="op">)</span></pre></div>
 <pre><code>## $y
 ## [1] "growth rate"
@@ -356,7 +322,7 @@
 ## attr(,"class")
 ## [1] "labels"</code></pre>
 <p>The generated cases exhibit differential delay which impacts the tail of the data set at each observation time point with potential for introducing estimate bias</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb28"><pre class="downlit">
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>data<span class="op">=</span><span class="va">omicronDataset</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">value.s1</span>, colour<span class="op">=</span><span class="va">source.s1</span><span class="op">)</span>, size<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>data<span class="op">=</span><span class="va">omicronDataset</span><span class="op">$</span><span class="va">ts</span>, mapping<span class="op">=</span><span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>,y<span class="op">=</span><span class="va">value.s2</span>, colour<span class="op">=</span><span class="va">source.s2</span><span class="op">)</span>, size<span class="op">=</span><span class="fl">0.1</span><span class="op">)</span><span class="op">+</span>
@@ -364,7 +330,7 @@
   <span class="fu">ylab</span><span class="op">(</span><span class="st">"cases"</span><span class="op">)</span><span class="op">+</span><span class="fu">xlab</span><span class="op">(</span><span class="st">"date"</span><span class="op">)</span></pre></div>
 <p><img src="generating-synthetic-datasets_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
 <p>When combined the data set can be represented as a proportion of cases that are S-gene negative versus those that are S-gene negative or positive. This can be used for growth rate estimation. If the same biases are present in both data sets then they to a certain extent cancel out.</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb29"><pre class="downlit">
 <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_line</span><span class="op">(</span>data <span class="op">=</span> <span class="va">omicronDataset</span><span class="op">$</span><span class="va">ts</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>, y<span class="op">=</span><span class="va">Proportion.actual</span><span class="op">)</span>,colour<span class="op">=</span><span class="st">"red"</span><span class="op">)</span><span class="op">+</span>
   <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="va">omicronDataset</span><span class="op">$</span><span class="va">ts</span>, mapping <span class="op">=</span> <span class="fu">aes</span><span class="op">(</span>x<span class="op">=</span><span class="va">date</span>, y<span class="op">=</span><span class="va">proportion</span><span class="op">)</span>,colour<span class="op">=</span><span class="st">"black"</span>,size<span class="op">=</span><span class="fl">0.2</span><span class="op">)</span><span class="op">+</span>

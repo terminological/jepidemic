@@ -47,7 +47,7 @@ knitr::opts_chunk$set(
 library(tidyverse)
 
 
-here::i_am("vignettes/in-development/appendix-D-bayesian-estimators.Rmd")
+here::i_am("vignettes/in-development/_appendix-D-bayesian-estimators.Rmd")
 source(here::here("vignettes/common-setup.R"))
 
 ```

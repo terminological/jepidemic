@@ -200,7 +200,7 @@ public class CoriEstimator {
 	}
 	
 	/**
-	 * The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+	 * The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that span the estimate date (this may involve longer windowed estimate from
 	 * dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows. 
 	 * @return The estimator itself (a fluent method)
 	 */
@@ -211,9 +211,9 @@ public class CoriEstimator {
 	}
 	
 	/**
-	 * The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+	 * The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that span the estimate date (this may involve longer windowed estimate from
 	 * dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows.
-	 * @param weights - the weighting of the different windows as a vector which much be the same length as the longest window, maxTau.
+	 * @param weights - the weighting of the different windows according to their length as a vector which much be the same length as the longest window, maxTau.
 	 * @return The estimator itself (a fluent method)
 	 */
 	@RMethod

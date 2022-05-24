@@ -42,7 +42,7 @@
 <meta property="og:title" content="CoriEstimator — CoriEstimator" />
 <meta property="og:description" content="An estimator of the reproduction number (\(R_t\)) using a renewal equation method.
 Version: 0.03
-Generated: 2022-01-28T16:04:19.694061" />
+Generated: 2022-05-24T22:12:30.975629" />
 
 
 
@@ -102,39 +102,6 @@ Generated: 2022-01-28T16:04:19.694061" />
     <li>
       <a href="../articles/getting-started.html">Getting started</a>
     </li>
-    <li>
-      <a href="../articles/in-development/appendix-A-validation-methods.html">Appendix A - Reproduction number validation methodology</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-B-cori-method-jepidemic.html">Appendix B - Renewal equation reproduction number estimation and Jepidemic implementation validation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-C-incidence-and-growth-rate-estimation.html">Appendix C - Incidence and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/appendix-D-bayesian-estimators.html">Appendix D - Bayesian growth rate and reproduction number estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/bayesian-growth-rate-2.html">Bayesian growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/proportion-and-growth-rate-estimation.html">Appendix C - Proportions and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/in-development/two-strain-dynamics.html">Two strain dynamics</a>
-    </li>
-    <li>
-      <a href="../articles/old/cori-method.html">Cori method</a>
-    </li>
-    <li>
-      <a href="../articles/old/epiestim-testing.html">Testing epiestim</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rate-estimation.html">Growth rate estimation</a>
-    </li>
-    <li>
-      <a href="../articles/old/growth-rates.html">Cori method</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -161,7 +128,7 @@ Generated: 2022-01-28T16:04:19.694061" />
     <div class="ref-description">
     <p>An estimator of the reproduction number (\(R_t\)) using a renewal equation method.</p>
 <p>Version: 0.03</p>
-<p>Generated: 2022-01-28T16:04:19.694061</p>
+<p>Generated: 2022-05-24T22:12:30.975629</p>
     </div>
 
 
@@ -415,7 +382,7 @@ not available
 			</pre><p></div></p><p></p><p><hr>
 	<a id="method-selectMixtureCombination"></a></p>	
 <p></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>selectMixtureCombination()</code></h3>
-<p>The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+<p>The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that span the estimate date (this may involve longer windowed estimate from
 dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows.</p>	
 
 <p></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
@@ -439,7 +406,7 @@ not available
 			</pre><p></div></p><p></p><p><hr>
 	<a id="method-selectWeightedMixtureCombination"></a></p>	
 <p></p><h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Method <code>selectWeightedMixtureCombination()</code></h3>
-<p>The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that is centred on the estimate date (this may involve longer windowed estimate from
+<p>The mixture combination strategy for selecting a posterior \(R_t\) involves finding all the estimates that have a window that span the estimate date (this may involve longer windowed estimate from
 dates in the future) and estimating a gamma distribution with the same mean and SD as the mixture of all the estimates. This combined estimate involves estimates of all different windows.</p>	
 
 <p></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Usage</h4>
@@ -451,7 +418,7 @@ dates in the future) and estimating a gamma distribution with the same mean and 
 	
 <p></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Arguments</h4>
 <p><div class="arguments"></p><ul>
-<li><p>weights - the weighting of the different windows as a vector which much be the same length as the longest window, maxTau. - (java expects a RNumericVector)</p></li>
+<li><p>weights - the weighting of the different windows according to their length as a vector which much be the same length as the longest window, maxTau. - (java expects a RNumericVector)</p></li>
 </ul><p></div></p>
 
 <p></p><h4 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Returns</h4>

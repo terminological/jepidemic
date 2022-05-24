@@ -10,10 +10,10 @@
 #' 
 #' Version: 0.03
 #' 
-#' Generated: 2022-01-28T16:04:19.691941
+#' Generated: 2022-05-24T22:12:30.974474
 #'
 #' @details
-	#' #' string and serialises the dataframe so it can be used natively in java
+	#' string and serialises the dataframe so it can be used natively in java
 	#' for testing purposes.
 #' @export
 Serialiser = R6::R6Class("Serialiser", public=list(

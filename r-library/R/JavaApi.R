@@ -6,7 +6,7 @@
 #'
 #' Version: 0.03
 #'
-#' Generated: 2022-01-28T16:04:19.654225
+#' Generated: 2022-05-24T22:12:30.944579
 #'
 #' Contact: rc538@exeter.ac.uk
 #' @import rJava
@@ -48,7 +48,8 @@ JavaApi = R6::R6Class("JavaApi", public=list(
     #' print java system messages to the R console and flush the message cache. This is generally called automatically,
     #' @return nothing
 	printMessages = function() {
-		cat(.jcall("uk/co/terminological/rjava/LogController", returnSig = "Ljava/lang/String;", method = "getSystemMessages"))
+		# check = FALSE here to stop exceptions being cleared from the stack.
+		cat(.jcall("uk/co/terminological/rjava/LogController", returnSig = "Ljava/lang/String;", method = "getSystemMessages", check=FALSE))
 		invisible(NULL)
 	},
 	
@@ -56,18 +57,19 @@ JavaApi = R6::R6Class("JavaApi", public=list(
  	#### constructor ----
  	#' @description
  	#' Create the R6 api library class. This is the entry point to all Java related classes and methods in this package.
-    #' @param logLevel A string such as "DEBUG", "INFO", "WARN" (defaults to "INFO")
+    #' @param logLevel One of "OFF", "FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", "ALL". (defaults to "INFO") 
     #' @examples
     #' \dontrun{
     #' J = jepidemic::JavaApi$get();
 	#' }
     #' @return nothing
  	initialize = function(logLevel = "INFO") {
- 		if (!is.null(JavaApi$singleton)) stop("Startup the java api with JavaApi$get() rather than using this constructor directly")
+ 		if (is.null(JavaApi$singleton)) stop("Startup the java api with JavaApi$get() rather than using this constructor directly")
  	
  		message("Initialising Java Epidemic")
  		message("Version: 0.03")
-		message("Generated: 2022-01-28T16:04:19.654529")
+		message("Generated: 2022-05-24T22:12:30.944848")
+ 	
  	
 		if (!.jniInitialized) 
 	        .jinit(parameters=getOption("java.parameters"),silent = TRUE, force.init = FALSE)
@@ -80,18 +82,20 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 	        message(paste0("Adding to classpath: ",jars,collapse='\n'))
 	        .jaddClassPath(jars)
 	    }
- 	
+	    
+	    # configure logging
  		.jcall("uk/co/terminological/rjava/LogController", returnSig = "V", method = "setupRConsole")
  		.jcall("uk/co/terminological/rjava/LogController", returnSig = "V", method = "configureLog" , logLevel)
  		# TODO: this is the library build date code byut it requires testing
- 		# buildDate = .jcall("uk/co/terminological/rjava/LogController", returnSig = "S", method = "getClassBuildTime")
+ 		buildDate = .jcall("uk/co/terminological/rjava/LogController", returnSig = "S", method = "getClassBuildTime")
     	self$.log = .jcall("org/slf4j/LoggerFactory", returnSig = "Lorg/slf4j/Logger;", method = "getLogger", "jepidemic");
     	.jcall(self$.log,returnSig = "V",method = "info","Initialised jepidemic");
 		.jcall(self$.log,returnSig = "V",method = "debug","Version: 0.03");
-		.jcall(self$.log,returnSig = "V",method = "debug","R package generated: 2022-01-28T16:04:19.654624");
-		# .jcall(self$.log,returnSig = "V",method = "debug",paste0("Java library compiled: ",buildDate));
+		.jcall(self$.log,returnSig = "V",method = "debug","R package generated: 2022-05-24T22:12:30.944934");
+		.jcall(self$.log,returnSig = "V",method = "debug",paste0("Java library compiled: ",buildDate));
 		.jcall(self$.log,returnSig = "V",method = "debug","Contact: rc538@exeter.ac.uk");
 		self$printMessages()
+		
 		# initialise type conversion functions
 		
 		self$.toJava = list(
@@ -103,18 +107,18 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmpDim = dim(rObj)
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RNumericArray',rJava::.jarray(tmpVec),rJava::.jarray(tmpDim)))
 			},
+			RDateVector=function(rObj) {
+				if (is.null(rObj)) return(rJava::.new('uk/co/terminological/rjava/types/RDateVector'))
+				if (any(na.omit(rObj)<'0001-01-01')) message('dates smaller than 0001-01-01 will be converted to NA')
+				tmp = as.character(rObj,format='%C%y-%m-%d')
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RDateVector',rJava::.jarray(tmp)))
+			},
 			RDate=function(rObj) {
 				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RDate'))
 				if (length(rObj) > 1) stop('input too long')
 			   if (rObj<'0001-01-01') message('dates smaller than 0001-01-01 will be converted to NA')
 				tmp = as.character(rObj,format='%C%y-%m-%d')[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RDate',tmp))
-			},
-			RDateVector=function(rObj) {
-				if (is.null(rObj)) return(rJava::.new('uk/co/terminological/rjava/types/RDateVector'))
-				if (any(na.omit(rObj)<'0001-01-01')) message('dates smaller than 0001-01-01 will be converted to NA')
-				tmp = as.character(rObj,format='%C%y-%m-%d')
-				return(rJava::.jnew('uk/co/terminological/rjava/types/RDateVector',rJava::.jarray(tmp)))
 			},
 			RCharacterVector=function(rObj) {
 				if (is.null(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RCharacterVector'))
@@ -142,20 +146,20 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp = as.integer(rObj)[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RLogical',tmp))
 			},
-			RLogicalVector=function(rObj) {
-				if (is.null(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RLogicalVector'))
-				if (!is.logical(rObj)) stop('expected a vector of logicals')
-				tmp = as.integer(rObj)
-				return(rJava::.jnew('uk/co/terminological/rjava/types/RLogicalVector',rJava::.jarray(tmp)))
+			RNull=function(rObj) {
+				if (!is.null(rObj)) stop('input expected to be NULL')
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RNull'))
 			},
 			RCharacter=function(rObj) {
 				if (is.na(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RCharacter'))
 				tmp = as.character(rObj)[[1]]
 				return(rJava::.jnew('uk/co/terminological/rjava/types/RCharacter',tmp))
 			},
-			RNull=function(rObj) {
-				if (!is.null(rObj)) stop('input expected to be NULL')
-				return(rJava::.jnew('uk/co/terminological/rjava/types/RNull'))
+			RLogicalVector=function(rObj) {
+				if (is.null(rObj)) return(rJava::.jnew('uk/co/terminological/rjava/types/RLogicalVector'))
+				if (!is.logical(rObj)) stop('expected a vector of logicals')
+				tmp = as.integer(rObj)
+				return(rJava::.jnew('uk/co/terminological/rjava/types/RLogicalVector',rJava::.jarray(tmp)))
 			},
 			String=function(rObj) return(as.character(rObj)),
 			CoriEstimator=function(rObj) return(rObj$.jobj),
@@ -307,15 +311,15 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 			   if (length(tmpDim)==2) return(matrix(tmpVec,tmpDim))
 				return(array(tmpVec,tmpDim))
 			},
-			RDate=function(jObj) as.Date(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive'),'%Y-%m-%d'),
 			RDateVector=function(jObj) as.Date(rJava::.jcall(jObj,returnSig='[Ljava/lang/String;',method='rPrimitive'),'%Y-%m-%d'),
+			RDate=function(jObj) as.Date(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive'),'%Y-%m-%d'),
 			RCharacterVector=function(jObj) as.character(rJava::.jcall(jObj,returnSig='[Ljava/lang/String;',method='rPrimitive')),
 			RNumeric=function(jObj) as.numeric(rJava::.jcall(jObj,returnSig='D',method='rPrimitive')),
 			RFactor=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rLabel')),
 			RLogical=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='I',method='rPrimitive')),
-			RLogicalVector=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='[I',method='rPrimitive')),
-			RCharacter=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive')),
 			RNull=function(jObj) return(NULL),
+			RCharacter=function(jObj) as.character(rJava::.jcall(jObj,returnSig='Ljava/lang/String;',method='rPrimitive')),
+			RLogicalVector=function(jObj) as.logical(rJava::.jcall(jObj,returnSig='[I',method='rPrimitive')),
 			String=function(jObj) return(as.character(jObj)),
 			CoriEstimator=function(jObj) return(jObj),
 			GrowthRateEstimator=function(jObj) return(jObj),
@@ -362,13 +366,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_minWindow = self$.toJava$int(minWindow);
 				tmp_maxWindow = self$.toJava$int(maxWindow);
 				# invoke constructor method
-				tmp_out = .jnew("org/github/terminological/jepidemic/growth/GrowthRateEstimator" , tmp_minWindow, tmp_maxWindow); 
+				tmp_out = .jnew("org/github/terminological/jepidemic/growth/GrowthRateEstimator" , tmp_minWindow, tmp_maxWindow, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert result back to R (should be a identity conversion)
 				tmp_r6 = GrowthRateEstimator$new(
 					self$.fromJava$GrowthRateEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(tmp_r6)
 			},
 			strictGrowthRateAndRtEstimator = function(minWindow, maxWindow, infectivityProfiles) {
@@ -377,13 +382,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_maxWindow = self$.toJava$int(maxWindow);
 				tmp_infectivityProfiles = self$.toJava$RNumericArray(infectivityProfiles);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="strictGrowthRateAndRtEstimator" , tmp_minWindow, tmp_maxWindow, tmp_infectivityProfiles); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="strictGrowthRateAndRtEstimator" , tmp_minWindow, tmp_maxWindow, tmp_infectivityProfiles, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# wrap return java object in R6 class 
 				out = GrowthRateEstimator$new(
 					self$.fromJava$GrowthRateEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(out)
 			},
 			defaultGrowthRateAndRtEstimator = function(minWindow, maxWindow, initialIncidence) {
@@ -392,13 +398,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_maxWindow = self$.toJava$int(maxWindow);
 				tmp_initialIncidence = self$.toJava$double(initialIncidence);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="defaultGrowthRateAndRtEstimator" , tmp_minWindow, tmp_maxWindow, tmp_initialIncidence); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="defaultGrowthRateAndRtEstimator" , tmp_minWindow, tmp_maxWindow, tmp_initialIncidence, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# wrap return java object in R6 class 
 				out = GrowthRateEstimator$new(
 					self$.fromJava$GrowthRateEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(out)
 			},
 			defaultGrowthRateEstimator = function(minWindow, maxWindow) {
@@ -406,25 +413,27 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_minWindow = self$.toJava$int(minWindow);
 				tmp_maxWindow = self$.toJava$int(maxWindow);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="defaultGrowthRateEstimator" , tmp_minWindow, tmp_maxWindow); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="defaultGrowthRateEstimator" , tmp_minWindow, tmp_maxWindow, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# wrap return java object in R6 class 
 				out = GrowthRateEstimator$new(
 					self$.fromJava$GrowthRateEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(out)
 			},
 			basicGrowthRateEstimator = function() {
 				# copy parameters
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="basicGrowthRateEstimator" ); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/growth/GrowthRateEstimator", returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="basicGrowthRateEstimator" , check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# wrap return java object in R6 class 
 				out = GrowthRateEstimator$new(
 					self$.fromJava$GrowthRateEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(out)
 			}	)
 		self$Serialiser = list(
@@ -432,13 +441,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				# constructor
 				# convert parameters to java
 				# invoke constructor method
-				tmp_out = .jnew("org/github/terminological/jepidemic/utils/Serialiser" ); 
+				tmp_out = .jnew("org/github/terminological/jepidemic/utils/Serialiser" , check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert result back to R (should be a identity conversion)
 				tmp_r6 = Serialiser$new(
 					self$.fromJava$Serialiser(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(tmp_r6)
 			},
 			serialiseDataframe = function(dataframe, filename) {
@@ -446,10 +456,11 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_dataframe = self$.toJava$RDataframe(dataframe);
 				tmp_filename = self$.toJava$String(filename);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "V", method="serialiseDataframe" , tmp_dataframe, tmp_filename); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "V", method="serialiseDataframe" , tmp_dataframe, tmp_filename, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert java object back to R
 				out = self$.fromJava$void(tmp_out);
-				self$printMessages()
 				if(is.null(out)) return(invisible(out))
 				return(out)
 			},
@@ -457,10 +468,11 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				# copy parameters
 				tmp_filename = self$.toJava$String(filename);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="deserialiseDataframe" , tmp_filename); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="deserialiseDataframe" , tmp_filename, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert java object back to R
 				out = self$.fromJava$RDataframe(tmp_out);
-				self$printMessages()
 				if(is.null(out)) return(invisible(out))
 				return(out)
 			},
@@ -469,10 +481,11 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_dataframe = self$.toJava$RList(dataframe);
 				tmp_filename = self$.toJava$String(filename);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "V", method="serialiseList" , tmp_dataframe, tmp_filename); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "V", method="serialiseList" , tmp_dataframe, tmp_filename, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert java object back to R
 				out = self$.fromJava$void(tmp_out);
-				self$printMessages()
 				if(is.null(out)) return(invisible(out))
 				return(out)
 			},
@@ -480,10 +493,11 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				# copy parameters
 				tmp_filename = self$.toJava$String(filename);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "Luk/co/terminological/rjava/types/RList;", method="deserialiseList" , tmp_filename); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "Luk/co/terminological/rjava/types/RList;", method="deserialiseList" , tmp_filename, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert java object back to R
 				out = self$.fromJava$RList(tmp_out);
-				self$printMessages()
 				if(is.null(out)) return(invisible(out))
 				return(out)
 			},
@@ -492,10 +506,11 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_dataframe = self$.toJava$RNamedList(dataframe);
 				tmp_filename = self$.toJava$String(filename);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "V", method="serialiseNamedList" , tmp_dataframe, tmp_filename); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "V", method="serialiseNamedList" , tmp_dataframe, tmp_filename, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert java object back to R
 				out = self$.fromJava$void(tmp_out);
-				self$printMessages()
 				if(is.null(out)) return(invisible(out))
 				return(out)
 			},
@@ -503,10 +518,11 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				# copy parameters
 				tmp_filename = self$.toJava$String(filename);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "Luk/co/terminological/rjava/types/RNamedList;", method="deserialiseNamedList" , tmp_filename); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/utils/Serialiser", returnSig = "Luk/co/terminological/rjava/types/RNamedList;", method="deserialiseNamedList" , tmp_filename, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert java object back to R
 				out = self$.fromJava$RNamedList(tmp_out);
-				self$printMessages()
 				if(is.null(out)) return(invisible(out))
 				return(out)
 			}	)
@@ -517,13 +533,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_discretePdf = self$.toJava$RNumericVector(discretePdf);
 				tmp_id = self$.toJava$int(id);
 				# invoke constructor method
-				tmp_out = .jnew("org/github/terminological/jepidemic/InfectivityProfile" , tmp_discretePdf, tmp_id); 
+				tmp_out = .jnew("org/github/terminological/jepidemic/InfectivityProfile" , tmp_discretePdf, tmp_id, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert result back to R (should be a identity conversion)
 				tmp_r6 = InfectivityProfile$new(
 					self$.fromJava$InfectivityProfile(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(tmp_r6)
 			}
 	)
@@ -535,13 +552,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_r0SD = self$.toJava$double(r0SD);
 				tmp_maxWindow = self$.toJava$int(maxWindow);
 				# invoke constructor method
-				tmp_out = .jnew("org/github/terminological/jepidemic/estimate/CoriEstimator" , tmp_r0Mean, tmp_r0SD, tmp_maxWindow); 
+				tmp_out = .jnew("org/github/terminological/jepidemic/estimate/CoriEstimator" , tmp_r0Mean, tmp_r0SD, tmp_maxWindow, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# convert result back to R (should be a identity conversion)
 				tmp_r6 = CoriEstimator$new(
 					self$.fromJava$CoriEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(tmp_r6)
 			},
 			defaultEpiEstim = function(infectivityProfile, meanR0, sdR0, window) {
@@ -551,13 +569,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_sdR0 = self$.toJava$double(sdR0);
 				tmp_window = self$.toJava$int(window);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/estimate/CoriEstimator", returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="defaultEpiEstim" , tmp_infectivityProfile, tmp_meanR0, tmp_sdR0, tmp_window); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/estimate/CoriEstimator", returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="defaultEpiEstim" , tmp_infectivityProfile, tmp_meanR0, tmp_sdR0, tmp_window, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# wrap return java object in R6 class 
 				out = CoriEstimator$new(
 					self$.fromJava$CoriEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(out)
 			},
 			defaultUncertainEpiEstim = function(infectivityProfiles, meanR0, sdR0, window, n2) {
@@ -568,13 +587,14 @@ JavaApi = R6::R6Class("JavaApi", public=list(
 				tmp_window = self$.toJava$int(window);
 				tmp_n2 = self$.toJava$int(n2);
 				#execute static call
-				tmp_out = .jcall("org/github/terminological/jepidemic/estimate/CoriEstimator", returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="defaultUncertainEpiEstim" , tmp_infectivityProfiles, tmp_meanR0, tmp_sdR0, tmp_window, tmp_n2); 
+				tmp_out = .jcall("org/github/terminological/jepidemic/estimate/CoriEstimator", returnSig = "Lorg/github/terminological/jepidemic/estimate/CoriEstimator;", method="defaultUncertainEpiEstim" , tmp_infectivityProfiles, tmp_meanR0, tmp_sdR0, tmp_window, tmp_n2, check=FALSE);
+				self$printMessages()
+				.jcheck() 
 				# wrap return java object in R6 class 
 				out = CoriEstimator$new(
 					self$.fromJava$CoriEstimator(tmp_out),
 					self
 				);
-				self$printMessages()
 				return(out)
 			}	)
 	}
@@ -584,8 +604,11 @@ JavaApi$singleton = NULL
 
 JavaApi$get = function(logLevel = "INFO") {
 	if (is.null(JavaApi$singleton)) {
+		# set to non-null so that R6 constructor will work
+		JavaApi$singleton = FALSE 
 		JavaApi$singleton = JavaApi$new(logLevel)
 	}
 	return(JavaApi$singleton)
 }
+
 

@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-here::i_am("vignettes/in-development/two-strain-dynamics.Rmd")
+here::i_am("vignettes/in-development/_two-strain-dynamics.Rmd")
 source(here::here("vignettes/common-setup.R"))
 ```
 

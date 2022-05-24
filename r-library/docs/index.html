@@ -59,39 +59,6 @@
     <li>
       <a href="articles/getting-started.html">Getting started</a>
     </li>
-    <li>
-      <a href="articles/in-development/appendix-A-validation-methods.html">Appendix A - Reproduction number validation methodology</a>
-    </li>
-    <li>
-      <a href="articles/in-development/appendix-B-cori-method-jepidemic.html">Appendix B - Renewal equation reproduction number estimation and Jepidemic implementation validation</a>
-    </li>
-    <li>
-      <a href="articles/in-development/appendix-C-incidence-and-growth-rate-estimation.html">Appendix C - Incidence and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="articles/in-development/appendix-D-bayesian-estimators.html">Appendix D - Bayesian growth rate and reproduction number estimation</a>
-    </li>
-    <li>
-      <a href="articles/in-development/bayesian-growth-rate-2.html">Bayesian growth rate estimation</a>
-    </li>
-    <li>
-      <a href="articles/in-development/proportion-and-growth-rate-estimation.html">Appendix C - Proportions and growth rate estimation</a>
-    </li>
-    <li>
-      <a href="articles/in-development/two-strain-dynamics.html">Two strain dynamics</a>
-    </li>
-    <li>
-      <a href="articles/old/cori-method.html">Cori method</a>
-    </li>
-    <li>
-      <a href="articles/old/epiestim-testing.html">Testing epiestim</a>
-    </li>
-    <li>
-      <a href="articles/old/growth-rate-estimation.html">Growth rate estimation</a>
-    </li>
-    <li>
-      <a href="articles/old/growth-rates.html">Cori method</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -111,9 +78,9 @@
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#jepidemic" class="anchor"></a>jepidemic</h1></div>
 <p>R and Java based tools for epidemic modelling</p>
-<div class="sourceCode"><pre class="downlit">
+<div class="sourceCode" id="cb1"><pre class="downlit">
 
-<span class="va">J</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="va"><a href="reference/JavaApi.html">JavaApi</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="op">)</span>
+<span class="va">J</span> <span class="op">=</span> <span class="fu">jepidemic</span><span class="fu">::</span><span class="va"><a href="reference/JavaApi.html">JavaApi</a></span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="op">)</span>
 <span class="va">estim</span> <span class="op">=</span> <span class="va">J</span><span class="op">$</span><span class="va">CoriEstimator</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>r0Mean <span class="op">=</span> <span class="fl">5</span>,r0SD <span class="op">=</span> <span class="fl">5</span>,maxWindow <span class="op">=</span> <span class="fl">14</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">EpiEstim</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">Flu2009</span><span class="op">)</span>

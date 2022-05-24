@@ -10,10 +10,10 @@
 #' 
 #' Version: 0.03
 #' 
-#' Generated: 2022-01-28T16:04:19.681362
+#' Generated: 2022-05-24T22:12:30.967976
 #'
 #' @details
-	#' #' The renewal equation method depends on a time series of infections, and on the infectivity profile - 
+	#' The renewal equation method depends on a time series of infections, and on the infectivity profile - 
 	#' a measure of the probability that a secondary infection occurred on a specific day after the primary case, 
 	#' given a secondary infection occurred. A Bayesian framework is then used to update a prior probabilistic 
 	#' estimate of \(R_t\) on any given day with both information gained from the time series of infections in the 
@@ -59,12 +59,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_quantiles = self$.api$.toJava$RNumericVector(quantiles);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withOutputQuantiles" , tmp_quantiles); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withOutputQuantiles" , tmp_quantiles, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -72,7 +74,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -86,12 +87,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	withSaneDefaults = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withSaneDefaults" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withSaneDefaults" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -99,7 +102,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -113,12 +115,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_incidence = self$.api$.toJava$double(incidence);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withInitialIncidence" , tmp_incidence); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withInitialIncidence" , tmp_incidence, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -126,7 +130,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -145,12 +148,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		tmp_meanTau = self$.api$.toJava$double(meanTau);
 		tmp_sdTau = self$.api$.toJava$double(sdTau);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withGaussianEstimateWeighting" , tmp_meanTau, tmp_sdTau); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withGaussianEstimateWeighting" , tmp_meanTau, tmp_sdTau, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -158,7 +163,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -175,12 +179,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_weights = self$.api$.toJava$RNumericVector(weights);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withEstimateWeighting" , tmp_weights); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withEstimateWeighting" , tmp_weights, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -188,7 +194,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -202,12 +207,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	combineEstimatesWithWeightedMixture = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="combineEstimatesWithWeightedMixture" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="combineEstimatesWithWeightedMixture" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -215,7 +222,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -230,12 +236,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_multiplyingSDby = self$.api$.toJava$double(multiplyingSDby);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPreviousPosterior" , tmp_multiplyingSDby); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPreviousPosterior" , tmp_multiplyingSDby, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -243,7 +251,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -257,12 +264,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	priorIncidenceFromScaledPreviousPosterior = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromScaledPreviousPosterior" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromScaledPreviousPosterior" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -270,7 +279,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -286,12 +294,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_multiplyingSDby = self$.api$.toJava$double(multiplyingSDby);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorAndGrowthRate" , tmp_multiplyingSDby); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorAndGrowthRate" , tmp_multiplyingSDby, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -299,7 +309,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -313,12 +322,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	priorIncidenceFromScaledPosteriorAndGrowthRate = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromScaledPosteriorAndGrowthRate" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromScaledPosteriorAndGrowthRate" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -326,7 +337,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -339,12 +349,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	priorIncidenceFromPosteriorMean = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMean" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMean" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -352,7 +364,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -365,12 +376,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	priorIncidenceFromPosteriorMeanAndGrowthRate = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndGrowthRate" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndGrowthRate" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -378,7 +391,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -386,19 +398,21 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	#' priorIncidenceFromPosteriorMeanAndCoefVariation: 
 	#' Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
 	#' mean and sd both equal to the mean of the previous posterior.
-	#' @param kappa - (java expects a double)
+	#' @param kappa - the coefficient of variation of the prior. - (java expects a double)
 	#' @return R6 GrowthRateEstimator object: 
 	#' a fluent method
 	priorIncidenceFromPosteriorMeanAndCoefVariation = function(kappa) {
 		# copy parameters
 		tmp_kappa = self$.api$.toJava$double(kappa);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndCoefVariation" , tmp_kappa); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndCoefVariation" , tmp_kappa, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -406,7 +420,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -414,19 +427,21 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	#' priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation: 
 	#' Select a prior estimate for the poisson rate by taking the previous posterior and constructing a prior with 
 	#' mean and sd both equal to the mean of the previous posterior plus the growth rate.
-	#' @param kappa - (java expects a double)
+	#' @param kappa - the coefficient of variation of the prior. - (java expects a double)
 	#' @return R6 GrowthRateEstimator object: 
 	#' a fluent method
 	priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation = function(kappa) {
 		# copy parameters
 		tmp_kappa = self$.api$.toJava$double(kappa);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation" , tmp_kappa); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="priorIncidenceFromPosteriorMeanAndGrowthRateAndCoefVariation" , tmp_kappa, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -434,7 +449,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -446,12 +460,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 	useAllPosteriorEstimates = function() {
 		# copy parameters
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="useAllPosteriorEstimates" ); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="useAllPosteriorEstimates" , check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -459,7 +475,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -474,12 +489,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_tau = self$.api$.toJava$int(tau);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="usePosteriorEstimatesFromOneWindow" , tmp_tau); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="usePosteriorEstimatesFromOneWindow" , tmp_tau, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -487,7 +504,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -502,12 +518,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_sumIncidence = self$.api$.toJava$int(sumIncidence);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="usePosteriorEstimatesWithEnoughData" , tmp_sumIncidence); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="usePosteriorEstimatesWithEnoughData" , tmp_sumIncidence, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -515,7 +533,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -532,12 +549,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		tmp_infectivityProfile = self$.api$.toJava$RNumericVector(infectivityProfile);
 		tmp_replace = self$.api$.toJava$boolean(replace);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withInfectivityProfile" , tmp_infectivityProfile, tmp_replace); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withInfectivityProfile" , tmp_infectivityProfile, tmp_replace, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -545,7 +564,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -560,12 +578,14 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		# copy parameters
 		tmp_infectivityProfiles = self$.api$.toJava$RNumericArray(infectivityProfiles);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withInfectivityProfileMatrix" , tmp_infectivityProfiles); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Lorg/github/terminological/jepidemic/growth/GrowthRateEstimator;", method="withInfectivityProfileMatrix" , tmp_infectivityProfiles, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# is this a fluent method?
 		# if(.jcall(self$.jobj, returnSig="Z", method="equals", .jcast(tmp_out))) {
 		if(self$.jobj$equals(tmp_out)) {
 			# return fluent method
-			self$.api$printMessages()
 			invisible(self)
 		} else {
 			# wrap return java object in R6 class  
@@ -573,7 +593,6 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 				self$.api$.fromJava$GrowthRateEstimator(tmp_out),
 				self$.api
 			);
-			self$.api$printMessages()
 			return(out);
 		}
 	},
@@ -591,10 +610,12 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		tmp_dateColName = self$.api$.toJava$String(dateColName);
 		tmp_incidenceColName = self$.api$.toJava$String(incidenceColName);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateGrowthRate" , tmp_incidence, tmp_dateColName, tmp_incidenceColName); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateGrowthRate" , tmp_incidence, tmp_dateColName, tmp_incidenceColName, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# convert java object back to R
 		out = self$.api$.fromJava$RDataframe(tmp_out);
-		self$.api$printMessages()
 		if(is.null(out)) return(invisible(out))
 		return(out);
 	},
@@ -612,10 +633,12 @@ GrowthRateEstimator = R6::R6Class("GrowthRateEstimator", public=list(
 		tmp_dateColName = self$.api$.toJava$String(dateColName);
 		tmp_incidenceColName = self$.api$.toJava$String(incidenceColName);
 		# execute method call
-		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateGrowthRateSingle" , tmp_incidence, tmp_dateColName, tmp_incidenceColName); 
+		tmp_out = .jcall(self$.jobj, returnSig = "Luk/co/terminological/rjava/types/RDataframe;", method="estimateGrowthRateSingle" , tmp_incidence, tmp_dateColName, tmp_incidenceColName, check=FALSE);
+		self$.api$printMessages()
+		# check for exceptions and rethrow them
+		.jcheck()
 		# convert java object back to R
 		out = self$.api$.fromJava$RDataframe(tmp_out);
-		self$.api$printMessages()
 		if(is.null(out)) return(invisible(out))
 		return(out);
 	},

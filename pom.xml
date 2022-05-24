@@ -89,6 +89,7 @@
 						<debug>false</debug>
 						<usePkgdown>true</usePkgdown>
 						<useJavadoc>true</useJavadoc>
+						<useRoxygen2>true</useRoxygen2>
 						<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
 						<rjavaOpts>
 							<rjavaOpt>-Xmx4096M</rjavaOpt>

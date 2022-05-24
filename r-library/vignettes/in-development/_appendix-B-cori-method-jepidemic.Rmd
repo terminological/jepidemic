@@ -46,7 +46,7 @@ knitr::opts_chunk$set(
   error = TRUE
 )
 
-here::i_am("vignettes/in-development/appendix-B-cori-method-jepidemic.Rmd")
+here::i_am("vignettes/in-development/_appendix-B-cori-method-jepidemic.Rmd")
 source(here::here("vignettes/common-setup.R"))
 
 ```
