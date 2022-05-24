@@ -4,4 +4,4 @@
 
 R and Java based tools for epidemic modelling
 
-[See the documentation](https://terminological.github.io/jepidemic/)
+[See the documentation](https://terminological.github.io/jepidemic/r-library/docs/index.html)
