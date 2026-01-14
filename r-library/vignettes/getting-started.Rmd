@@ -14,23 +14,33 @@ here::i_am("vignettes/getting-started.Rmd")
 source(here::here("vignettes/common-setup.R"))
 ```
 
-## growth rate estimate + rt from growth rate
-
+## a simulated dataset
 
 
 ```{r}
-test = jepidemic::vignetteDataset$ts  %>% filter(bootstrap==2, observationDate==max(observationDate))
-infProf = jepidemic::vignetteDataset$infectivityProfile
 
-ggplot(test)+
-  geom_bar(mapping=aes(x=date,y=import), stat="identity",fill="blue")+
-  geom_line(mapping=aes(x=date,y=Est.actual), colour="red")+
-  geom_point(mapping=aes(x=date,y=value), size=0.1, colour="black")
+
+a = ggplot()+
+  geom_line(data = simpleDataset$ts, mapping = aes(x=date, y=Growth.actual), colour="red")+
+  geom_point(data = simpleDataset$events, mapping = aes(x=`Start date`, y=rates), colour="red")
+
+b = ggplot() +
+  geom_bar(data=simpleDataset$ts, mapping=aes(x=date,y=import), stat="identity", position = "dodge")+
+  geom_line(data=simpleDataset$ts, mapping=aes(x=date,y=Est.actual), colour="red")+ylab("Cases")+
+  geom_line(data=simpleDataset$ts, mapping=aes(x=date,y=value), colour="black",size=0.1,alpha=0.3)+
+  geom_point(data=simpleDataset$ts %>% filter(bootstrap==1), mapping=aes(x=date,y=value), colour="black",size=0.1)
+
+a+ggrrr::gg_hide_X_axis()+b+patchwork::plot_layout(ncol=1)
+
+test = jepidemic::simpleDataset$ts %>% filter(bootstrap==1)
+infProf = jepidemic::simpleDataset$infectivityProfile
+
 ```
 
+## growth rate estimate + rt from growth rate
 
 ```{r}
-gr = test %>% locfitGrowthEstimate()
+gr = test %>% filter(bootstrap==2) %>% locfitGrowthEstimate()
 
 ggplot(gr)+
   geom_rect(aes(xmin=date,xmax=date+1,alpha=import),ymin=-Inf,ymax=Inf,fill="blue")+

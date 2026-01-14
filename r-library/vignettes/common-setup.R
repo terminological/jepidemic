@@ -13,10 +13,10 @@ devtools::load_all()
 source(here::here("vignettes/validation-functions.R"))
 source(here::here("vignettes/plotting-functions.R"))
 
+devtools::load_all("~/Git/ggrrr/")
 output = outputter("~/Dropbox/sarscov2/r-estimation-methodology")
 
-devtools::load_all("~/Git/standard-print-output/")
-standardPrintOutput::setDefaults()
+ggrrr::gg_pedantic()
 
 J = jepidemic::JavaApi$get()
 

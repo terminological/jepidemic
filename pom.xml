@@ -110,6 +110,12 @@
 				</configuration>
 				<executions>
 					<execution>
+						<id>compile-java-library</id>
+						<goals>
+							<goal>compile-java-library</goal>
+						</goals>
+					</execution>
+					<execution>
 						<id>generate-r-library</id>
 						<goals>
 							<goal>generate-r-library</goal>

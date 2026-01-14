@@ -371,12 +371,15 @@ addBootstrappedObservations = function(growthSimulation, bootstraps = 100, delay
 getGrowthRateBasedDataset = function(
   growthSimulation = NULL,
   bootstraps = 100, 
-  seed=100, 
+  seed=NULL,
+  import=100,
   weekendEffect = 0.1, 
   Gt.mean=5, Gt.sd=4, 
   periodic=FALSE, 
   name = "synthetic",
   ...) {
+  
+  if (!is.null(seed)) set.seed(seed)
   
   if (is.null(growthSimulation)) {
     if(periodic) {
@@ -387,7 +390,7 @@ getGrowthRateBasedDataset = function(
   }
   
   out = growthSimulation %>%
-    addImportations(importDf = tibble(time = 0, import = seed)) %>%
+    addImportations(importDf = tibble(time = 0, import = import)) %>%
     addPoissonRate() %>%
     addObservedRate(weekendEffect = weekendEffect) %>%
     addBootstrappedObservations(bootstraps = bootstraps,delayMean = 0, delaySd = 1)

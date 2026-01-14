@@ -1,4 +1,4 @@
-# TODO:
+# TODO: check
 # 1) Write lag analysis for estimators.
 # Simple one for growth rate
 # N.B. for Rt this will need wallinga et al Rt calculation of Rt using infectivity profile.
@@ -448,7 +448,7 @@ doublingTimeFromGrowthRate = function(simpleTimeseries) {
 
 #' Calculate a reproduction number estimate using the Wallinga 2007 estimation using empirical generation time distribution. This uses resampling to transmit uncertainty in growth rate estimates
 #'
-#' @param simpleTimeseries - With a "Growth" estimate as a normally distributed quantility
+#' @param simpleTimeseries - With a "Growth" estimate as a normally distributed quantity
 #' @param yMatrix - the matrix of possible infectivity profiles as discrete distributions
 #' @param aVector - the upper boundaries of the time cut-offs for the infectivity profiles
 #' @param bootstraps - the number of bootstraps to take to calculate for each point.
@@ -735,3 +735,105 @@ epiestimRtEstimate = function(simpleTimeseries, yMatrix, bootstraps = 10*dim(yMa
 #     geom_errorbar(data=tmp2,mapping=aes(x=date,ymin=lower,ymax=upper),inherit.aes = FALSE)+
 #     scale_y_continuous(trans = "logit")
 # }
+
+
+
+## Weekly case estimators ----
+
+# takes a line list of patient admissions and estimates weekly rates based on
+# a quasi-poisson model fitted to count data using local regression.
+# expects admissions to contain admission_week columns only defining the date of admission
+estimateWeeklyRate = function(admissions, ... ,nn=0.2,deg=2) {
+  admissionCounts = admissions %>% group_by(admission_week) %>% count()
+  fit = locfit::locfit(n~locfit::lp(admission_week,nn=nn,deg=deg),data = admissionCounts,family="qpoisson")
+  weeks = seq(min(admissionCounts$admission_week),max(admissionCounts$admission_week),by = 1/7)
+  tmp = preplot(fit,newdata=weeks,se.fit = TRUE,band="local")
+  t = tmp$tr
+  tibble(
+    admission_week = weeks,
+    admission_date = .weeks_to_date(weeks),
+    lower = .opt(t(qnorm(0.05,tmp$fit,tmp$se.fit))),
+    median = t(qnorm(0.5,tmp$fit,tmp$se.fit)),
+    upper = .opt(t(qnorm(0.95,tmp$fit,tmp$se.fit)))
+  )
+}
+
+# takes a line list of patient admissions with a multinomial class label, and fits
+# a quasi-binomial model with logit link using local regression. This expects a dataframe
+# with an admission_week column and a class column. Multinomial class is either treated as a
+# set of 1 versus others binomials (cumulative = FALSE) or as a set of less than or equal versus more
+# than binomials (cumulative = TRUE, which assumes multinomial class is ordered)
+estimateWeeklyProportion = function(admissions, ... ,nn=0.2, deg=2, cumulative = is.ordered(admissions$class)) {
+  # get the output as fractional weeks - we wil convert this to days later.
+  weeks = seq(min(admissions$admission_week),max(admissions$admission_week),by = 1/7)
+  
+  out = tibble()
+  # we are doing a binomial this for each level in the factor versus all other levels.
+  # this lets us create an estimate for multinomial data that I'm going to use later.
+  # I've never been sure about whether multinomial proportions can be treated as the sum of
+  # binomial 1 vs others, my suspicion is they can't, but I'm going to do it anyway
+  for (level in levels(admissions$class)) {
+    if (cumulative) {
+      tmpdf = admissions %>% mutate(class_bool = class <= level)
+    } else {
+      tmpdf = admissions %>% mutate(class_bool = class == level)
+    }
+    if (any(is.na(tmpdf$class_bool))) browser()
+    # detect some edge cases
+    if (nrow(tmpdf) == 0) {
+      # data set is empty
+      out = out %>% bind_rows(
+        tibble(
+          class = level,
+          admission_week = weeks,
+          admission_date = .weeks_to_date(weeks),
+          lower = 0,
+          median = 0,
+          upper = 1
+        )
+      )
+    } else if (!any(tmpdf$class_bool)) {
+      # for a given class there is no data or all observations are negative
+      out = out %>% bind_rows(
+        tibble(
+          class = level,
+          admission_week = weeks,
+          admission_date = .weeks_to_date(weeks),
+          lower = 0,
+          median = 0,
+          upper = 0
+        )
+      )
+    } else if (all(tmpdf$class_bool)) {
+      # for a given class all the observations are positive
+      out = out %>% bind_rows(
+        tibble(
+          class = level,
+          admission_week = weeks,
+          admission_date = .weeks_to_date(weeks),
+          lower = 1,
+          median = 1,
+          upper = 1
+        )
+      )
+    } else {
+      fit = locfit::locfit(class_bool ~ locfit::lp(admission_week,nn=nn,deg=deg),
+                           data = tmpdf,family="qbinomial", link="logit")
+      tmp = preplot(fit,newdata=weeks,se.fit = TRUE,band="local")
+      t = tmp$tr
+      out = out %>% bind_rows(
+        tibble(
+          class = level,
+          admission_week = weeks,
+          admission_date = .weeks_to_date(weeks),
+          lower = .opt(t(qnorm(0.05,tmp$fit,tmp$se.fit))),
+          median = t(tmp$fit), #only because fit is normally distributed so mean=median
+          upper = .opt(t(qnorm(0.95,tmp$fit,tmp$se.fit)))
+        )
+      )
+    }
+  }
+  out = out %>% mutate(class = factor(class, levels(admissions$class)))
+  return(out)
+  
+}
